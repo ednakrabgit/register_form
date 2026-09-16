@@ -284,8 +284,8 @@ namespace backend.Controllers
             // Training Results Analytics from trn_training_result
             var trainingResults = await context.TrainingResults.ToListAsync();
             var totalTrainingRecords = trainingResults.Count;
-            var passedResults = trainingResults.Where(r => r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน" || r.TrainingStatus == "passed").ToList();
-            var failedResults = trainingResults.Where(r => r.TrainingStatus == "ไม่ผ่าน" || r.TrainingStatus == "failed").ToList();
+            var passedResults = trainingResults.Where(r => IsTrainingPassed(r.TrainingStatus)).ToList();
+            var failedResults = trainingResults.Where(r => !IsTrainingPassed(r.TrainingStatus)).ToList();
             var totalPassedCount = passedResults.Count;
             var totalFailedCount = failedResults.Count;
             var overallPassRate = totalTrainingRecords > 0 ? Math.Round((double)totalPassedCount * 100 / totalTrainingRecords, 1) : 0;
@@ -302,8 +302,8 @@ namespace backend.Controllers
                 })
                 .Select(g => {
                     var total = g.Count();
-                    var passed = g.Count(r => r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน" || r.TrainingStatus == "passed");
-                    var failed = g.Count(r => r.TrainingStatus == "ไม่ผ่าน" || r.TrainingStatus == "failed");
+                    var passed = g.Count(r => IsTrainingPassed(r.TrainingStatus));
+                    var failed = g.Count(r => !IsTrainingPassed(r.TrainingStatus));
                     var rate = total > 0 ? Math.Round((double)passed * 100 / total, 1) : 0;
                     return new {
                         courseCode = g.Key.CourseCode,
@@ -336,7 +336,7 @@ namespace backend.Controllers
                     courseName = r.TrainingCourseName ?? "-",
                     trainingDate = r.TrainingDateDisplay ?? "-",
                     trainingStatus = r.TrainingStatus ?? "-",
-                    isPassed = r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน" || r.TrainingStatus == "passed",
+                    isPassed = IsTrainingPassed(r.TrainingStatus),
                     progressPercent = r.ProgressPercent ?? "-",
                     scorePercent = r.ScorePercent ?? "-",
                     stampDate = r.StampDate.ToString("yyyy-MM-dd HH:mm"),
@@ -356,8 +356,8 @@ namespace backend.Controllers
                     var courseCodeDisplay = string.Join(", ", courseCodes);
                     
                     var totalEnrolled = cg.Count();
-                    var totalPassed = cg.Count(r => r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน" || r.TrainingStatus == "passed");
-                    var totalFailed = cg.Count(r => r.TrainingStatus == "ไม่ผ่าน" || r.TrainingStatus == "failed");
+                    var totalPassed = cg.Count(r => IsTrainingPassed(r.TrainingStatus));
+                    var totalFailed = cg.Count(r => !IsTrainingPassed(r.TrainingStatus));
                     var overallPassRate = totalEnrolled > 0 ? Math.Round((double)totalPassed * 100 / totalEnrolled, 1) : 0;
 
                     // Group by Training Date (Rounds)
@@ -365,8 +365,8 @@ namespace backend.Controllers
                         .GroupBy(r => r.TrainingDateDisplay ?? "-")
                         .Select((rg, rIdx) => {
                             var rEnrolled = rg.Count();
-                            var rPassed = rg.Count(r => r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน" || r.TrainingStatus == "passed");
-                            var rFailed = rg.Count(r => r.TrainingStatus == "ไม่ผ่าน" || r.TrainingStatus == "failed");
+                            var rPassed = rg.Count(r => IsTrainingPassed(r.TrainingStatus));
+                            var rFailed = rg.Count(r => !IsTrainingPassed(r.TrainingStatus));
                             var rPassRate = rEnrolled > 0 ? Math.Round((double)rPassed * 100 / rEnrolled, 1) : 0;
                             var rCodes = string.Join(", ", rg.Select(r => r.TrainingCourseCode).Where(c => !string.IsNullOrEmpty(c)).Distinct());
 
@@ -509,7 +509,7 @@ namespace backend.Controllers
                     courseName = tr.TrainingCourseName ?? "-",
                     trainingDate = tr.TrainingDateDisplay ?? "-",
                     status = tr.TrainingStatus ?? "-",
-                    isPassed = tr.TrainingStatus == "อนุมัติ" || tr.TrainingStatus == "ผ่าน" || tr.TrainingStatus == "passed",
+                    isPassed = IsTrainingPassed(tr.TrainingStatus),
                     progressPercent = tr.ProgressPercent,
                     scorePercent = tr.ScorePercent,
                     stampDate = tr.StampDate.ToString("yyyy-MM-dd HH:mm"),
@@ -1078,6 +1078,13 @@ namespace backend.Controllers
                 ["MasterDegreeStatus"] = regObj?.MasterDegreeStatus,
                 ["Action"] = actionName
             };
+        }
+
+        private static bool IsTrainingPassed(string? status)
+        {
+            if (string.IsNullOrWhiteSpace(status)) return false;
+            var s = status.Trim().ToLowerInvariant();
+            return s == "อนุมัติ" || s == "ผ่าน" || s == "passed" || s == "pass" || s == "approved" || s == "สำเร็จ";
         }
     }
 }

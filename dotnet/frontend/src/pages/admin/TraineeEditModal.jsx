@@ -75,18 +75,18 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
           titles, religions, genders, bloods, provinces, courses, agentBranches, 
           territories, expertises, companies, renewCourseCheckboxes, renewOtherOptions, fullData
         ] = await Promise.all([
-          safeFetchArray('http://localhost:8085/api/masterdata/titles'),
-          safeFetchArray('http://localhost:8085/api/masterdata/religion'),
-          safeFetchArray('http://localhost:8085/api/masterdata/gender'),
-          safeFetchArray('http://localhost:8085/api/masterdata/blood'),
+          safeFetchArray('http://localhost:8085/api/masterdata/titles?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/religion?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/gender?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/blood?all=true'),
           safeFetchArray('http://localhost:8085/api/masterdata/provinces'),
-          safeFetchArray('http://localhost:8085/api/masterdata/renew-courses'),
-          safeFetchArray('http://localhost:8085/api/masterdata/agent-branches'),
-          safeFetchArray('http://localhost:8085/api/masterdata/territories'),
-          safeFetchArray('http://localhost:8085/api/masterdata/expertises'),
-          safeFetchArray('http://localhost:8085/api/masterdata/companies'),
-          safeFetchArray('http://localhost:8085/api/masterdata/renewcourse'),
-          safeFetchArray('http://localhost:8085/api/masterdata/renew-other-courses'),
+          safeFetchArray('http://localhost:8085/api/masterdata/renew-courses?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/agent-branches?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/territories?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/expertises?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/companies?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/renewcourse?all=true'),
+          safeFetchArray('http://localhost:8085/api/masterdata/renew-other-courses?all=true'),
           fetch(`http://localhost:8085/api/admin/trainees/${nationId}/full`, { 
             headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
           }).then(r => r.ok ? r.json() : {}).catch(() => ({}))

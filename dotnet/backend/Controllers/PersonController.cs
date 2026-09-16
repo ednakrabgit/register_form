@@ -59,8 +59,10 @@ namespace backend.Controllers
                 .OrderByDescending(o => o.ProfileId)
                 .FirstOrDefaultAsync(o => o.IdCardNumber == cleanNationId && o.IsLatest);
 
+            var userAccount = await _context.Users.FirstOrDefaultAsync(u => u.NationId == cleanNationId);
+
             // oicProfile will be null if the Background Worker hasn't processed the file yet.
-            if (person == null && oicProfile == null)
+            if (person == null && oicProfile == null && userAccount == null)
             {
                 return NotFound(new { message = "ไม่พบข้อมูลเดิม และยังไม่มีข้อมูลจาก OIC (Worker ยังไม่ได้ทำงาน)" });
             }
@@ -134,6 +136,24 @@ namespace backend.Controllers
             var other = person?.Others.FirstOrDefault();
 
             var rawTitle = person?.TitleTh ?? GetStr("titleTh");
+            var firstNameVal = person?.FirstNameTh ?? GetStr("firstNameTh");
+            var lastNameVal = person?.LastNameTh ?? GetStr("lastNameTh");
+
+            // If first name not present from person or OIC, extract from userAccount
+            if (string.IsNullOrWhiteSpace(firstNameVal) && userAccount != null && !string.IsNullOrWhiteSpace(userAccount.FullName))
+            {
+                var trimmedName = userAccount.FullName.Trim();
+                if (string.IsNullOrWhiteSpace(rawTitle))
+                {
+                    if (trimmedName.StartsWith("นางสาว")) { rawTitle = "นางสาว"; trimmedName = trimmedName.Substring(6).Trim(); }
+                    else if (trimmedName.StartsWith("นาง")) { rawTitle = "นาง"; trimmedName = trimmedName.Substring(3).Trim(); }
+                    else if (trimmedName.StartsWith("นาย")) { rawTitle = "นาย"; trimmedName = trimmedName.Substring(3).Trim(); }
+                }
+                var parts = trimmedName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                firstNameVal = parts.Length > 0 ? parts[0] : "";
+                lastNameVal = parts.Length > 1 ? parts[1] : "";
+            }
+
             var resolvedTitleName = GetTitleName(rawTitle);
 
             var flatData = new
@@ -142,9 +162,9 @@ namespace backend.Controllers
                 idCardExpiry = person?.IdCardExpiry?.ToString("yyyy-MM-dd") ?? GetStr("idCardExpiry"),
                 titleTh = rawTitle,
                 titleThName = resolvedTitleName,
-                firstNameTh = person?.FirstNameTh ?? GetStr("firstNameTh"),
+                firstNameTh = firstNameVal,
                 middleNameTh = person?.MiddleNameTh ?? GetStr("middleNameTh"),
-                lastNameTh = person?.LastNameTh ?? GetStr("lastNameTh"),
+                lastNameTh = lastNameVal,
                 hasChangedName = !string.IsNullOrEmpty(person?.FirstNameOldTh) ? "yes" : "no",
                 titlePrev = person?.TitleOldTh,
                 firstNameOldTh = person?.FirstNameOldTh,
@@ -154,8 +174,8 @@ namespace backend.Controllers
                 religion = person?.ReligionId?.ToString() ?? (GetReligionId(GetStr("religion")))?.ToString(),
                 gender = person?.GenderId?.ToString() ?? (GetGenderId(GetStr("gender")))?.ToString(),
                 bloodGroup = person?.BloodGroupId?.ToString() ?? (GetBloodId(GetStr("bloodGroup")))?.ToString(),
-                phone = person?.PhoneOtp ?? GetStr("phoneOtp"),
-                email = person?.EmailAlt ?? GetStr("email"),
+                phone = person?.PhoneOtp ?? GetStr("phoneOtp") ?? userAccount?.Phone,
+                email = person?.EmailAlt ?? GetStr("email") ?? userAccount?.Email,
                 lineId = person?.LineId ?? GetStr("lineId"),
                 facebook = person?.Facebook ?? GetStr("facebook"),
                 instagram = person?.Instagram ?? GetStr("instagram"),

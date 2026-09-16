@@ -32,17 +32,21 @@ export default function LocationMasterCrud({ type: propType }) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/Location/${type}`);
+      const url = type === 'subdistricts' 
+        ? `${API_BASE_URL}/Location/subdistricts?limit=1000&all=true`
+        : `${API_BASE_URL}/Location/${type}?all=true`;
+      
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch data');
       const json = await res.json();
       setData(json);
 
       if (type === 'districts' || type === 'subdistricts') {
-        const pRes = await fetch(`${API_BASE_URL}/Location/provinces`);
+        const pRes = await fetch(`${API_BASE_URL}/Location/provinces?all=true`);
         if (pRes.ok) setProvinces(await pRes.json());
       }
       if (type === 'subdistricts') {
-        const dRes = await fetch(`${API_BASE_URL}/Location/districts`);
+        const dRes = await fetch(`${API_BASE_URL}/Location/districts?all=true`);
         if (dRes.ok) setDistricts(await dRes.json());
       }
 
@@ -63,17 +67,23 @@ export default function LocationMasterCrud({ type: propType }) {
         ? `${API_BASE_URL}/Location/${type}/${editItem.id}` 
         : `${API_BASE_URL}/Location/${type}`;
 
+      const payload = {
+        ...formData,
+        startActiveDatetime: formData.startActiveDatetime || null,
+        endActiveDatetime: formData.endActiveDatetime || null
+      };
+
       const res = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error('Save failed');
       
       setShowModal(false);
       fetchData();
     } catch (err) {
-      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message);
     }
   };
 
@@ -92,17 +102,28 @@ export default function LocationMasterCrud({ type: propType }) {
 
   const openAddModal = () => {
     setEditItem(null);
-    let initial = {};
-    if (type === 'provinces') initial = { provinceId: 0, provinceThai: '', provinceEng: '' };
-    if (type === 'districts') initial = { districtId: 0, districtThai: '', districtEng: '', provinceId: 0 };
-    if (type === 'subdistricts') initial = { subDistrictId: 0, subDistrictThai: '', subDistrictEng: '', districtId: 0, zipcode: '' };
+    let initial = {
+      isActiveBackend: true,
+      isActiveFrontend: true,
+      startActiveDatetime: '',
+      endActiveDatetime: ''
+    };
+    if (type === 'provinces') initial = { ...initial, provinceId: 0, provinceThai: '', provinceEng: '' };
+    if (type === 'districts') initial = { ...initial, districtId: 0, districtThai: '', districtEng: '', provinceId: 0 };
+    if (type === 'subdistricts') initial = { ...initial, subDistrictId: 0, subDistrictThai: '', subDistrictEng: '', districtId: 0, zipcode: '' };
     setFormData(initial);
     setShowModal(true);
   };
 
   const openEditModal = (item) => {
     setEditItem(item);
-    setFormData({ ...item });
+    setFormData({ 
+      ...item,
+      isActiveBackend: item.isActiveBackend !== false,
+      isActiveFrontend: item.isActiveFrontend !== false,
+      startActiveDatetime: item.startActiveDatetime ? item.startActiveDatetime.slice(0, 16) : '',
+      endActiveDatetime: item.endActiveDatetime ? item.endActiveDatetime.slice(0, 16) : ''
+    });
     setShowModal(true);
   };
 
@@ -141,6 +162,9 @@ export default function LocationMasterCrud({ type: propType }) {
                   {type === 'districts' && <th className="p-3 border-b">จังหวัด</th>}
                   {type === 'subdistricts' && <th className="p-3 border-b">อำเภอ</th>}
                   {type === 'subdistricts' && <th className="p-3 border-b">รหัสไปรษณีย์</th>}
+                  <th className="p-3 border-b text-center">Backend</th>
+                  <th className="p-3 border-b text-center">Frontend</th>
+                  <th className="p-3 border-b">ช่วงเวลาเปิดใช้งาน (Frontend)</th>
                   <th className="p-3 border-b text-center">จัดการ</th>
                 </tr>
               </thead>
@@ -166,12 +190,31 @@ export default function LocationMasterCrud({ type: propType }) {
                     {type === 'districts' && <td className="p-3">{provinces.find(p => p.provinceId === item.provinceId)?.provinceThai || item.provinceId}</td>}
                     {type === 'subdistricts' && <td className="p-3">{districts.find(d => d.districtId === item.districtId)?.districtThai || item.districtId}</td>}
                     {type === 'subdistricts' && <td className="p-3">{item.zipcode}</td>}
-                    
                     <td className="p-3 text-center">
-                      <button onClick={() => openEditModal(item)} className="text-info hover:text-blue-700 mx-2" title="แก้ไข">
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${item.isActiveBackend !== false ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'}`}>
+                        {item.isActiveBackend !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${item.isActiveFrontend !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                        {item.isActiveFrontend !== false ? 'Active' : 'Hidden'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-xs text-gray-600">
+                      {item.startActiveDatetime || item.endActiveDatetime ? (
+                        <div className="flex flex-col gap-0.5">
+                          {item.startActiveDatetime && <span><span className="text-gray-400">เริ่ม:</span> {new Date(item.startActiveDatetime).toLocaleString('th-TH')}</span>}
+                          {item.endActiveDatetime && <span><span className="text-gray-400">สิ้นสุด:</span> {new Date(item.endActiveDatetime).toLocaleString('th-TH')}</span>}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic">ไม่จำกัดเวลา</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-center">
+                      <button onClick={() => openEditModal(item)} className="text-info hover:text-blue-700 mx-1" title="แก้ไข">
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="text-danger hover:text-red-700 mx-2" title="ลบ">
+                      <button onClick={() => handleDelete(item.id)} className="text-danger hover:text-red-700 mx-1" title="ลบ">
                         <i className="fas fa-trash"></i>
                       </button>
                     </td>
@@ -179,7 +222,7 @@ export default function LocationMasterCrud({ type: propType }) {
                 ))}
                 {data.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
+                    <td colSpan={type === 'subdistricts' ? 11 : type === 'districts' ? 10 : 9} className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
                   </tr>
                 )}
               </tbody>
@@ -190,7 +233,7 @@ export default function LocationMasterCrud({ type: propType }) {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 max-h-screen overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-info">{editItem ? 'แก้ไขข้อมูล' : 'เพิ่มข้อมูล'}</h3>
             <form onSubmit={handleSave}>
               
@@ -264,12 +307,65 @@ export default function LocationMasterCrud({ type: propType }) {
                       })}
                     </select>
                   </div>
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">รหัสไปรษณีย์</label>
                     <input type="text" value={formData.zipcode || ''} onChange={e => setFormData({...formData, zipcode: e.target.value})} className="w-full border rounded p-2 focus:ring-2 focus:ring-info outline-none" />
                   </div>
                 </>
               )}
+
+              {/* Dual Active Flags */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="font-semibold text-sm text-gray-700 mb-2">การควบคุมการมองเห็น (Visibility Control)</div>
+                <div className="flex flex-col gap-2">
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActiveBackend !== false} 
+                      onChange={e => setFormData({...formData, isActiveBackend: e.target.checked})}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 h-4 w-4"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">เปิดใช้งานในระบบ Admin/Backend</span>
+                  </label>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActiveFrontend !== false} 
+                      onChange={e => setFormData({...formData, isActiveFrontend: e.target.checked})}
+                      className="rounded border-gray-300 text-emerald-600 shadow-sm focus:ring-emerald-500 h-4 w-4"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">เปิดให้ผู้สมัครมองเห็นที่หน้าสมัคร (Frontend Active)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Active Datetime Range for Frontend */}
+              <div className="mb-6 p-3 bg-emerald-50/50 rounded-lg border border-emerald-200">
+                <div className="font-semibold text-sm text-emerald-900 mb-2">
+                  <i className="fas fa-calendar-alt mr-1"></i> ช่วงเวลากำหนดเปิดให้เห็นในหน้าสมัคร (Frontend)
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</label>
+                    <input 
+                      type="datetime-local" 
+                      value={formData.startActiveDatetime || ''} 
+                      onChange={e => setFormData({...formData, startActiveDatetime: e.target.value})}
+                      className="w-full border rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</label>
+                    <input 
+                      type="datetime-local" 
+                      value={formData.endActiveDatetime || ''} 
+                      onChange={e => setFormData({...formData, endActiveDatetime: e.target.value})}
+                      className="w-full border rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-2">* หากไม่ระบุ จะเปิดใช้งานตลอดเวลา (ตาม Flag ด้านบน)</p>
+              </div>
 
               <div className="flex justify-end gap-2 mt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded hover:bg-gray-100">ยกเลิก</button>

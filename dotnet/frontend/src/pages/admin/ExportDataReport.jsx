@@ -25,8 +25,8 @@ export default function ExportDataReport() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API_BASE_URL}/masterdata/renew-courses`).then(res => res.json()),
-      fetch(`${API_BASE_URL}/masterdata/renew-other-courses`).then(res => res.json())
+      fetch(`${API_BASE_URL}/masterdata/renew-courses?all=true`).then(res => res.json()),
+      fetch(`${API_BASE_URL}/masterdata/renew-other-courses?all=true`).then(res => res.json())
     ])
       .then(([coursesData, otherCoursesData]) => {
         const groups = {};

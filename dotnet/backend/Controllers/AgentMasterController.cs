@@ -18,9 +18,15 @@ namespace backend.Controllers
 
         // --- REGIONS ---
         [HttpGet("regions")]
-        public async Task<IActionResult> GetRegions()
+        public async Task<IActionResult> GetRegions([FromQuery] bool all = false)
         {
-            var data = await _context.AgentRegions.OrderBy(r => r.Name).ToListAsync();
+            var query = _context.AgentRegions.AsQueryable();
+            if (!all)
+            {
+                var now = DateTime.Now;
+                query = query.Where(r => r.IsActiveFrontend && (r.StartActiveDatetime == null || now >= r.StartActiveDatetime) && (r.EndActiveDatetime == null || now <= r.EndActiveDatetime));
+            }
+            var data = await query.OrderBy(r => r.Name).ToListAsync();
             return Ok(data);
         }
 
@@ -39,6 +45,11 @@ namespace backend.Controllers
             if (existing == null) return NotFound();
             
             existing.Name = region.Name;
+            existing.IsActiveBackend = region.IsActiveBackend;
+            existing.IsActiveFrontend = region.IsActiveFrontend;
+            existing.StartActiveDatetime = region.StartActiveDatetime;
+            existing.EndActiveDatetime = region.EndActiveDatetime;
+            
             await _context.SaveChangesAsync();
             return Ok(existing);
         }
@@ -62,9 +73,15 @@ namespace backend.Controllers
 
         // --- BRANCHES ---
         [HttpGet("branches")]
-        public async Task<IActionResult> GetBranches()
+        public async Task<IActionResult> GetBranches([FromQuery] bool all = false)
         {
-            var data = await _context.AgentBranches.OrderBy(b => b.Name).ToListAsync();
+            var query = _context.AgentBranches.AsQueryable();
+            if (!all)
+            {
+                var now = DateTime.Now;
+                query = query.Where(b => b.IsActiveFrontend && (b.StartActiveDatetime == null || now >= b.StartActiveDatetime) && (b.EndActiveDatetime == null || now <= b.EndActiveDatetime));
+            }
+            var data = await query.OrderBy(b => b.Name).ToListAsync();
             return Ok(data);
         }
 
@@ -84,6 +101,11 @@ namespace backend.Controllers
             
             existing.Name = branch.Name;
             existing.RegionId = branch.RegionId;
+            existing.IsActiveBackend = branch.IsActiveBackend;
+            existing.IsActiveFrontend = branch.IsActiveFrontend;
+            existing.StartActiveDatetime = branch.StartActiveDatetime;
+            existing.EndActiveDatetime = branch.EndActiveDatetime;
+            
             await _context.SaveChangesAsync();
             return Ok(existing);
         }

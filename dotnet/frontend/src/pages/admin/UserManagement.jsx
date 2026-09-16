@@ -37,6 +37,20 @@ export default function UserManagement() {
 
   // Modals state (Users)
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const parseFullName = (full) => {
+    if (!full) return { titleTh: 'นาย', firstName: '', lastName: '' };
+    let trimmed = full.trim();
+    let title = 'นาย';
+    if (trimmed.startsWith('นางสาว')) { title = 'นางสาว'; trimmed = trimmed.substring(6).trim(); }
+    else if (trimmed.startsWith('นาง')) { title = 'นาง'; trimmed = trimmed.substring(3).trim(); }
+    else if (trimmed.startsWith('นาย')) { title = 'นาย'; trimmed = trimmed.substring(3).trim(); }
+    
+    const parts = trimmed.split(/\s+/);
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+    return { titleTh: title, firstName, lastName };
+  };
+
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -46,6 +60,9 @@ export default function UserManagement() {
     password: '',
     role: 'Applicant',
     nationId: '',
+    titleTh: 'นาย',
+    firstName: '',
+    lastName: '',
     fullName: '',
     phone: '',
     isActive: true
@@ -117,6 +134,9 @@ export default function UserManagement() {
       password: '',
       role: 'Applicant',
       nationId: '',
+      titleTh: 'นาย',
+      firstName: '',
+      lastName: '',
       fullName: '',
       phone: '',
       isActive: true
@@ -130,12 +150,16 @@ export default function UserManagement() {
       return;
     }
     setCurrentUser(user);
+    const parsed = parseFullName(user.fullName);
     setUserFormData({
       username: user.username,
       email: user.email || '',
       password: '',
       role: user.role,
       nationId: user.nationId || '',
+      titleTh: parsed.titleTh || 'นาย',
+      firstName: parsed.firstName || '',
+      lastName: parsed.lastName || '',
       fullName: user.fullName || '',
       phone: user.phone || '',
       isActive: user.isActive
@@ -165,18 +189,26 @@ export default function UserManagement() {
   const handleUserSubmit = async (e) => {
     e.preventDefault();
     try {
+      const combinedFullName = `${userFormData.titleTh || ''}${userFormData.firstName || ''} ${userFormData.lastName || ''}`.trim();
+      const payload = {
+        username: userFormData.username,
+        email: userFormData.email || null,
+        password: userFormData.password,
+        role: userFormData.role,
+        nationId: userFormData.nationId || null,
+        titleTh: userFormData.titleTh || null,
+        firstName: userFormData.firstName?.trim() || null,
+        lastName: userFormData.lastName?.trim() || null,
+        fullName: combinedFullName || userFormData.fullName || null,
+        phone: userFormData.phone || null,
+        isActive: userFormData.isActive
+      };
+
       if (currentUser) {
         const res = await fetch(`http://localhost:8085/api/users/${currentUser.id}`, {
           method: 'PUT',
           headers: getAuthHeaders(),
-          body: JSON.stringify({
-            email: userFormData.email,
-            role: userFormData.role,
-            nationId: userFormData.nationId,
-            fullName: userFormData.fullName,
-            phone: userFormData.phone,
-            isActive: userFormData.isActive
-          })
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'บันทึกข้อมูลไม่สำเร็จ');
@@ -185,7 +217,7 @@ export default function UserManagement() {
         const res = await fetch(`http://localhost:8085/api/users`, {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify(userFormData)
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'สร้างผู้ใช้งานไม่สำเร็จ');
@@ -1120,28 +1152,53 @@ export default function UserManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุล</label>
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-12 sm:col-span-3">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">คำนำหน้า</label>
+                  <select
+                    value={userFormData.titleTh}
+                    onChange={(e) => setUserFormData({ ...userFormData, titleTh: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white"
+                  >
+                    <option value="นาย">นาย</option>
+                    <option value="นาง">นาง</option>
+                    <option value="นางสาว">นางสาว</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                  </select>
+                </div>
+
+                <div className="col-span-12 sm:col-span-4">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ชื่อ (First Name)</label>
                   <input
                     type="text"
-                    value={userFormData.fullName}
-                    onChange={(e) => setUserFormData({ ...userFormData, fullName: e.target.value })}
-                    placeholder="นายสมชาย มีชำนาญ"
+                    value={userFormData.firstName}
+                    onChange={(e) => setUserFormData({ ...userFormData, firstName: e.target.value })}
+                    placeholder="สมชาย"
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                <div className="col-span-12 sm:col-span-5">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">นามสกุล (Last Name)</label>
                   <input
-                    type="tel"
-                    value={userFormData.phone}
-                    onChange={(e) => setUserFormData({ ...userFormData, phone: e.target.value })}
-                    placeholder="0812345678"
+                    type="text"
+                    value={userFormData.lastName}
+                    onChange={(e) => setUserFormData({ ...userFormData, lastName: e.target.value })}
+                    placeholder="มีชำนาญ"
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                <input
+                  type="tel"
+                  value={userFormData.phone}
+                  onChange={(e) => setUserFormData({ ...userFormData, phone: e.target.value })}
+                  placeholder="0812345678"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"
+                />
               </div>
 
               <div className="pt-2">

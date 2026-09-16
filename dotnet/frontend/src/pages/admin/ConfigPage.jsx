@@ -466,7 +466,7 @@ export default function ConfigPage() {
               </div>
 
               {/* View 1: Visual Interactive Table */}
-              {!isRawJsonMode ? (
+              {!isRawJsonMode && (
                 <div className="space-y-4">
                   {periodsList.length === 0 ? (
                     <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl space-y-3">
@@ -568,8 +568,10 @@ export default function ConfigPage() {
                     </div>
                   )}
                 </div>
-              ) : (
-                /* View 2: Raw JSON Editor */
+              )}
+
+              {/* View 2: Raw JSON Editor */}
+              {isRawJsonMode && (
                 <div className="space-y-3">
                   <div className="relative">
                     <textarea
@@ -595,6 +597,112 @@ export default function ConfigPage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Training Date Expiry Advance Settings */}
+            <div className="border border-slate-200 rounded-2xl p-6 bg-white space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-amber-600" />
+                    <h3 className="text-base font-bold text-slate-900">
+                      วันหมดอายุการเปิดรับสมัครวิชาอบรมล่วงหน้า (RENEW_COURSE_EXPIRY_DAYS_ADVANCE)
+                    </h3>
+                  </div>
+                  <p className="text-slate-500 text-xs mt-0.5">
+                    กำหนดจำนวนวันปิดรับสมัครล่วงหน้าก่อนถึงวันเปิดอบรมจริง สำหรับหน้าผู้สมัคร (Frontend) เช่น 30 วัน หรือ 7 วัน เมื่อถึงกำหนดเวลา ระบบจะซ่อนวันอบรมนั้นที่หน้าสมัครโดยอัตโนมัติ (แต่ในหน้า Admin ยังคงเห็นครบถ้วน)
+                  </p>
+                </div>
+
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => handleResetField('RENEW_COURSE_EXPIRY_DAYS_ADVANCE')}
+                    className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <RotateCcw className="w-3 h-3" /> คืนค่ามาตรฐาน (30 วัน)
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                      จำนวนวันปิดรับสมัครล่วงหน้า (วัน / Days)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="0"
+                        max="365"
+                        disabled={!canEdit}
+                        value={configs['RENEW_COURSE_EXPIRY_DAYS_ADVANCE'] ?? '30'}
+                        onChange={(e) => handleChange('RENEW_COURSE_EXPIRY_DAYS_ADVANCE', e.target.value)}
+                        className="w-32 px-3.5 py-2 text-base font-bold text-center rounded-xl border border-slate-300 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white shadow-sm"
+                      />
+                      <span className="text-sm font-semibold text-slate-600">วัน ก่อนถึงวันเปิดอบรม</span>
+                    </div>
+                  </div>
+
+                  {/* Preset Buttons */}
+                  {canEdit && (
+                    <div className="space-y-1.5">
+                      <span className="text-xs text-slate-500 font-medium">เลือกค่าที่ใช้บ่อย (Quick Presets):</span>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { days: '30', label: '30 วัน (มาตรฐาน)' },
+                          { days: '14', label: '14 วัน (2 สัปดาห์)' },
+                          { days: '7', label: '7 วัน (1 สัปดาห์)' },
+                          { days: '3', label: '3 วัน' },
+                          { days: '0', label: '0 วัน (ปิดในวันอบรม)' }
+                        ].map((preset) => (
+                          <button
+                            key={preset.days}
+                            type="button"
+                            onClick={() => handleChange('RENEW_COURSE_EXPIRY_DAYS_ADVANCE', preset.days)}
+                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition ${
+                              String(configs['RENEW_COURSE_EXPIRY_DAYS_ADVANCE'] ?? '30') === preset.days
+                                ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Simulation / Calculation Card */}
+                <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 space-y-2.5 text-xs text-amber-900">
+                  <div className="font-bold text-sm text-amber-950 flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-amber-600" />
+                    การคำนวณและจำลองผลลัพธ์ (Live Simulation)
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between py-1 border-b border-amber-200/60">
+                      <span className="text-amber-800">วันที่ปัจจุบัน (Today):</span>
+                      <span className="font-bold">{new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-amber-200/60">
+                      <span className="text-amber-800">วันอบรมเร็วที่สุดที่มองเห็นได้:</span>
+                      <span className="font-bold text-emerald-800">
+                        {(() => {
+                          const days = parseInt(configs['RENEW_COURSE_EXPIRY_DAYS_ADVANCE'] || '30', 10) || 0;
+                          const d = new Date();
+                          d.setDate(d.getDate() + days);
+                          return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+                        })()}
+                      </span>
+                    </div>
+                    <div className="pt-1 text-[11px] text-amber-800/90 leading-relaxed">
+                      💡 <strong>หลักการทำงาน:</strong> หากวันเปิดอบรมใดเหลือเวลาน้อยกว่า <strong>{configs['RENEW_COURSE_EXPIRY_DAYS_ADVANCE'] || 30} วัน</strong> ระบบจะถือว่าหมดเขตรับสมัคร และปิดการแสดงผลที่หน้าสมัครของผู้ใช้ทันที
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

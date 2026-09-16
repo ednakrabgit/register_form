@@ -24,6 +24,9 @@ namespace backend.Controllers
             public string Password { get; set; } = null!;
             public string Role { get; set; } = "Applicant"; // Superadmin, Admin, Viewer, Applicant
             public string? NationId { get; set; }
+            public string? TitleTh { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
             public string? FullName { get; set; }
             public string? Phone { get; set; }
             public bool IsActive { get; set; } = true;
@@ -34,6 +37,9 @@ namespace backend.Controllers
             public string? Email { get; set; }
             public string Role { get; set; } = "Applicant";
             public string? NationId { get; set; }
+            public string? TitleTh { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
             public string? FullName { get; set; }
             public string? Phone { get; set; }
             public bool IsActive { get; set; } = true;
@@ -170,6 +176,10 @@ namespace backend.Controllers
                 }
             }
 
+            var cleanFullName = !string.IsNullOrWhiteSpace(dto.FullName)
+                ? dto.FullName.Trim()
+                : $"{dto.TitleTh}{dto.FirstName} {dto.LastName}".Trim();
+
             var newUser = new User
             {
                 Username = cleanUsername,
@@ -177,7 +187,7 @@ namespace backend.Controllers
                 PasswordHash = dto.Password, // Plain/hash
                 Role = dto.Role,
                 NationId = cleanNationId,
-                FullName = dto.FullName?.Trim(),
+                FullName = cleanFullName,
                 Phone = dto.Phone?.Trim(),
                 IsActive = dto.IsActive,
                 IsEmailVerified = true,
@@ -185,6 +195,34 @@ namespace backend.Controllers
             };
 
             _context.Users.Add(newUser);
+
+            // Sync with Person table if NationId is provided
+            if (!string.IsNullOrWhiteSpace(cleanNationId))
+            {
+                var person = await _context.Persons.FirstOrDefaultAsync(p => p.NationId == cleanNationId);
+                if (person == null)
+                {
+                    person = new Person
+                    {
+                        NationId = cleanNationId,
+                        TitleTh = dto.TitleTh,
+                        FirstNameTh = dto.FirstName ?? cleanFullName,
+                        LastNameTh = dto.LastName,
+                        PhoneOtp = dto.Phone?.Trim(),
+                        EmailAlt = cleanEmail
+                    };
+                    _context.Persons.Add(person);
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(dto.TitleTh)) person.TitleTh = dto.TitleTh;
+                    if (!string.IsNullOrWhiteSpace(dto.FirstName)) person.FirstNameTh = dto.FirstName;
+                    if (!string.IsNullOrWhiteSpace(dto.LastName)) person.LastNameTh = dto.LastName;
+                    if (!string.IsNullOrWhiteSpace(dto.Phone)) person.PhoneOtp = dto.Phone.Trim();
+                    if (!string.IsNullOrWhiteSpace(cleanEmail)) person.EmailAlt = cleanEmail;
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new
@@ -233,9 +271,10 @@ namespace backend.Controllers
                 user.Email = cleanEmail;
             }
 
+            string? cleanNationId = null;
             if (!string.IsNullOrWhiteSpace(dto.NationId))
             {
-                var cleanNationId = Regex.Replace(dto.NationId, @"\D", "");
+                cleanNationId = Regex.Replace(dto.NationId, @"\D", "");
                 user.NationId = cleanNationId;
             }
             else
@@ -243,11 +282,42 @@ namespace backend.Controllers
                 user.NationId = null;
             }
 
+            var cleanFullName = !string.IsNullOrWhiteSpace(dto.FullName)
+                ? dto.FullName.Trim()
+                : $"{dto.TitleTh}{dto.FirstName} {dto.LastName}".Trim();
+
             user.Role = dto.Role;
-            user.FullName = dto.FullName?.Trim();
+            user.FullName = cleanFullName;
             user.Phone = dto.Phone?.Trim();
             user.IsActive = dto.IsActive;
             user.UpdatedAt = DateTime.UtcNow;
+
+            // Sync with Person table if NationId is present
+            if (!string.IsNullOrWhiteSpace(cleanNationId))
+            {
+                var person = await _context.Persons.FirstOrDefaultAsync(p => p.NationId == cleanNationId);
+                if (person == null)
+                {
+                    person = new Person
+                    {
+                        NationId = cleanNationId,
+                        TitleTh = dto.TitleTh,
+                        FirstNameTh = dto.FirstName ?? cleanFullName,
+                        LastNameTh = dto.LastName,
+                        PhoneOtp = dto.Phone?.Trim(),
+                        EmailAlt = cleanEmail
+                    };
+                    _context.Persons.Add(person);
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(dto.TitleTh)) person.TitleTh = dto.TitleTh;
+                    if (!string.IsNullOrWhiteSpace(dto.FirstName)) person.FirstNameTh = dto.FirstName;
+                    if (!string.IsNullOrWhiteSpace(dto.LastName)) person.LastNameTh = dto.LastName;
+                    if (!string.IsNullOrWhiteSpace(dto.Phone)) person.PhoneOtp = dto.Phone.Trim();
+                    if (!string.IsNullOrWhiteSpace(cleanEmail)) person.EmailAlt = cleanEmail;
+                }
+            }
 
             await _context.SaveChangesAsync();
 

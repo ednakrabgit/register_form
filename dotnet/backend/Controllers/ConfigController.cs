@@ -20,6 +20,7 @@ namespace backend.Controllers
             ["SESSION_TIMEOUT"] = ("3600", "Session timeout in seconds", "system"),
             ["SYSTEM_IS_ONLINE"] = ("true", "Is system online", "system"),
             ["SYSTEM_OPEN_PERIODS"] = ("[]", "JSON array of open periods", "system"),
+            ["RENEW_COURSE_EXPIRY_DAYS_ADVANCE"] = ("30", "จำนวนวันปิดรับสมัครล่วงหน้าก่อนถึงวันเปิดอบรม (สำหรับ Frontend เช่น 30 วัน หรือ 7 วัน)", "schedule"),
             ["tab4_label_branch"] = ("สาขา *", "Label for Branch", "tab4"),
             ["tab4_hint_branch"] = ("พิมพ์เพื่อค้นหาสาขา", "Hint for Branch", "tab4"),
             ["tab4_label_region"] = ("ภาค *", "Label for Region", "tab4"),

@@ -33,16 +33,16 @@ export default function TraineesList() {
           fetch('http://localhost:8085/api/masterdata/provinces').then(r => r.json()),
           fetch('http://localhost:8085/api/masterdata/districts').then(r => r.json()),
           fetch('http://localhost:8085/api/masterdata/subdistricts').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/agent-branches').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/renewcourse').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/company').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/territory').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/expertise').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/renew-other-courses').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/renew-courses').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/gender').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/blood').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/religion').then(r => r.json())
+          fetch('http://localhost:8085/api/masterdata/agent-branches?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/renewcourse?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/company?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/territory?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/expertise?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/renew-other-courses?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/renew-courses?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/gender?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/blood?all=true').then(r => r.json()),
+          fetch('http://localhost:8085/api/masterdata/religion?all=true').then(r => r.json())
         ]);
         
         const map = {

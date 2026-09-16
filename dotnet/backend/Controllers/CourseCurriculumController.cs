@@ -39,7 +39,8 @@ namespace backend.Controllers
 
             if (!all)
             {
-                query = query.Where(c => c.Status == "active");
+                var now = DateTime.Now;
+                query = query.Where(c => c.IsActiveFrontend && (c.StartActiveDatetime == null || now >= c.StartActiveDatetime) && (c.EndActiveDatetime == null || now <= c.EndActiveDatetime) && c.Status == "active");
             }
 
             var list = await query.OrderBy(c => c.DisplayOrder).ToListAsync();
@@ -88,6 +89,10 @@ namespace backend.Controllers
             existing.CourseShortName = model.CourseShortName;
             existing.DisplayOrder = model.DisplayOrder;
             existing.Status = model.Status;
+            existing.IsActiveBackend = model.IsActiveBackend;
+            existing.IsActiveFrontend = model.IsActiveFrontend;
+            existing.StartActiveDatetime = model.StartActiveDatetime;
+            existing.EndActiveDatetime = model.EndActiveDatetime;
 
             if (model.SubDetails != null)
             {
@@ -107,6 +112,10 @@ namespace backend.Controllers
                             existingSub.Hours = sub.Hours;
                             existingSub.DisplayOrder = sub.DisplayOrder;
                             existingSub.Status = sub.Status;
+                            existingSub.IsActiveBackend = sub.IsActiveBackend;
+                            existingSub.IsActiveFrontend = sub.IsActiveFrontend;
+                            existingSub.StartActiveDatetime = sub.StartActiveDatetime;
+                            existingSub.EndActiveDatetime = sub.EndActiveDatetime;
                         }
                     }
                     else

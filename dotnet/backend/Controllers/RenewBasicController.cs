@@ -16,18 +16,41 @@ namespace backend.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        private async Task<int> GetAdvanceExpiryDaysAsync()
         {
-            var data = await _context.RenewBasics
-                .OrderBy(x => x.CourseName)
+            var config = await _context.SysConfigs.FirstOrDefaultAsync(c => c.Key == "RENEW_COURSE_EXPIRY_DAYS_ADVANCE");
+            if (config != null && int.TryParse(config.Value, out int days))
+            {
+                return days;
+            }
+            return 30;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] bool all = false)
+        {
+            var query = _context.RenewBasics.AsQueryable();
+            var now = DateTime.Now;
+            if (!all)
+            {
+                query = query.Where(b => b.IsActiveFrontend 
+                    && (b.StartActiveDatetime == null || now >= b.StartActiveDatetime) 
+                    && (b.EndActiveDatetime == null || now <= b.EndActiveDatetime) 
+                    && b.Status == "active");
+            }
+
+            var data = await query
+                .OrderBy(x => x.Id)
                 .ToListAsync();
 
-            var curriculums = await _context.CourseCurriculums
+            var currQ = _context.CourseCurriculums
                 .Include(c => c.SubDetails)
-                .Where(c => c.CourseType == "basic")
-                .OrderBy(c => c.DisplayOrder)
-                .ToListAsync();
+                .Where(c => c.CourseType == "basic");
+            if (!all)
+            {
+                currQ = currQ.Where(c => c.IsActiveFrontend && (c.StartActiveDatetime == null || now >= c.StartActiveDatetime) && (c.EndActiveDatetime == null || now <= c.EndActiveDatetime) && c.Status == "active");
+            }
+            var curriculums = await currQ.OrderBy(c => c.DisplayOrder).ToListAsync();
 
             var curriculumsByCourseId = curriculums.GroupBy(c => c.CourseId).ToDictionary(g => g.Key, g => g.ToList());
 
@@ -37,6 +60,10 @@ namespace backend.Controllers
                 b.Status,
                 b.DateId,
                 b.AgentType,
+                b.IsActiveBackend,
+                b.IsActiveFrontend,
+                b.StartActiveDatetime,
+                b.EndActiveDatetime,
                 Curriculums = curriculumsByCourseId.GetValueOrDefault(b.Id, new List<MstCourseCurriculum>())
             });
 
@@ -60,6 +87,10 @@ namespace backend.Controllers
             existing.AgentType = model.AgentType;
             existing.DateId = model.DateId;
             existing.Status = model.Status;
+            existing.IsActiveBackend = model.IsActiveBackend;
+            existing.IsActiveFrontend = model.IsActiveFrontend;
+            existing.StartActiveDatetime = model.StartActiveDatetime;
+            existing.EndActiveDatetime = model.EndActiveDatetime;
             
             await _context.SaveChangesAsync();
             return Ok(existing);
@@ -71,8 +102,8 @@ namespace backend.Controllers
             var existing = await _context.RenewBasics.FindAsync(id);
             if (existing == null) return NotFound();
 
-            // Soft delete by status, or hard delete? The schema has status active/inactive.
             existing.Status = "inactive";
+            existing.IsActiveFrontend = false;
             await _context.SaveChangesAsync();
             return Ok(new { message = "Deleted successfully" });
         }

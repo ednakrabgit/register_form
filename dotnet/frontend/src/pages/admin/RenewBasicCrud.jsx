@@ -55,7 +55,7 @@ export default function RenewBasicCrud() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/RenewBasic`);
+      const res = await fetch(`${API_BASE}/RenewBasic?all=true`);
       if (!res.ok) throw new Error('Failed to fetch renew basic');
       const json = await res.json();
       setData(json);
@@ -85,7 +85,11 @@ export default function RenewBasicCrud() {
       courseName: '',
       status: 'active',
       dateId: '',
-      agentType: 'agent'
+      agentType: 'agent',
+      isActiveBackend: true,
+      isActiveFrontend: true,
+      startActiveDatetime: '',
+      endActiveDatetime: ''
     });
     setShowModal(true);
   };
@@ -96,7 +100,11 @@ export default function RenewBasicCrud() {
       courseName: item.courseName || '',
       status: item.status || 'active',
       dateId: item.dateId || '',
-      agentType: item.agentType || 'agent'
+      agentType: item.agentType || 'agent',
+      isActiveBackend: item.isActiveBackend !== false,
+      isActiveFrontend: item.isActiveFrontend !== false,
+      startActiveDatetime: item.startActiveDatetime ? item.startActiveDatetime.slice(0, 16) : '',
+      endActiveDatetime: item.endActiveDatetime ? item.endActiveDatetime.slice(0, 16) : ''
     });
     setShowModal(true);
   };
@@ -112,7 +120,11 @@ export default function RenewBasicCrud() {
         courseName: formData.courseName,
         status: formData.status,
         dateId: formData.dateId ? parseInt(formData.dateId) : null,
-        agentType: formData.agentType
+        agentType: formData.agentType,
+        isActiveBackend: formData.isActiveBackend !== false,
+        isActiveFrontend: formData.isActiveFrontend !== false,
+        startActiveDatetime: formData.startActiveDatetime ? new Date(formData.startActiveDatetime).toISOString() : null,
+        endActiveDatetime: formData.endActiveDatetime ? new Date(formData.endActiveDatetime).toISOString() : null
       };
         
       const res = await fetch(url, {
@@ -345,7 +357,7 @@ export default function RenewBasicCrud() {
                   <th className="p-3 border-b min-w-[320px]">รหัสประกาศ / รหัสหลักสูตร / รหัสวิชา OIC (Normalized)</th>
                   <th className="p-3 border-b w-24">ประเภท</th>
                   <th className="p-3 border-b">วันที่อบรม</th>
-                  <th className="p-3 border-b w-20 text-center">สถานะ</th>
+                  <th className="p-3 border-b min-w-[160px] text-center">สถานะ (Backend / Frontend)</th>
                   <th className="p-3 border-b text-center w-36">จัดการ</th>
                 </tr>
               </thead>
@@ -420,7 +432,7 @@ export default function RenewBasicCrud() {
 
                           <div>
                             <button 
-                              onClick={() => openDetailsModal(item)}
+                              onClick={() => openDetailsModal(item)} 
                               className="inline-flex items-center text-xs text-blue-700 hover:text-blue-900 font-semibold hover:underline mt-1"
                             >
                               <i className="fas fa-tags mr-1"></i>
@@ -436,9 +448,24 @@ export default function RenewBasicCrud() {
                         {renewDates.find(d => d.id === item.dateId)?.courseDateDisplay || (item.dateId ? `ID: ${item.dateId}` : '-')}
                       </td>
                       <td className="p-3 text-center">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${item.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          {item.status ? item.status.toUpperCase() : 'UNKNOWN'}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex gap-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${item.isActiveBackend !== false ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'}`}>
+                              BE: {item.isActiveBackend !== false ? 'Active' : 'Off'}
+                            </span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${item.isActiveFrontend !== false && item.status !== 'inactive' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                              FE: {item.isActiveFrontend !== false && item.status !== 'inactive' ? 'Active' : 'Off'}
+                            </span>
+                          </div>
+                          {(item.startActiveDatetime || item.endActiveDatetime) && (
+                            <div className="text-[10px] text-gray-500 font-mono flex items-center gap-0.5" title="ช่วงเวลาเปิดรับสมัครบน Frontend">
+                              <i className="far fa-clock text-[9px]"></i>
+                              <span>
+                                {item.startActiveDatetime ? new Date(item.startActiveDatetime).toLocaleDateString('th-TH') : 'เลย'} - {item.endActiveDatetime ? new Date(item.endActiveDatetime).toLocaleDateString('th-TH') : 'ไม่จำกัด'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3 text-center">
                         <button 
@@ -460,7 +487,7 @@ export default function RenewBasicCrud() {
                 })}
                 {data.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
+                    <td colSpan={7} className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
                   </tr>
                 )}
               </tbody>
@@ -472,7 +499,7 @@ export default function RenewBasicCrud() {
       {/* Main Renew Basic Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
               {editItem ? 'แก้ไขหลักสูตรพื้นฐาน' : 'เพิ่มหลักสูตรพื้นฐาน'}
             </h3>
@@ -519,8 +546,8 @@ export default function RenewBasicCrud() {
                 </select>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">สถานะทั่วไป</label>
                 <select 
                   value={formData.status} 
                   onChange={e => setFormData({...formData, status: e.target.value})} 
@@ -529,6 +556,69 @@ export default function RenewBasicCrud() {
                   <option value="active">Active (เปิดใช้งาน)</option>
                   <option value="inactive">Inactive (ปิดใช้งาน)</option>
                 </select>
+              </div>
+
+              {/* Dual Active Flags */}
+              <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 mb-4 space-y-3">
+                <div className="font-semibold text-xs text-gray-700 uppercase tracking-wider">
+                  <i className="fas fa-toggle-on mr-1 text-primary"></i> การควบคุมการมองเห็น (Visibility Flags)
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-blue-50/50">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActiveBackend !== false} 
+                      onChange={e => setFormData({...formData, isActiveBackend: e.target.checked})}
+                      className="rounded text-primary focus:ring-primary h-4 w-4"
+                    />
+                    <div className="text-xs">
+                      <div className="font-semibold text-gray-800">Backend / Admin</div>
+                      <div className="text-gray-500 text-[10px]">เปิดใช้ในระบบหลังบ้าน</div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-emerald-50/50">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActiveFrontend !== false} 
+                      onChange={e => setFormData({...formData, isActiveFrontend: e.target.checked})}
+                      className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                    />
+                    <div className="text-xs">
+                      <div className="font-semibold text-gray-800">Frontend / หน้าสมัคร</div>
+                      <div className="text-gray-500 text-[10px]">แสดงให้ผู้สมัครเห็น</div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Frontend Active DateTime Range */}
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="text-xs font-medium text-gray-700 mb-1.5">
+                    <i className="far fa-calendar-alt mr-1 text-amber-600"></i> ช่วงเวลาเปิดใช้งานบน Frontend (หน้าสมัคร):
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] text-gray-500 mb-0.5">เวลาเริ่มต้น (Start)</label>
+                      <input 
+                        type="datetime-local" 
+                        value={formData.startActiveDatetime || ''} 
+                        onChange={e => setFormData({...formData, startActiveDatetime: e.target.value})}
+                        className="w-full border rounded p-1.5 text-xs bg-white focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-gray-500 mb-0.5">เวลาสิ้นสุด (End)</label>
+                      <input 
+                        type="datetime-local" 
+                        value={formData.endActiveDatetime || ''} 
+                        onChange={e => setFormData({...formData, endActiveDatetime: e.target.value})}
+                        className="w-full border rounded p-1.5 text-xs bg-white focus:ring-1 focus:ring-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1 block">* ปล่อยว่างหากต้องการเปิดใช้งานตลอดเวลา</span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 border-t pt-4">

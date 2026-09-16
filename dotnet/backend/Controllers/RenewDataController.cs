@@ -16,12 +16,32 @@ namespace backend.Controllers
             _context = context;
         }
 
+        private async Task<int> GetAdvanceExpiryDaysAsync()
+        {
+            var config = await _context.SysConfigs.FirstOrDefaultAsync(c => c.Key == "RENEW_COURSE_EXPIRY_DAYS_ADVANCE");
+            if (config != null && int.TryParse(config.Value, out int days))
+            {
+                return days;
+            }
+            return 30;
+        }
+
         // --- Renew Dates ---
         [HttpGet("dates")]
         public async Task<IActionResult> GetRenewDates([FromQuery] bool all = false)
         {
             var query = _context.RenewDates.AsQueryable();
-            if (!all) query = query.Where(d => d.Status == "active");
+            if (!all)
+            {
+                var now = DateTime.Now;
+                var advanceDays = await GetAdvanceExpiryDaysAsync();
+                var cutoffDate = DateTime.Today.AddDays(advanceDays);
+                query = query.Where(d => d.IsActiveFrontend 
+                    && (d.StartActiveDatetime == null || now >= d.StartActiveDatetime) 
+                    && (d.EndActiveDatetime == null || now <= d.EndActiveDatetime) 
+                    && d.Status == "active"
+                    && d.CourseDate >= cutoffDate);
+            }
             return Ok(await query.OrderBy(d => d.DisplayOrder).ToListAsync());
         }
 
@@ -43,6 +63,10 @@ namespace backend.Controllers
             existing.DisplayOrder = dto.DisplayOrder;
             existing.CourseDateDisplay = dto.CourseDateDisplay;
             existing.CourseDate = dto.CourseDate;
+            existing.IsActiveBackend = dto.IsActiveBackend;
+            existing.IsActiveFrontend = dto.IsActiveFrontend;
+            existing.StartActiveDatetime = dto.StartActiveDatetime;
+            existing.EndActiveDatetime = dto.EndActiveDatetime;
             
             await _context.SaveChangesAsync();
             return Ok(new { message = "Updated successfully" });
@@ -54,6 +78,7 @@ namespace backend.Controllers
             var existing = await _context.RenewDates.FindAsync(id);
             if (existing != null) {
                 existing.Status = "inactive";
+                existing.IsActiveFrontend = false;
                 await _context.SaveChangesAsync();
             }
             return Ok(new { message = "Deleted successfully" });
@@ -63,6 +88,10 @@ namespace backend.Controllers
         [HttpGet("mappings")]
         public async Task<IActionResult> GetRenewMappings([FromQuery] bool all = false)
         {
+            var now = DateTime.Now;
+            var advanceDays = await GetAdvanceExpiryDaysAsync();
+            var cutoffDate = DateTime.Today.AddDays(advanceDays);
+
             var query = _context.RenewOthers
                 .Join(_context.RenewPillars, o => o.PillarId, p => p.Id, (o, p) => new { o, p })
                 .Join(_context.RenewDates, x => x.o.DateId, d => d.Id, (x, d) => new { x.o, x.p, d })
@@ -72,13 +101,25 @@ namespace backend.Controllers
                     PillarName = y.p.Name,
                     DateId = y.o.DateId,
                     DateDisplay = y.d.CourseDateDisplay,
+                    CourseDate = y.d.CourseDate,
                     SubjectId = y.o.SubjectId,
                     SubjectName = c.Name,
                     Status = y.o.Status,
+                    IsActiveBackend = y.o.IsActiveBackend,
+                    IsActiveFrontend = y.o.IsActiveFrontend,
+                    StartActiveDatetime = y.o.StartActiveDatetime,
+                    EndActiveDatetime = y.o.EndActiveDatetime,
                     DisplayOrder = y.o.DisplayOrder
                 });
             
-            if (!all) query = query.Where(m => m.Status == "active");
+            if (!all)
+            {
+                query = query.Where(m => m.IsActiveFrontend 
+                    && (m.StartActiveDatetime == null || now >= m.StartActiveDatetime) 
+                    && (m.EndActiveDatetime == null || now <= m.EndActiveDatetime) 
+                    && m.Status == "active"
+                    && m.CourseDate >= cutoffDate);
+            }
             
             return Ok(await query.OrderBy(m => m.DisplayOrder).ToListAsync());
         }
@@ -102,6 +143,10 @@ namespace backend.Controllers
             existing.SubjectId = dto.SubjectId;
             existing.Status = dto.Status;
             existing.DisplayOrder = dto.DisplayOrder;
+            existing.IsActiveBackend = dto.IsActiveBackend;
+            existing.IsActiveFrontend = dto.IsActiveFrontend;
+            existing.StartActiveDatetime = dto.StartActiveDatetime;
+            existing.EndActiveDatetime = dto.EndActiveDatetime;
             
             await _context.SaveChangesAsync();
             return Ok(new { message = "Updated successfully" });
@@ -113,6 +158,7 @@ namespace backend.Controllers
             var existing = await _context.RenewOthers.FindAsync(id);
             if (existing != null) {
                 existing.Status = "inactive";
+                existing.IsActiveFrontend = false;
                 await _context.SaveChangesAsync();
             }
             return Ok(new { message = "Deleted successfully" });

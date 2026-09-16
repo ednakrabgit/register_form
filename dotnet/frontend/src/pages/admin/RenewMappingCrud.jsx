@@ -15,7 +15,15 @@ export default function RenewMappingCrud() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [displayOrder, setDisplayOrder] = useState(1);
+  const [isActiveBackend, setIsActiveBackend] = useState(true);
+  const [isActiveFrontend, setIsActiveFrontend] = useState(true);
+  const [startActiveDatetime, setStartActiveDatetime] = useState('');
+  const [endActiveDatetime, setEndActiveDatetime] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -97,7 +105,11 @@ export default function RenewMappingCrud() {
         dateId: selectedDate.id,
         subjectId: selectedSubject.id,
         status: 'active',
-        displayOrder: parseInt(displayOrder) || 1
+        displayOrder: parseInt(displayOrder) || 1,
+        isActiveBackend: isActiveBackend,
+        isActiveFrontend: isActiveFrontend,
+        startActiveDatetime: startActiveDatetime || null,
+        endActiveDatetime: endActiveDatetime || null
       };
 
       const res = await fetch(`${API_BASE_URL}/RenewData/mappings`, {
@@ -112,12 +124,39 @@ export default function RenewMappingCrud() {
       setSelectedPillar(null);
       setSelectedDate(null);
       setSelectedSubject(null);
+      setStartActiveDatetime('');
+      setEndActiveDatetime('');
+      setIsActiveBackend(true);
+      setIsActiveFrontend(true);
       
       await fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editItem) return;
+    try {
+      const payload = {
+        ...editItem,
+        startActiveDatetime: editItem.startActiveDatetime || null,
+        endActiveDatetime: editItem.endActiveDatetime || null
+      };
+
+      const res = await fetch(`${API_BASE_URL}/RenewData/mappings/${editItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Update failed');
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการแก้ไขข้อมูล: ' + err.message);
     }
   };
 
@@ -130,6 +169,17 @@ export default function RenewMappingCrud() {
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
+  };
+
+  const openEdit = (item) => {
+    setEditItem({
+      ...item,
+      isActiveBackend: item.isActiveBackend !== false,
+      isActiveFrontend: item.isActiveFrontend !== false,
+      startActiveDatetime: item.startActiveDatetime ? item.startActiveDatetime.slice(0, 16) : '',
+      endActiveDatetime: item.endActiveDatetime ? item.endActiveDatetime.slice(0, 16) : ''
+    });
+    setShowEditModal(true);
   };
 
   // Draggable pill component
@@ -257,28 +307,76 @@ export default function RenewMappingCrud() {
                 <DropSlot type="subject" selectedItem={selectedSubject} placeholder="ชื่อวิชา" colorBorder="border-purple-300" />
               </div>
 
-              {/* Preview & Save */}
-              <div className="bg-gray-50 p-4 rounded-lg border flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex-1">
-                  <span className="text-sm text-gray-500 block mb-1">ตัวอย่างข้อความที่จะแสดงผล:</span>
-                  <div className="text-lg font-medium text-gray-800 min-h-[1.75rem]">
-                    {selectedPillar || selectedDate || selectedSubject ? (
-                      `[${selectedPillar?.name || '...'}] [${selectedDate?.courseDateDisplay || '...'}] : ${selectedSubject?.name || '...'}`
-                    ) : (
-                      <span className="text-gray-400 italic">กรุณาลากคำมาวาง</span>
-                    )}
+              {/* Preview & Flags */}
+              <div className="bg-gray-50 p-4 rounded-lg border flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <span className="text-sm text-gray-500 block mb-1">ตัวอย่างข้อความที่จะแสดงผล:</span>
+                    <div className="text-lg font-medium text-gray-800 min-h-[1.75rem]">
+                      {selectedPillar || selectedDate || selectedSubject ? (
+                        `[${selectedPillar?.name || '...'}] [${selectedDate?.courseDateDisplay || '...'}] : ${selectedSubject?.name || '...'}`
+                      ) : (
+                        <span className="text-gray-400 italic">กรุณาลากคำมาวาง</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 block">ลำดับแสดงผล</label>
+                      <input type="number" value={displayOrder} onChange={e => setDisplayOrder(e.target.value)} className="w-20 border rounded p-2 text-center" min="1" />
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 block">ลำดับแสดงผล</label>
-                    <input type="number" value={displayOrder} onChange={e => setDisplayOrder(e.target.value)} className="w-20 border rounded p-2 text-center" min="1" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3">
+                  <div className="flex flex-col gap-2">
+                    <label className="inline-flex items-center cursor-pointer text-sm">
+                      <input 
+                        type="checkbox" 
+                        checked={isActiveBackend} 
+                        onChange={e => setIsActiveBackend(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 mr-2 h-4 w-4"
+                      />
+                      <span>Active Backend</span>
+                    </label>
+                    <label className="inline-flex items-center cursor-pointer text-sm">
+                      <input 
+                        type="checkbox" 
+                        checked={isActiveFrontend} 
+                        onChange={e => setIsActiveFrontend(e.target.checked)}
+                        className="rounded border-gray-300 text-emerald-600 mr-2 h-4 w-4"
+                      />
+                      <span>Active Frontend</span>
+                    </label>
                   </div>
+                  <div className="flex flex-col gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500">เริ่มแสดงที่หน้าสมัคร</label>
+                      <input 
+                        type="datetime-local" 
+                        value={startActiveDatetime} 
+                        onChange={e => setStartActiveDatetime(e.target.value)} 
+                        className="border rounded p-1 text-xs w-full bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500">สิ้นสุดแสดงที่หน้าสมัคร</label>
+                      <input 
+                        type="datetime-local" 
+                        value={endActiveDatetime} 
+                        onChange={e => setEndActiveDatetime(e.target.value)} 
+                        className="border rounded p-1 text-xs w-full bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
                   <button 
                     onClick={handleSave} 
                     disabled={!selectedPillar || !selectedDate || !selectedSubject || isSaving}
-                    className="px-6 py-2 bg-yellow-600 text-white font-bold rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                    className="px-6 py-2 bg-yellow-600 text-white font-bold rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSaving ? 'กำลังบันทึก...' : 'บันทึกวิชานี้'}
                   </button>
@@ -295,8 +393,10 @@ export default function RenewMappingCrud() {
                     <tr className="bg-gray-100 text-gray-600">
                       <th className="p-3 border-b text-sm">ข้อความที่แสดงผล</th>
                       <th className="p-3 border-b text-sm w-16 text-center">ลำดับ</th>
-                      <th className="p-3 border-b text-sm w-20 text-center">สถานะ</th>
-                      <th className="p-3 border-b text-sm w-16 text-center">จัดการ</th>
+                      <th className="p-3 border-b text-sm text-center">Backend</th>
+                      <th className="p-3 border-b text-sm text-center">Frontend</th>
+                      <th className="p-3 border-b text-sm">ช่วงเวลา (Frontend)</th>
+                      <th className="p-3 border-b text-sm w-20 text-center">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -309,12 +409,30 @@ export default function RenewMappingCrud() {
                         </td>
                         <td className="p-3 text-center">{m.displayOrder}</td>
                         <td className="p-3 text-center">
-                          <span className={`px-2 py-1 rounded text-xs ${m.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {m.status.toUpperCase()}
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${m.isActiveBackend !== false ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'}`}>
+                            {m.isActiveBackend !== false ? 'Active' : 'Inactive'}
                           </span>
                         </td>
                         <td className="p-3 text-center">
-                          <button onClick={() => handleDelete(m.id)} className="text-danger hover:text-red-700" title="ลบ">
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${m.isActiveFrontend !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                            {m.isActiveFrontend !== false ? 'Active' : 'Hidden'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-xs text-gray-600">
+                          {m.startActiveDatetime || m.endActiveDatetime ? (
+                            <div className="flex flex-col gap-0.5">
+                              {m.startActiveDatetime && <span><span className="text-gray-400">เริ่ม:</span> {new Date(m.startActiveDatetime).toLocaleString('th-TH')}</span>}
+                              {m.endActiveDatetime && <span><span className="text-gray-400">สิ้นสุด:</span> {new Date(m.endActiveDatetime).toLocaleString('th-TH')}</span>}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic">ไม่จำกัดเวลา</span>
+                          )}
+                        </td>
+                        <td className="p-3 text-center">
+                          <button onClick={() => openEdit(m)} className="text-warning hover:text-yellow-700 mx-1" title="แก้ไข">
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button onClick={() => handleDelete(m.id)} className="text-danger hover:text-red-700 mx-1" title="ลบ">
                             <i className="fas fa-trash"></i>
                           </button>
                         </td>
@@ -322,7 +440,7 @@ export default function RenewMappingCrud() {
                     ))}
                     {mappings.length === 0 && (
                       <tr>
-                        <td colSpan="4" className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
+                        <td colSpan="6" className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
                       </tr>
                     )}
                   </tbody>
@@ -330,6 +448,89 @@ export default function RenewMappingCrud() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4 text-warning">แก้ไขวิชาต่ออายุ</h3>
+            <form onSubmit={handleUpdate}>
+              <div className="mb-4 p-3 bg-gray-50 rounded border text-sm text-gray-700">
+                <div><strong>Pillar:</strong> {editItem.pillarName}</div>
+                <div><strong>Date:</strong> {editItem.dateDisplay}</div>
+                <div><strong>Subject:</strong> {editItem.subjectName}</div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</label>
+                <input 
+                  type="number" 
+                  required 
+                  value={editItem.displayOrder || 0} 
+                  onChange={e => setEditItem({...editItem, displayOrder: parseInt(e.target.value)})} 
+                  className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" 
+                />
+              </div>
+
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="font-semibold text-sm text-gray-700 mb-2">การควบคุมการมองเห็น (Visibility Control)</div>
+                <div className="flex flex-col gap-2">
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={editItem.isActiveBackend !== false} 
+                      onChange={e => setEditItem({...editItem, isActiveBackend: e.target.checked})}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 h-4 w-4"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">เปิดใช้งานในระบบ Admin/Backend</span>
+                  </label>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={editItem.isActiveFrontend !== false} 
+                      onChange={e => setEditItem({...editItem, isActiveFrontend: e.target.checked})}
+                      className="rounded border-gray-300 text-emerald-600 shadow-sm focus:ring-emerald-500 h-4 w-4"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">เปิดให้ผู้สมัครมองเห็นที่หน้าสมัคร (Frontend Active)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mb-6 p-3 bg-emerald-50/50 rounded-lg border border-emerald-200">
+                <div className="font-semibold text-sm text-emerald-900 mb-2">
+                  <i className="fas fa-calendar-alt mr-1"></i> ช่วงเวลากำหนดเปิดให้เห็นในหน้าสมัคร (Frontend)
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</label>
+                    <input 
+                      type="datetime-local" 
+                      value={editItem.startActiveDatetime || ''} 
+                      onChange={e => setEditItem({...editItem, startActiveDatetime: e.target.value})}
+                      className="w-full border rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</label>
+                    <input 
+                      type="datetime-local" 
+                      value={editItem.endActiveDatetime || ''} 
+                      onChange={e => setEditItem({...editItem, endActiveDatetime: e.target.value})}
+                      className="w-full border rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-2">* หากไม่ระบุ จะเปิดใช้งานตลอดเวลา (ตาม Flag ด้านบน)</p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 border rounded hover:bg-gray-100">ยกเลิก</button>
+                <button type="submit" className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">บันทึก</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

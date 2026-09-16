@@ -18,6 +18,18 @@ namespace backend.Models
         [Column("status")]
         [MaxLength(20)]
         public string Status { get; set; } = "active"; // active, inactive
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
         
         [Column("display_order")]
         public int DisplayOrder { get; set; } = 0;
@@ -38,6 +50,18 @@ namespace backend.Models
         
         [Column("province_english")]
         public string? ProvinceEng { get; set; }
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
     }
 
     [Table("mst_districts")]
@@ -58,6 +82,18 @@ namespace backend.Models
         
         [Column("province_id")]
         public int ProvinceId { get; set; }
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
     }
 
     [Table("mst_sub_districts")]
@@ -81,6 +117,18 @@ namespace backend.Models
         
         [Column("postal_code")]
         public string? Zipcode { get; set; }
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
     }
 
     [Table("mst_blood")]
@@ -167,6 +215,18 @@ namespace backend.Models
         [MaxLength(20)]
         public string Status { get; set; } = "active";
 
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
+
         public ICollection<MstCourseSubDetail> SubDetails { get; set; } = new List<MstCourseSubDetail>();
     }
 
@@ -202,6 +262,18 @@ namespace backend.Models
         [Column("status")]
         [MaxLength(20)]
         public string Status { get; set; } = "active";
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
     }
 
     [Table("mst_renew_dates")]
@@ -221,6 +293,18 @@ namespace backend.Models
         [MaxLength(20)]
         public string Status { get; set; } = "active";
         
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
+
         [Column("display_order")]
         public int DisplayOrder { get; set; } = 0;
     }
@@ -234,6 +318,18 @@ namespace backend.Models
         
         [Column("name")]
         public string Name { get; set; } = null!;
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
     }
 
     [Table("mst_agent_branches")]
@@ -248,6 +344,18 @@ namespace backend.Models
         
         [Column("region_id")]
         public int RegionId { get; set; }
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
     }
 
     [Table("mst_renew_basic")]
@@ -263,6 +371,18 @@ namespace backend.Models
         [Column("status")]
         [MaxLength(20)]
         public string Status { get; set; } = "active";
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
 
         [Column("date_id")]
         public int? DateId { get; set; }
@@ -295,6 +415,18 @@ namespace backend.Models
         [Column("status")]
         [MaxLength(20)]
         public string Status { get; set; } = "active";
+
+        [Column("is_active_backend")]
+        public bool IsActiveBackend { get; set; } = true;
+
+        [Column("is_active_frontend")]
+        public bool IsActiveFrontend { get; set; } = true;
+
+        [Column("start_active_datetime")]
+        public DateTime? StartActiveDatetime { get; set; }
+
+        [Column("end_active_datetime")]
+        public DateTime? EndActiveDatetime { get; set; }
 
         [Column("display_order")]
         public int DisplayOrder { get; set; } = 0;

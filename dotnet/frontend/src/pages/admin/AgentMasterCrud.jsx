@@ -27,7 +27,7 @@ export default function AgentMasterCrud({ type: propType }) {
     try {
       setLoading(true);
       const endpoint = type === 'agent-regions' ? 'regions' : 'branches';
-      const res = await fetch(`${API_BASE}/AgentMaster/${endpoint}`);
+      const res = await fetch(`${API_BASE}/AgentMaster/${endpoint}?all=true`);
       if (!res.ok) throw new Error('Failed to fetch data');
       const json = await res.json();
       setData(json);
@@ -41,7 +41,7 @@ export default function AgentMasterCrud({ type: propType }) {
 
   const fetchRegions = async () => {
     try {
-      const res = await fetch(`${API_BASE}/AgentMaster/regions`);
+      const res = await fetch(`${API_BASE}/AgentMaster/regions?all=true`);
       if (res.ok) {
         setRegions(await res.json());
       }
@@ -58,13 +58,32 @@ export default function AgentMasterCrud({ type: propType }) {
 
   const openAddModal = () => {
     setEditItem(null);
-    setFormData(type === 'agent-branches' ? { name: '', regionId: '' } : { name: '' });
+    setFormData(type === 'agent-branches' ? { 
+      name: '', 
+      regionId: '',
+      isActiveBackend: true,
+      isActiveFrontend: true,
+      startActiveDatetime: '',
+      endActiveDatetime: ''
+    } : { 
+      name: '',
+      isActiveBackend: true,
+      isActiveFrontend: true,
+      startActiveDatetime: '',
+      endActiveDatetime: ''
+    });
     setShowModal(true);
   };
 
   const openEditModal = (item) => {
     setEditItem(item);
-    setFormData({ ...item });
+    setFormData({ 
+      ...item,
+      isActiveBackend: item.isActiveBackend !== false,
+      isActiveFrontend: item.isActiveFrontend !== false,
+      startActiveDatetime: item.startActiveDatetime ? item.startActiveDatetime.slice(0, 16) : '',
+      endActiveDatetime: item.endActiveDatetime ? item.endActiveDatetime.slice(0, 16) : ''
+    });
     setShowModal(true);
   };
 
@@ -76,10 +95,16 @@ export default function AgentMasterCrud({ type: propType }) {
         ? `${API_BASE}/AgentMaster/${endpoint}/${editItem.id}`
         : `${API_BASE}/AgentMaster/${endpoint}`;
         
+      const payload = {
+        ...formData,
+        startActiveDatetime: formData.startActiveDatetime || null,
+        endActiveDatetime: formData.endActiveDatetime || null
+      };
+
       const res = await fetch(url, {
         method: editItem ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       
       if (!res.ok) throw new Error('Failed to save');
@@ -113,8 +138,8 @@ export default function AgentMasterCrud({ type: propType }) {
           <h2 className="text-3xl font-bold text-primary mb-2">{getTypeTitle()}</h2>
           <p className="text-gray-500 text-sm">เพิ่ม ลบ หรือแก้ไขข้อมูล</p>
         </div>
-        <Link to="/admin" className="px-4 py-2 border border-gray-400 text-gray-600 rounded hover:bg-gray-100 transition-colors">
-          <i className="fas fa-arrow-left mr-2"></i> กลับหน้าหลัก
+        <Link to="/admin/master-data" className="px-4 py-2 border border-gray-400 text-gray-600 rounded hover:bg-gray-100 transition-colors">
+          <i className="fas fa-arrow-left mr-2"></i> กลับหน้ารวม Master Data
         </Link>
       </div>
 
@@ -134,9 +159,12 @@ export default function AgentMasterCrud({ type: propType }) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-100 text-gray-600">
-                  <th className="p-3 border-b w-24 text-center">ID</th>
+                  <th className="p-3 border-b w-20 text-center">ID</th>
                   <th className="p-3 border-b">ชื่อ</th>
                   {type === 'agent-branches' && <th className="p-3 border-b">ภูมิภาค</th>}
+                  <th className="p-3 border-b text-center w-24">Backend</th>
+                  <th className="p-3 border-b text-center w-24">Frontend</th>
+                  <th className="p-3 border-b">ช่วงเวลาเปิดใช้งาน (Frontend)</th>
                   <th className="p-3 border-b text-center w-24">จัดการ</th>
                 </tr>
               </thead>
@@ -151,10 +179,30 @@ export default function AgentMasterCrud({ type: propType }) {
                       </td>
                     )}
                     <td className="p-3 text-center">
-                      <button onClick={() => openEditModal(item)} className="text-blue-600 hover:text-blue-800 mx-2" title="แก้ไข">
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${item.isActiveBackend !== false ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'}`}>
+                        {item.isActiveBackend !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${item.isActiveFrontend !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                        {item.isActiveFrontend !== false ? 'Active' : 'Hidden'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-xs text-gray-600">
+                      {item.startActiveDatetime || item.endActiveDatetime ? (
+                        <div className="flex flex-col gap-0.5">
+                          {item.startActiveDatetime && <span><span className="text-gray-400">เริ่ม:</span> {new Date(item.startActiveDatetime).toLocaleString('th-TH')}</span>}
+                          {item.endActiveDatetime && <span><span className="text-gray-400">สิ้นสุด:</span> {new Date(item.endActiveDatetime).toLocaleString('th-TH')}</span>}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic">ไม่จำกัดเวลา</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-center">
+                      <button onClick={() => openEditModal(item)} className="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข">
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800 mx-2" title="ลบ">
+                      <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800 mx-1" title="ลบ">
                         <i className="fas fa-trash"></i>
                       </button>
                     </td>
@@ -162,7 +210,7 @@ export default function AgentMasterCrud({ type: propType }) {
                 ))}
                 {data.length === 0 && (
                   <tr>
-                    <td colSpan={type === 'agent-branches' ? 4 : 3} className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
+                    <td colSpan={type === 'agent-branches' ? 7 : 6} className="text-center p-8 text-gray-500">ไม่มีข้อมูล</td>
                   </tr>
                 )}
               </tbody>
@@ -173,7 +221,7 @@ export default function AgentMasterCrud({ type: propType }) {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-primary">{editItem ? 'แก้ไขข้อมูล' : 'เพิ่มข้อมูล'}</h3>
             <form onSubmit={handleSave}>
               <div className="mb-4">
@@ -182,7 +230,7 @@ export default function AgentMasterCrud({ type: propType }) {
               </div>
 
               {type === 'agent-branches' && (
-                <div className="mb-6">
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">ภูมิภาค</label>
                   <select required value={formData.regionId || ''} onChange={e => setFormData({...formData, regionId: parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none">
                     <option value="" disabled>เลือกภูมิภาค...</option>
@@ -192,6 +240,59 @@ export default function AgentMasterCrud({ type: propType }) {
                   </select>
                 </div>
               )}
+
+              {/* Dual Active Flags */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="font-semibold text-sm text-gray-700 mb-2">การควบคุมการมองเห็น (Visibility Control)</div>
+                <div className="flex flex-col gap-2">
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActiveBackend !== false} 
+                      onChange={e => setFormData({...formData, isActiveBackend: e.target.checked})}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 h-4 w-4"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">เปิดใช้งานในระบบ Admin/Backend</span>
+                  </label>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActiveFrontend !== false} 
+                      onChange={e => setFormData({...formData, isActiveFrontend: e.target.checked})}
+                      className="rounded border-gray-300 text-emerald-600 shadow-sm focus:ring-emerald-500 h-4 w-4"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">เปิดให้ผู้สมัครมองเห็นที่หน้าสมัคร (Frontend Active)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Active Datetime Range for Frontend */}
+              <div className="mb-6 p-3 bg-emerald-50/50 rounded-lg border border-emerald-200">
+                <div className="font-semibold text-sm text-emerald-900 mb-2">
+                  <i className="fas fa-calendar-alt mr-1"></i> ช่วงเวลากำหนดเปิดให้เห็นในหน้าสมัคร (Frontend)
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</label>
+                    <input 
+                      type="datetime-local" 
+                      value={formData.startActiveDatetime || ''} 
+                      onChange={e => setFormData({...formData, startActiveDatetime: e.target.value})}
+                      className="w-full border rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</label>
+                    <input 
+                      type="datetime-local" 
+                      value={formData.endActiveDatetime || ''} 
+                      onChange={e => setFormData({...formData, endActiveDatetime: e.target.value})}
+                      className="w-full border rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-2">* หากไม่ระบุ จะเปิดใช้งานตลอดเวลา (ตาม Flag ด้านบน)</p>
+              </div>
 
               <div className="flex justify-end gap-2 mt-6">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded hover:bg-gray-100">ยกเลิก</button>
