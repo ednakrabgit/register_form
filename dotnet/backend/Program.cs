@@ -206,12 +206,13 @@ catch (Exception ex)
 
 app.UseSerilogRequestLogging();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments for API documentation
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Viriyah Registration API v1");
+    c.RoutePrefix = "swagger";
+});
 
 // app.UseHttpsRedirection();
 
@@ -226,6 +227,9 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseAuthorization();
+
+app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", time = DateTime.UtcNow }));
 
 app.MapControllers();
 
