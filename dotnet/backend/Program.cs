@@ -80,187 +80,128 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Auto-migrate and seed database
-using (var scope = app.Services.CreateScope())
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // In a legacy DB scenario, EnsureCreated ignores everything if the DB exists.
-    // Instead, we get the create script and run it command by command, ignoring "Table already exists" errors.
-    // Ensure DB exists (without running schema scripts which contain GO)
-    context.Database.EnsureCreated();
-
-    // Ensure new columns exist
-    string[] schemaMigrations = new[]
+    using (var scope = app.Services.CreateScope())
     {
-        "IF OBJECT_ID('personregistration', 'U') IS NOT NULL AND COL_LENGTH('personregistration', 'DeductionPrivilege') IS NULL BEGIN ALTER TABLE personregistration ADD DeductionPrivilege NVARCHAR(MAX) NULL; END",
-        "IF OBJECT_ID('personregistration', 'U') IS NOT NULL AND COL_LENGTH('personregistration', 'MasterDegreeStatus') IS NULL BEGIN ALTER TABLE personregistration ADD MasterDegreeStatus NVARCHAR(MAX) NULL; END",
-        "IF OBJECT_ID('registrations', 'U') IS NOT NULL AND COL_LENGTH('registrations', 'master_degree_status') IS NULL BEGIN ALTER TABLE registrations ADD master_degree_status NVARCHAR(MAX) NULL; END",
-        "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'default_pillar_id') IS NULL BEGIN ALTER TABLE mst_renew_course ADD default_pillar_id INT NULL; END",
-        "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'course_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN course_code; END",
-        "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'announcement_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN announcement_code; END",
-        "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'course_short_name') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN course_short_name; END",
-        "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'curriculum_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN curriculum_code; END",
-        "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'oic_course_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN oic_course_code; END",
-        "IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_basic', 'course_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_basic DROP COLUMN course_code; END",
-        "IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_basic', 'announcement_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_basic DROP COLUMN announcement_code; END",
-        "IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_basic', 'course_short_name') IS NOT NULL BEGIN ALTER TABLE mst_renew_basic DROP COLUMN course_short_name; END",
-        "IF OBJECT_ID('mst_course_curriculum', 'U') IS NULL BEGIN CREATE TABLE mst_course_curriculum (id INT IDENTITY(1,1) PRIMARY KEY, course_type NVARCHAR(20) NOT NULL, course_id INT NOT NULL, agent_type NVARCHAR(20) NULL, training_course_code NVARCHAR(100) NULL, announcement_code NVARCHAR(100) NULL, curriculum_code NVARCHAR(100) NULL, course_short_name NVARCHAR(100) NULL, display_order INT DEFAULT 0, status NVARCHAR(20) DEFAULT 'active'); END",
-        "IF OBJECT_ID('trn_training_result', 'U') IS NULL BEGIN CREATE TABLE trn_training_result (id INT IDENTITY(1,1) PRIMARY KEY, nation_id NVARCHAR(13) NULL, person_registration_id INT NULL, original_license_no NVARCHAR(50) NULL, training_course_code NVARCHAR(100) NULL, training_course_name NVARCHAR(500) NULL, training_date_display NVARCHAR(100) NULL, training_status NVARCHAR(50) NULL, deduction_privilege NVARCHAR(10) NULL, deduction_doc_status NVARCHAR(50) NULL, progress_percent NVARCHAR(20) NULL, score_percent NVARCHAR(20) NULL, enrollment_url NVARCHAR(1000) NULL, verified_title_th NVARCHAR(100) NULL, verified_first_name_th NVARCHAR(200) NULL, verified_last_name_th NVARCHAR(200) NULL, verified_license_no NVARCHAR(50) NULL, verified_license_issue_date NVARCHAR(50) NULL, verified_license_expiry_date NVARCHAR(50) NULL, verified_applicant_type NVARCHAR(100) NULL, verified_license_type NVARCHAR(200) NULL, verified_insurance_type NVARCHAR(200) NULL, stamp_date DATETIME DEFAULT GETDATE(), import_file_name NVARCHAR(500) NULL, is_data_mismatch NVARCHAR(10) DEFAULT 'N'); END",
-        "DECLARE @tables TABLE (name VARCHAR(100)); INSERT INTO @tables VALUES ('mst_titles'), ('mst_gender'), ('mst_blood'), ('mst_religion'), ('mst_territories'), ('mst_expertises'), ('mst_companies'), ('mst_renew_pillars'), ('mst_renew_basic'), ('mst_renew_other'), ('mst_renew_dates'), ('mst_renew_course'), ('mst_provinces'), ('mst_districts'), ('mst_sub_districts'), ('mst_agent_regions'), ('mst_agent_branches'); DECLARE @tbl VARCHAR(100); DECLARE tbl_cursor CURSOR FOR SELECT name FROM @tables; OPEN tbl_cursor; FETCH NEXT FROM tbl_cursor INTO @tbl; WHILE @@FETCH_STATUS = 0 BEGIN IF OBJECT_ID(@tbl, 'U') IS NOT NULL BEGIN IF COL_LENGTH(@tbl, 'is_active_backend') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD is_active_backend BIT NOT NULL DEFAULT 1;'); IF COL_LENGTH(@tbl, 'is_active_frontend') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD is_active_frontend BIT NOT NULL DEFAULT 1;'); IF COL_LENGTH(@tbl, 'start_active_datetime') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD start_active_datetime DATETIME NULL;'); IF COL_LENGTH(@tbl, 'end_active_datetime') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD end_active_datetime DATETIME NULL;'); END; FETCH NEXT FROM tbl_cursor INTO @tbl; END; CLOSE tbl_cursor; DEALLOCATE tbl_cursor;"
-    };
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        
+        // In a legacy DB scenario, EnsureCreated ignores everything if the DB exists.
+        // Instead, we get the create script and run it command by command, ignoring "Table already exists" errors.
+        // Ensure DB exists (without running schema scripts which contain GO)
+        context.Database.EnsureCreated();
 
-    foreach (var sql in schemaMigrations)
-    {
+        // Ensure new columns exist
+        string[] schemaMigrations = new[]
+        {
+            "IF OBJECT_ID('personregistration', 'U') IS NOT NULL AND COL_LENGTH('personregistration', 'DeductionPrivilege') IS NULL BEGIN ALTER TABLE personregistration ADD DeductionPrivilege NVARCHAR(MAX) NULL; END",
+            "IF OBJECT_ID('personregistration', 'U') IS NOT NULL AND COL_LENGTH('personregistration', 'MasterDegreeStatus') IS NULL BEGIN ALTER TABLE personregistration ADD MasterDegreeStatus NVARCHAR(MAX) NULL; END",
+            "IF OBJECT_ID('registrations', 'U') IS NOT NULL AND COL_LENGTH('registrations', 'master_degree_status') IS NULL BEGIN ALTER TABLE registrations ADD master_degree_status NVARCHAR(MAX) NULL; END",
+            "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'default_pillar_id') IS NULL BEGIN ALTER TABLE mst_renew_course ADD default_pillar_id INT NULL; END",
+            "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'course_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN course_code; END",
+            "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'announcement_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN announcement_code; END",
+            "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'course_short_name') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN course_short_name; END",
+            "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'curriculum_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN curriculum_code; END",
+            "IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_course', 'oic_course_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_course DROP COLUMN oic_course_code; END",
+            "IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_basic', 'course_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_basic DROP COLUMN course_code; END",
+            "IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_basic', 'announcement_code') IS NOT NULL BEGIN ALTER TABLE mst_renew_basic DROP COLUMN announcement_code; END",
+            "IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL AND COL_LENGTH('mst_renew_basic', 'course_short_name') IS NOT NULL BEGIN ALTER TABLE mst_renew_basic DROP COLUMN course_short_name; END",
+            "IF OBJECT_ID('mst_course_curriculum', 'U') IS NULL BEGIN CREATE TABLE mst_course_curriculum (id INT IDENTITY(1,1) PRIMARY KEY, course_type NVARCHAR(20) NOT NULL, course_id INT NOT NULL, agent_type NVARCHAR(20) NULL, training_course_code NVARCHAR(100) NULL, announcement_code NVARCHAR(100) NULL, curriculum_code NVARCHAR(100) NULL, course_short_name NVARCHAR(100) NULL, display_order INT DEFAULT 0, status NVARCHAR(20) DEFAULT 'active'); END",
+            "IF OBJECT_ID('trn_training_result', 'U') IS NULL BEGIN CREATE TABLE trn_training_result (id INT IDENTITY(1,1) PRIMARY KEY, nation_id NVARCHAR(13) NULL, person_registration_id INT NULL, original_license_no NVARCHAR(50) NULL, training_course_code NVARCHAR(100) NULL, training_course_name NVARCHAR(500) NULL, training_date_display NVARCHAR(100) NULL, training_status NVARCHAR(50) NULL, deduction_privilege NVARCHAR(10) NULL, deduction_doc_status NVARCHAR(50) NULL, progress_percent NVARCHAR(20) NULL, score_percent NVARCHAR(20) NULL, enrollment_url NVARCHAR(1000) NULL, verified_title_th NVARCHAR(100) NULL, verified_first_name_th NVARCHAR(200) NULL, verified_last_name_th NVARCHAR(200) NULL, verified_license_no NVARCHAR(50) NULL, verified_license_issue_date NVARCHAR(50) NULL, verified_license_expiry_date NVARCHAR(50) NULL, verified_applicant_type NVARCHAR(100) NULL, verified_license_type NVARCHAR(200) NULL, verified_insurance_type NVARCHAR(200) NULL, stamp_date DATETIME DEFAULT GETDATE(), import_file_name NVARCHAR(500) NULL, is_data_mismatch NVARCHAR(10) DEFAULT 'N'); END",
+            "DECLARE @tables TABLE (name VARCHAR(100)); INSERT INTO @tables VALUES ('mst_titles'), ('mst_gender'), ('mst_blood'), ('mst_religion'), ('mst_territories'), ('mst_expertises'), ('mst_companies'), ('mst_renew_pillars'), ('mst_renew_basic'), ('mst_renew_other'), ('mst_renew_dates'), ('mst_renew_course'), ('mst_provinces'), ('mst_districts'), ('mst_sub_districts'), ('mst_agent_regions'), ('mst_agent_branches'); DECLARE @tbl VARCHAR(100); DECLARE tbl_cursor CURSOR FOR SELECT name FROM @tables; OPEN tbl_cursor; FETCH NEXT FROM tbl_cursor INTO @tbl; WHILE @@FETCH_STATUS = 0 BEGIN IF OBJECT_ID(@tbl, 'U') IS NOT NULL BEGIN IF COL_LENGTH(@tbl, 'is_active_backend') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD is_active_backend BIT NOT NULL DEFAULT 1;'); IF COL_LENGTH(@tbl, 'is_active_frontend') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD is_active_frontend BIT NOT NULL DEFAULT 1;'); IF COL_LENGTH(@tbl, 'start_active_datetime') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD start_active_datetime DATETIME NULL;'); IF COL_LENGTH(@tbl, 'end_active_datetime') IS NULL EXEC('ALTER TABLE ' + @tbl + ' ADD end_active_datetime DATETIME NULL;'); END; FETCH NEXT FROM tbl_cursor INTO @tbl; END; CLOSE tbl_cursor; DEALLOCATE tbl_cursor;"
+        };
+
+        foreach (var sql in schemaMigrations)
+        {
+            try
+            {
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Migration '{sql}' skipped: {ex.Message}");
+            }
+        }
+
         try
         {
-            context.Database.ExecuteSqlRaw(sql);
+            context.Database.ExecuteSqlRaw(@"
+                IF OBJECT_ID('mst_course_curriculum', 'U') IS NOT NULL AND OBJECT_ID('mst_course_detail', 'U') IS NOT NULL
+                BEGIN
+                    -- 1. Insert any missing curriculum packages from mst_course_detail
+                    INSERT INTO mst_course_curriculum (course_type, course_id, agent_type, training_course_code, announcement_code, curriculum_code, course_short_name, display_order, status)
+                    SELECT d.course_type, d.course_id, d.agent_type, d.course_code, d.announcement_code, d.curriculum_code, d.course_short_name, MIN(d.display_order), 'active'
+                    FROM mst_course_detail d
+                    LEFT JOIN mst_course_curriculum c ON 
+                        d.course_type = c.course_type AND 
+                        d.course_id = c.course_id AND 
+                        ISNULL(d.agent_type,'') = ISNULL(c.agent_type,'') AND
+                        ISNULL(d.course_code,'') = ISNULL(c.training_course_code,'') AND
+                        ISNULL(d.curriculum_code,'') = ISNULL(c.curriculum_code,'')
+                    WHERE c.id IS NULL
+                    GROUP BY d.course_type, d.course_id, d.agent_type, d.course_code, d.announcement_code, d.curriculum_code, d.course_short_name;
+
+                    -- 2. Insert any missing sub-details linked by curriculum ID
+                    INSERT INTO mst_course_sub_detail (curriculum_id, oic_course_code, sub_course_name, display_order, status)
+                    SELECT c.id, d.oic_course_code, d.sub_course_name, d.display_order, d.status
+                    FROM mst_course_detail d
+                    INNER JOIN mst_course_curriculum c ON 
+                        d.course_type = c.course_type AND 
+                        d.course_id = c.course_id AND 
+                        ISNULL(d.agent_type,'') = ISNULL(c.agent_type,'') AND
+                        ISNULL(d.course_code,'') = ISNULL(c.training_course_code,'') AND
+                        ISNULL(d.curriculum_code,'') = ISNULL(c.curriculum_code,'')
+                    LEFT JOIN mst_course_sub_detail s ON
+                        s.curriculum_id = c.id AND
+                        ISNULL(s.oic_course_code,'') = ISNULL(d.oic_course_code,'') AND
+                        ISNULL(s.sub_course_name,'') = ISNULL(d.sub_course_name,'')
+                    WHERE s.id IS NULL;
+
+                    -- 3. Drop legacy mst_course_detail table
+                    DROP TABLE mst_course_detail;
+                END
+            ");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Warning: Migration '{sql}' skipped: {ex.Message}");
+            Serilog.Log.Error(ex, "Failed to execute mst_course_curriculum migration from mst_course_detail");
+        }
+
+        try 
+        {
+            context.Database.ExecuteSqlRaw("IF COL_LENGTH('oic_raw_api_store', 'is_latest') IS NULL BEGIN ALTER TABLE oic_raw_api_store ADD is_latest BIT DEFAULT 0 NOT NULL; END");
+            context.Database.ExecuteSqlRaw(@"
+                WITH LatestRecords AS (
+                    SELECT raw_id, ROW_NUMBER() OVER(PARTITION BY id_card_number ORDER BY raw_id DESC) as rn
+                    FROM oic_raw_api_store
+                )
+                UPDATE oic_raw_api_store
+                SET is_latest = CASE WHEN l.rn = 1 THEN 1 ELSE 0 END
+                FROM oic_raw_api_store o
+                INNER JOIN LatestRecords l ON o.raw_id = l.raw_id;
+            ");
+
+            context.Database.ExecuteSqlRaw("IF COL_LENGTH('oic_agent_profile_store', 'is_latest') IS NULL BEGIN ALTER TABLE oic_agent_profile_store ADD is_latest BIT DEFAULT 0 NOT NULL; END");
+            context.Database.ExecuteSqlRaw(@"
+                WITH LatestProfiles AS (
+                    SELECT profile_id, ROW_NUMBER() OVER(PARTITION BY id_card_number ORDER BY profile_id DESC) as rn
+                    FROM oic_agent_profile_store
+                )
+                UPDATE oic_agent_profile_store
+                SET is_latest = CASE WHEN l.rn = 1 THEN 1 ELSE 0 END
+                FROM oic_agent_profile_store p
+                INNER JOIN LatestProfiles l ON p.profile_id = l.profile_id;
+            ");
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to update is_latest column in oic_raw_api_store or oic_agent_profile_store");
         }
     }
-
-    try
-    {
-        context.Database.ExecuteSqlRaw(@"
-            IF OBJECT_ID('mst_course_curriculum', 'U') IS NOT NULL AND OBJECT_ID('mst_course_detail', 'U') IS NOT NULL
-            BEGIN
-                -- 1. Insert any missing curriculum packages from mst_course_detail
-                INSERT INTO mst_course_curriculum (course_type, course_id, agent_type, training_course_code, announcement_code, curriculum_code, course_short_name, display_order, status)
-                SELECT d.course_type, d.course_id, d.agent_type, d.course_code, d.announcement_code, d.curriculum_code, d.course_short_name, MIN(d.display_order), 'active'
-                FROM mst_course_detail d
-                LEFT JOIN mst_course_curriculum c ON 
-                    d.course_type = c.course_type AND 
-                    d.course_id = c.course_id AND 
-                    ISNULL(d.agent_type,'') = ISNULL(c.agent_type,'') AND
-                    ISNULL(d.course_code,'') = ISNULL(c.training_course_code,'') AND
-                    ISNULL(d.curriculum_code,'') = ISNULL(c.curriculum_code,'')
-                WHERE c.id IS NULL
-                GROUP BY d.course_type, d.course_id, d.agent_type, d.course_code, d.announcement_code, d.curriculum_code, d.course_short_name;
-
-                -- 2. Insert any missing sub-details linked by curriculum ID
-                INSERT INTO mst_course_sub_detail (curriculum_id, oic_course_code, sub_course_name, display_order, status)
-                SELECT c.id, d.oic_course_code, d.sub_course_name, d.display_order, d.status
-                FROM mst_course_detail d
-                INNER JOIN mst_course_curriculum c ON 
-                    d.course_type = c.course_type AND 
-                    d.course_id = c.course_id AND 
-                    ISNULL(d.agent_type,'') = ISNULL(c.agent_type,'') AND
-                    ISNULL(d.course_code,'') = ISNULL(c.training_course_code,'') AND
-                    ISNULL(d.curriculum_code,'') = ISNULL(c.curriculum_code,'')
-                LEFT JOIN mst_course_sub_detail s ON
-                    s.curriculum_id = c.id AND
-                    ISNULL(s.oic_course_code,'') = ISNULL(d.oic_course_code,'') AND
-                    ISNULL(s.sub_course_name,'') = ISNULL(d.sub_course_name,'')
-                WHERE s.id IS NULL;
-
-                -- 3. Drop legacy mst_course_detail table
-                DROP TABLE mst_course_detail;
-            END
-        ");
-    }
-    catch (Exception ex)
-    {
-        Serilog.Log.Error(ex, "Failed to execute mst_course_curriculum migration from mst_course_detail");
-    }
-
-    try 
-    {
-        context.Database.ExecuteSqlRaw("IF COL_LENGTH('oic_raw_api_store', 'is_latest') IS NULL BEGIN ALTER TABLE oic_raw_api_store ADD is_latest BIT DEFAULT 0 NOT NULL; END");
-        context.Database.ExecuteSqlRaw(@"
-            WITH LatestRecords AS (
-                SELECT raw_id, ROW_NUMBER() OVER(PARTITION BY id_card_number ORDER BY raw_id DESC) as rn
-                FROM oic_raw_api_store
-            )
-            UPDATE oic_raw_api_store
-            SET is_latest = CASE WHEN l.rn = 1 THEN 1 ELSE 0 END
-            FROM oic_raw_api_store o
-            INNER JOIN LatestRecords l ON o.raw_id = l.raw_id;
-        ");
-
-        context.Database.ExecuteSqlRaw("IF COL_LENGTH('oic_agent_profile_store', 'is_latest') IS NULL BEGIN ALTER TABLE oic_agent_profile_store ADD is_latest BIT DEFAULT 0 NOT NULL; END");
-        
-        // Drop unique constraint on id_card_number in oic_agent_profile_store if it exists, so we can store history
-        context.Database.ExecuteSqlRaw(@"
-            DECLARE @constraint_name NVARCHAR(256);
-            SELECT @constraint_name = name 
-            FROM sys.key_constraints 
-            WHERE type = 'UQ' AND parent_object_id = OBJECT_ID('oic_agent_profile_store');
-            IF @constraint_name IS NOT NULL
-            BEGIN
-                EXEC('ALTER TABLE oic_agent_profile_store DROP CONSTRAINT ' + @constraint_name);
-            END
-            
-            -- Also check for unique index
-            SELECT @constraint_name = name 
-            FROM sys.indexes 
-            WHERE is_unique = 1 AND object_id = OBJECT_ID('oic_agent_profile_store') AND is_primary_key = 0;
-            IF @constraint_name IS NOT NULL
-            BEGIN
-                EXEC('DROP INDEX ' + @constraint_name + ' ON oic_agent_profile_store');
-            END
-        ");
-
-        context.Database.ExecuteSqlRaw(@"
-            WITH LatestProfiles AS (
-                SELECT profile_id, ROW_NUMBER() OVER(PARTITION BY id_card_number ORDER BY profile_id DESC) as rn
-                FROM oic_agent_profile_store
-            )
-            UPDATE oic_agent_profile_store
-            SET is_latest = CASE WHEN l.rn = 1 THEN 1 ELSE 0 END
-            FROM oic_agent_profile_store p
-            INNER JOIN LatestProfiles l ON p.profile_id = l.profile_id;
-        ");
-    }
-    catch (Exception ex)
-    {
-        Serilog.Log.Error(ex, "Failed to update is_latest column in oic_raw_api_store or oic_agent_profile_store");
-    }
-
-    // Seed initial admin user if none exists
-    if (!context.Users.Any())
-    {
-        context.Users.Add(new backend.Models.User 
-        { 
-            Username = "admin", 
-            PasswordHash = "editor", // In real app, this should be hashed
-            Role = "Admin",
-            IsActive = true
-        });
-        context.SaveChanges();
-    }
-
-    // Seed agent regions and branches
-    if (!context.AgentRegions.Any())
-    {
-        var agentRegionMap = new Dictionary<string, string[]>
-        {
-            { "ภาค 1 (ภาคเหนือ)", new[] { "เชียงราย", "เชียงใหม่", "นครสวรรค์", "พิษณุโลก" } },
-            { "ภาค 2 (ภาคตะวันออกเฉียงเหนือ)", new[] { "ขอนแก่น", "นครราชสีมา", "อุดรธานี", "อุบลราชธานี" } },
-            { "ภาค 3 (ภาคตะวันออก)", new[] { "จันทบุรี", "ฉะเชิงเทรา", "พัทยา", "ระยอง" } },
-            { "ภาค 4 (ภาคกลางและภาคตะวันตก)", new[] { "นครปฐม", "พระนครศรีอยุธยา", "สมุทรสาคร", "สระบุรี" } },
-            { "ภาค 5 (ภาคใต้)", new[] { "กระบี่", "นครศรีธรรมราช", "ภูเก็ต", "สุราษฎร์ธานี", "หาดใหญ่" } },
-            { "ภาค 6 (ภาคกรุงเทพฯ)", new[] { "กรุงเกษม", "ดอนเมือง", "บางนา", "บางพลัด", "ปู่เจ้าสมิงพราย", "พระราม 2", "ปากเกร็ด-345", "รัชดาภิเษก", "ลุมพินี", "วงศ์สว่าง", "วิภาวดี", "สุขสวัสดิ์", "สุขาภิบาล 3", "กิจกรรพิเศษ1", "กิจกรรพิเศษ2" } }
-        };
-
-        foreach (var kvp in agentRegionMap)
-        {
-            var region = new backend.Models.MstAgentRegion { Name = kvp.Key };
-            context.AgentRegions.Add(region);
-            context.SaveChanges(); // Need ID generated
-
-            foreach (var branch in kvp.Value)
-            {
-                context.AgentBranches.Add(new backend.Models.MstAgentBranch 
-                { 
-                    Name = branch, 
-                    RegionId = region.Id 
-                });
-            }
-        }
-        context.SaveChanges();
-    }
+}
+catch (Exception ex)
+{
+    Serilog.Log.Warning(ex, "Database auto-migration skipped during startup: {Message}", ex.Message);
 }
 
 app.UseSerilogRequestLogging();
