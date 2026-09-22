@@ -1,4 +1,17 @@
 services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: mssql2025
+    ports:
+      - "14333:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Pass@456981@XKTT
+    user: "0:0"
+    volumes:
+      - mssql_data:/var/opt/mssql/data
+      - C:\SQLBackup:/var/opt/mssql/backup
+
   backend:
     build:
       context: ./backend
@@ -9,13 +22,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8085
       - TZ=Asia/Bangkok
-      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=thaiairp_iptc;User Id=sa;Password=Pass@456981@XKTT;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=mssql;Database=thaiairp_iptc;User Id=sa;Password=Pass@456981@XKTT;TrustServerCertificate=True;
       - ConnectionStrings__MySqlConnection=Server=host.docker.internal;Database=thaiairp_iptc;User=thaiairp_iptc;Password=Pass@456981@XKTT;SslMode=none;AllowPublicKeyRetrieval=True;
     volumes:
       - ./backend/LocalData:/App/LocalData
-    # Uncomment and configure depends_on if you add a mysql service locally
-    # depends_on:
-    #   - mysql
+    depends_on:
+      - mssql
 
   frontend:
     build:
@@ -25,3 +37,6 @@ services:
       - "5173:80"
     depends_on:
       - backend
+
+volumes:
+  mssql_data:

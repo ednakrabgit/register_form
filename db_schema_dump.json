@@ -1,0 +1,3461 @@
+{
+  "__EFMigrationsHistory": [
+    {
+      "name": "MigrationId",
+      "type": "nvarchar",
+      "length": 300,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "ProductVersion",
+      "type": "nvarchar",
+      "length": 64,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "admin_menus": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "MenuKey",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "MenuName",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "Category",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "Icon",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Path",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "SortOrder",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "admin_role_permissions": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "RoleId",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "MenuKey",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CanView",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CanEdit",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "admin_roles": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "RoleCode",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "RoleName",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "Description",
+      "type": "nvarchar",
+      "length": 510,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "IsSystem",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CreatedAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "UpdatedAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "admin_users": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "Username",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "PasswordHash",
+      "type": "nvarchar",
+      "length": 510,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "Role",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "IsActive",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CreatedAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "Email",
+      "type": "nvarchar",
+      "length": 300,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "FullName",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Phone",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "IsEmailVerified",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "PasswordResetToken",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "ResetTokenExpires",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "LastLoginAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "UpdatedAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_agent_branches": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "region_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_agent_regions": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_blood": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_companies": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_course_curriculum": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "course_type",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "course_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "agent_type",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_course_code",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "announcement_code",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "curriculum_code",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "course_short_name",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_course_sub_detail": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "curriculum_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "oic_course_code",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "sub_course_name",
+      "type": "nvarchar",
+      "length": 1000,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "hours",
+      "type": "decimal",
+      "length": 5,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_districts": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "district_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "district_thai",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "district_english",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "province_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_expertises": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_gender": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_provinces": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "province_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "province_thai",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "province_english",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_religion": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_renew_basic": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "course_name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "date_id",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "agent_type",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_renew_course": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "default_pillar_id",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_renew_dates": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "course_date_display",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "course_date",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_renew_other": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "pillar_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "date_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "subject_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_renew_pillars": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_sub_districts": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "sub_district_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "sub_district_thai",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "sub_district_english",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "district_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "postal_code",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_territories": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "mst_titles": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "status",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "display_order",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_backend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "is_active_frontend",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "start_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "end_active_datetime",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "oic_agent_profile_store": [
+    {
+      "name": "profile_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "id_card_number",
+      "type": "varchar",
+      "length": 13,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "source_system",
+      "type": "varchar",
+      "length": 50,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verification_status",
+      "type": "varchar",
+      "length": 30,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "http_status_code",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "profile_payload",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "last_verified_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "created_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "updated_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "last_successful_log_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_latest",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "oic_api_request_log": [
+    {
+      "name": "log_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "id_card_number",
+      "type": "varchar",
+      "length": 13,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "endpoint_url",
+      "type": "varchar",
+      "length": 255,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "http_method",
+      "type": "varchar",
+      "length": 10,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "http_status_code",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "response_body",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "error_message",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "execution_time_ms",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "created_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "oic_field_mapping": [
+    {
+      "name": "mapping_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "source_json_path",
+      "type": "varchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "target_field_name",
+      "type": "varchar",
+      "length": 50,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "data_type",
+      "type": "varchar",
+      "length": 20,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "description",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_active",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "oic_raw_api_store": [
+    {
+      "name": "raw_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "id_card_number",
+      "type": "varchar",
+      "length": 13,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "source_system",
+      "type": "varchar",
+      "length": 50,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "http_status_code",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "raw_payload",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "received_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "created_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "last_successful_log_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_latest",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "oic_value_mapping": [
+    {
+      "name": "val_mapping_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "target_field_name",
+      "type": "varchar",
+      "length": 50,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "source_word",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "target_word",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "description",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_active",
+      "type": "bit",
+      "length": 1,
+      "nullable": false,
+      "pk": false
+    }
+  ],
+  "person": [
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "IdCardExpiry",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "TitleTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "FirstNameTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "MiddleNameTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "LastNameTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "TitleOldTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "FirstNameOldTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "MiddleNameOldTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "LastNameOldTh",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BirthDate",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "ReligionId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "GenderId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BloodGroupId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "PhoneOtp",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "EmailAlt",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "LineId",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Facebook",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Instagram",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "FoodAllergy",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "MedicalCondition",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "EmergencyContactName",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "EmergencyContactPhone",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personaddress": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "HouseNo",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Moo",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Village",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Soi",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Road",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "ProvinceId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "DistrictId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "SubDistrictId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "Postcode",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "AddressTypeText",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "AddressType",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personaffiliation": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "RegionId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BranchId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BrokerCompany",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BrokerBranch",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "ViriyahAgentCode",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BrokerType",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personcourse": [
+    {
+      "name": "PersonCourseId",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CourseId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "CourseDateId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "RenewOtherId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "persondocument": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "DocumentType",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "FilePath",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "UploadedAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "FileData",
+      "type": "varbinary",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "ContentType",
+      "type": "nvarchar",
+      "length": 510,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personlicense": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "LicenseNo",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "LicenseIssueDate",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "LicenseExpiryDate",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "CourseType",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "CourseTypeCode",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personother": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "ExtraTrainingInterest",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "OtherBusiness",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "BrokerBranch",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "InsuranceExperienceYears",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personothercompanies": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "OtherId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CompanyId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personothersalesarea": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "OtherId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "TerritoriesId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personotherspecialty": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "OtherId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "ExpertiseId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "personregistration": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "PdpaConsent",
+      "type": "bit",
+      "length": 1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "start_time",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "completion_time",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "confirmed",
+      "type": "bit",
+      "length": 1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "DeductionPrivilege",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "MasterDegreeStatus",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "persontraining5y": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "CourseId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "register": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "pdpa_consent",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "national_id",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "id_card_expiry",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "title_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "title_custom",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "first_name_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "middle_name_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "last_name_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "first_name_en",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "middle_name_en",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "last_name_en",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "first_name_old_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "middle_name_old_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "last_name_old_th",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "birth_date",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "religion",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "gender",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "blood_group",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "phone_otp",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "email_alt",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "line_id",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "facebook",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "instagram",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "food_allergy",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "medical_condition",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "emergency_contact_name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "emergency_contact_phone",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_house_no",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_moo",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_village",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_soi",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_road",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_province",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_district",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_subdistrict",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "addr_postcode",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_address",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_house_no",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_moo",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_village",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_soi",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_road",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_province",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_district",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_subdistrict",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "contact_postcode",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "license_type",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "license_status",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "license_no",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "license_issue_date",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "license_expiry_date",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_affiliation",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_north",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_northeast",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_east",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_central_west",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_south",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "region_bangkok",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "broker_company",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "viriyah_agent_code",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "course_type",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "course_type_code",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "agent_level",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "broker_level",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_agent_1",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_agent_2",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_agent_3",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_broker_1",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_broker_2",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_broker_3",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_other",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_exemption",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "past_training_5y",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "extra_training_interest",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "highest_education",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "main_business",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "broker_branch",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "insurance_experience_years",
+      "type": "decimal",
+      "length": 9,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "sales_area",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "other_insurance_companies",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "insurance_specialty",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "has_changed_name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "title_prev",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "title_custom_prev",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "first_name_en_prev",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "middle_name_en_prev",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "last_name_en_prev",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "agent_branch",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_exemption_yet",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_date",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_format",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "deduction_privilege",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "previous_courses",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "additional_course_requirement",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "has_experience",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "expectation",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "certify_true",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "created_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "updated_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "confirmed",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "start_time",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "completion_time",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "email",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "form_name",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "last_modified_time",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "past_training_5y_course_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "renew_other_course_id",
+      "type": "bigint",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "remark",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "register_history": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "register_id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "edited_by_type",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "created_by",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "old_data",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "new_data",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "created_at",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "registrationhistory": [
+    {
+      "name": "Id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "RegisterId",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "NationId",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "EditedByType",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "CreatedBy",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "OldData",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "NewData",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "CreatedAt",
+      "type": "datetime2",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "sys_config": [
+    {
+      "name": "key_name",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "value",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "description",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "group_name",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": false,
+      "pk": false
+    },
+    {
+      "name": "default_value",
+      "type": "nvarchar",
+      "length": -1,
+      "nullable": true,
+      "pk": false
+    }
+  ],
+  "trn_training_result": [
+    {
+      "name": "id",
+      "type": "int",
+      "length": 4,
+      "nullable": false,
+      "pk": true
+    },
+    {
+      "name": "nation_id",
+      "type": "nvarchar",
+      "length": 26,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "person_registration_id",
+      "type": "int",
+      "length": 4,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "original_license_no",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_course_code",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_course_name",
+      "type": "nvarchar",
+      "length": 1000,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_date_display",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "training_status",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "deduction_privilege",
+      "type": "nvarchar",
+      "length": 20,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "deduction_doc_status",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "progress_percent",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "score_percent",
+      "type": "nvarchar",
+      "length": 40,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "enrollment_url",
+      "type": "nvarchar",
+      "length": 2000,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_title_th",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_first_name_th",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_last_name_th",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_license_no",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_license_issue_date",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_license_expiry_date",
+      "type": "nvarchar",
+      "length": 100,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_applicant_type",
+      "type": "nvarchar",
+      "length": 200,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_license_type",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "verified_insurance_type",
+      "type": "nvarchar",
+      "length": 400,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "stamp_date",
+      "type": "datetime",
+      "length": 8,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "import_file_name",
+      "type": "nvarchar",
+      "length": 1000,
+      "nullable": true,
+      "pk": false
+    },
+    {
+      "name": "is_data_mismatch",
+      "type": "nvarchar",
+      "length": 20,
+      "nullable": true,
+      "pk": false
+    }
+  ]
+}
