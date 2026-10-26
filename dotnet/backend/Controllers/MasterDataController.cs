@@ -342,14 +342,28 @@ namespace backend.Controllers
                         })
                         .ToListAsync();
 
-                    var pillarDict = await _context.RenewPillars.ToDictionaryAsync(p => p.Id, p => p.Name);
+                    var pillars = await _context.RenewPillars.ToListAsync();
+                    var pillarDict = pillars.GroupBy(p => p.Id).ToDictionary(g => g.Key, g => g.First().Name);
 
-                    var currQ = _context.CourseCurriculums
-                        .Include(c => c.SubDetails)
-                        .Where(c => c.CourseType == "renew");
-                    if (!all) currQ = currQ.Where(c => c.IsActiveFrontend && (c.StartActiveDatetime == null || now >= c.StartActiveDatetime) && (c.EndActiveDatetime == null || now <= c.EndActiveDatetime) && c.Status == "active");
-                    var curriculums = await currQ.OrderBy(c => c.DisplayOrder).ToListAsync();
-                    var curriculumsByCourseId = curriculums.GroupBy(c => c.CourseId).ToDictionary(g => g.Key, g => g.ToList());
+                    Dictionary<int, List<MstCourseCurriculum>> curriculumsByCourseId = new();
+                    try
+                    {
+                        var currList = await _context.CourseCurriculums.Where(c => c.CourseType == "renew").OrderBy(c => c.DisplayOrder).ToListAsync();
+                        var subDetails = await _context.CourseSubDetails.ToListAsync();
+                        var subsByCurrId = subDetails.GroupBy(s => s.CurriculumId).ToDictionary(g => g.Key, g => (ICollection<MstCourseSubDetail>)g.ToList());
+                        foreach (var curr in currList)
+                        {
+                            if (subsByCurrId.TryGetValue(curr.Id, out var subList))
+                            {
+                                curr.SubDetails = subList;
+                            }
+                        }
+                        curriculumsByCourseId = currList.GroupBy(c => c.CourseId).ToDictionary(g => g.Key, g => g.ToList());
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Warning("Could not load curriculums: {Error}", ex.Message);
+                    }
 
                     foreach (var c in renewCourses)
                     {

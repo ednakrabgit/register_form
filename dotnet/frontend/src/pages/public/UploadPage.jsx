@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button';
@@ -52,7 +53,7 @@ export default function UploadPage() {
       if (files.idCardWithFace) formData.append('IDCardFace', files.idCardWithFace);
       if (files.idCard) formData.append('IDCard', files.idCard);
 
-      const res = await fetch('http://localhost:8085/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData
       });

@@ -1,7 +1,8 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import HistorySnapshotViewer from '../../components/HistorySnapshotViewer';
 
-const API_BASE_URL = 'http://localhost:8085/api';
+
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([]);

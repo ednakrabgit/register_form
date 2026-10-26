@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../../config/api';
 import { useState, useEffect } from 'react';
 import { useRegistration } from '../../../context/RegistrationContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -73,7 +74,7 @@ export default function Tab2PersonalInfo() {
       // If personal details not fetched yet, fetch and auto-fill
       if (!formData.firstNameTh) {
         setIsFetchingPerson(true);
-        fetch(`http://localhost:8085/api/person/${rawId}`)
+        fetch(`${API_BASE_URL}/person/${rawId}`)
           .then(res => res.ok ? res.json() : null)
           .then(personData => {
             if (personData) {
@@ -117,7 +118,7 @@ export default function Tab2PersonalInfo() {
     if (val.length === 13) {
       setIsFetchingPerson(true);
       try {
-        const res = await fetch(`http://localhost:8085/api/person/${val}`);
+        const res = await fetch(`${API_BASE_URL}/person/${val}`);
         if (res.ok) {
           const personData = await res.json();
           // Merge fetched data, preserving nationalId formatting

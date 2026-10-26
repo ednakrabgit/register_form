@@ -1,6 +1,7 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:8085/api';
+
 
 export default function SystemLogs() {
   const [logFiles, setLogFiles] = useState([]);

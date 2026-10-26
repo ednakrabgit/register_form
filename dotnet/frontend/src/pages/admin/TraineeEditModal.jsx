@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import ThaiDatePicker from '../../components/ThaiDatePicker';
@@ -75,19 +76,19 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
           titles, religions, genders, bloods, provinces, courses, agentBranches, 
           territories, expertises, companies, renewCourseCheckboxes, renewOtherOptions, fullData
         ] = await Promise.all([
-          safeFetchArray('http://localhost:8085/api/masterdata/titles?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/religion?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/gender?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/blood?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/provinces'),
-          safeFetchArray('http://localhost:8085/api/masterdata/renew-courses?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/agent-branches?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/territories?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/expertises?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/companies?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/renewcourse?all=true'),
-          safeFetchArray('http://localhost:8085/api/masterdata/renew-other-courses?all=true'),
-          fetch(`http://localhost:8085/api/admin/trainees/${nationId}/full`, { 
+          safeFetchArray(`${API_BASE_URL}/masterdata/titles?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/religion?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/gender?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/blood?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/provinces`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/renew-courses?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/agent-branches?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/territories?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/expertises?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/companies?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/renewcourse?all=true`),
+          safeFetchArray(`${API_BASE_URL}/masterdata/renew-other-courses?all=true`),
+          fetch(`${API_BASE_URL}/admin/trainees/${nationId}/full`, { 
             headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
           }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
         ]);
@@ -115,6 +116,13 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
         fullData.trainings = fullData.trainings || [];
         fullData.others = fullData.others?.length > 0 ? fullData.others : [{ otherBusiness: '', insuranceExperienceYears: null, salesAreas: [], specialties: [], otherCompanies: [] }];
         fullData.registrations = fullData.registrations?.length > 0 ? fullData.registrations : [{ DeductionPrivilege: null, MasterDegreeStatus: null }];
+
+        if (fullData.titleTh) {
+          const matchedTitle = (Array.isArray(titles) ? titles : []).find(t => t.name === fullData.titleTh || t.id?.toString() === fullData.titleTh?.toString());
+          if (matchedTitle) {
+            fullData.titleTh = matchedTitle.id.toString();
+          }
+        }
 
         setMasterData({ 
           titles: Array.isArray(titles) ? titles : [],
@@ -148,7 +156,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
 
   useEffect(() => {
     if (addrAProvince) {
-      fetch(`http://localhost:8085/api/masterdata/districts/${addrAProvince}`)
+      fetch(`${API_BASE_URL}/masterdata/districts/${addrAProvince}`)
         .then(r => r.json())
         .then(data => setDistrictsA(Array.isArray(data) ? data : []))
         .catch(() => setDistrictsA([]));
@@ -159,7 +167,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
 
   useEffect(() => {
     if (addrADistrict) {
-      fetch(`http://localhost:8085/api/masterdata/subdistricts/${addrADistrict}`)
+      fetch(`${API_BASE_URL}/masterdata/subdistricts/${addrADistrict}`)
         .then(r => r.json())
         .then(data => setSubDistrictsA(Array.isArray(data) ? data : []))
         .catch(() => setSubDistrictsA([]));
@@ -170,7 +178,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
 
   useEffect(() => {
     if (addrCProvince) {
-      fetch(`http://localhost:8085/api/masterdata/districts/${addrCProvince}`)
+      fetch(`${API_BASE_URL}/masterdata/districts/${addrCProvince}`)
         .then(r => r.json())
         .then(data => setDistrictsC(Array.isArray(data) ? data : []))
         .catch(() => setDistrictsC([]));
@@ -181,7 +189,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
 
   useEffect(() => {
     if (addrCDistrict) {
-      fetch(`http://localhost:8085/api/masterdata/subdistricts/${addrCDistrict}`)
+      fetch(`${API_BASE_URL}/masterdata/subdistricts/${addrCDistrict}`)
         .then(r => r.json())
         .then(data => setSubDistrictsC(Array.isArray(data) ? data : []))
         .catch(() => setSubDistrictsC([]));
@@ -567,8 +575,12 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
         finalAddresses.push({ ...addrC, addressType: 'C' });
       }
 
+      const selectedTitleObj = masterData.titles.find(t => t.id?.toString() === formData.titleTh?.toString() || t.name === formData.titleTh);
+      const resolvedTitleTh = selectedTitleObj ? selectedTitleObj.name : formData.titleTh;
+
       const payload = {
         ...formData,
+        titleTh: resolvedTitleTh,
         addresses: finalAddresses,
         birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
         idCardExpiry: formData.idCardExpiry ? new Date(formData.idCardExpiry).toISOString() : null,
@@ -577,7 +589,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
         bloodGroupId: formData.bloodGroupId ? parseInt(formData.bloodGroupId) : null
       };
 
-      const res = await fetch(`http://localhost:8085/api/admin/trainees/${nationId}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/trainees/${nationId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -703,7 +715,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                       <label className="block text-xs font-bold text-gray-600 mb-1">คำนำหน้า (ไทย)</label>
                       <select 
                         name="titleTh" 
-                        value={formData?.titleTh || ''} 
+                        value={masterData.titles.find(t => t.name === formData?.titleTh || t.id?.toString() === formData?.titleTh?.toString())?.id?.toString() || formData?.titleTh || ''} 
                         onChange={handleChange} 
                         className="w-full border rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none"
                       >

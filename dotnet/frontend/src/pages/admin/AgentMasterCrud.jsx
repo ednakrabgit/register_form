@@ -1,7 +1,8 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-const API_BASE = 'http://localhost:8085/api';
+const API_BASE = API_BASE_URL;
 
 export default function AgentMasterCrud({ type: propType }) {
   const { type: paramType } = useParams();

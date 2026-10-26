@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -11,7 +12,7 @@ import {
   Layers, ListFilter, CheckSquare
 } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8085/api';
+
 
 const formatDateForInput = (d) => {
   const pad = (n) => String(n).padStart(2, '0');

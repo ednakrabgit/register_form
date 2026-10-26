@@ -30,7 +30,25 @@ try
 // you will replace this ORM setup with a typed HttpClient to the REST endpoint.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    var isCloudRun = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("K_SERVICE"));
+    var dbPath = Path.Combine(AppContext.BaseDirectory, "app.db");
+    if (!File.Exists(dbPath))
+    {
+        dbPath = Path.Combine(Directory.GetCurrentDirectory(), "app.db");
+    }
+
+    if (isCloudRun || connectionString?.Contains("app.db", StringComparison.OrdinalIgnoreCase) == true || (File.Exists(dbPath) && (string.IsNullOrEmpty(connectionString) || connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase) && isCloudRun)))
+    {
+        Serilog.Log.Information("Using SQLite Database: {DbPath}", dbPath);
+        options.UseSqlite($"Data Source={dbPath}");
+    }
+    else
+    {
+        Serilog.Log.Information("Using SQL Server Database Connection");
+        options.UseSqlServer(connectionString);
+    }
+});
 
 var mySqlConnectionString = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MySqlDbContext>(options =>
@@ -65,16 +83,16 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
-// Configure CORS for the React frontend
+// Configure CORS for the React frontend (Local & Cloud Run)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:5173", "http://localhost") // Adjust for production
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
 var app = builder.Build();

@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { 
   User, Shield, Lock, MapPin, Briefcase, BookOpen, History, 
@@ -121,19 +122,19 @@ export default function UserProfile() {
         titles, religions, genders, bloods, provinces, courses, agentBranches, 
         territories, expertises, companies, renewCourseCheckboxes, renewOtherOptions, profileRes
       ] = await Promise.all([
-        safeFetchArray('http://localhost:8085/api/masterdata/titles?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/religion?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/gender?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/blood?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/provinces'),
-        safeFetchArray('http://localhost:8085/api/masterdata/renew-courses?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/agent-branches?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/territories?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/expertises?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/companies?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/renewcourse?all=true'),
-        safeFetchArray('http://localhost:8085/api/masterdata/renew-other-courses?all=true'),
-        fetch('http://localhost:8085/api/auth/profile', { headers: getAuthHeaders() }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+        safeFetchArray(`${API_BASE_URL}/masterdata/titles?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/religion?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/gender?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/blood?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/provinces`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/renew-courses?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/agent-branches?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/territories?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/expertises?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/companies?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/renewcourse?all=true`),
+        safeFetchArray(`${API_BASE_URL}/masterdata/renew-other-courses?all=true`),
+        fetch(`${API_BASE_URL}/auth/profile`, { headers: getAuthHeaders() }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
       ]);
 
       setMasterData({
@@ -220,7 +221,7 @@ export default function UserProfile() {
       const targetNationId = profileRes.person?.nationId || authUser?.nationId;
       if (targetNationId) {
         try {
-          const docRes = await fetch(`http://localhost:8085/api/admin/trainees/${targetNationId}/documents`, {
+          const docRes = await fetch(`${API_BASE_URL}/admin/trainees/${targetNationId}/documents`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           if (docRes.ok) setDocuments(await docRes.json());
@@ -247,7 +248,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (addrAProvince) {
-      fetch(`http://localhost:8085/api/masterdata/districts/${addrAProvince}`)
+      fetch(`${API_BASE_URL}/masterdata/districts/${addrAProvince}`)
         .then(r => r.json())
         .then(data => setDistrictsA(Array.isArray(data) ? data : []))
         .catch(() => setDistrictsA([]));
@@ -258,7 +259,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (addrADistrict) {
-      fetch(`http://localhost:8085/api/masterdata/subdistricts/${addrADistrict}`)
+      fetch(`${API_BASE_URL}/masterdata/subdistricts/${addrADistrict}`)
         .then(r => r.json())
         .then(data => setSubDistrictsA(Array.isArray(data) ? data : []))
         .catch(() => setSubDistrictsA([]));
@@ -269,7 +270,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (addrCProvince) {
-      fetch(`http://localhost:8085/api/masterdata/districts/${addrCProvince}`)
+      fetch(`${API_BASE_URL}/masterdata/districts/${addrCProvince}`)
         .then(r => r.json())
         .then(data => setDistrictsC(Array.isArray(data) ? data : []))
         .catch(() => setDistrictsC([]));
@@ -280,7 +281,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (addrCDistrict) {
-      fetch(`http://localhost:8085/api/masterdata/subdistricts/${addrCDistrict}`)
+      fetch(`${API_BASE_URL}/masterdata/subdistricts/${addrCDistrict}`)
         .then(r => r.json())
         .then(data => setSubDistrictsC(Array.isArray(data) ? data : []))
         .catch(() => setSubDistrictsC([]));
@@ -306,7 +307,7 @@ export default function UserProfile() {
       formData.append('phone', accountData.phone || personData.phoneOtp || '0000000000');
       formData.append(docType, file);
 
-      const res = await fetch('http://localhost:8085/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData
@@ -314,7 +315,7 @@ export default function UserProfile() {
 
       if (res.ok) {
         showAlert('success', 'อัปโหลดรูปภาพเรียบร้อยแล้ว');
-        const docRes = await fetch(`http://localhost:8085/api/admin/trainees/${nationId}/documents`, {
+        const docRes = await fetch(`${API_BASE_URL}/admin/trainees/${nationId}/documents`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (docRes.ok) setDocuments(await docRes.json());
@@ -722,7 +723,7 @@ export default function UserProfile() {
         }
       };
 
-      const res = await fetch('http://localhost:8085/api/auth/profile', {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload)
@@ -764,7 +765,7 @@ export default function UserProfile() {
 
     setSaving(true);
     try {
-      const res = await fetch('http://localhost:8085/api/auth/change-password', {
+      const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -950,7 +951,7 @@ export default function UserProfile() {
                 <label className="block text-xs font-bold text-slate-600 mb-1">คำนำหน้า (ไทย)</label>
                 <select
                   name="titleTh"
-                  value={personData.titleTh || ''}
+                  value={masterData.titles.find(t => t.name === personData.titleTh || t.id?.toString() === personData.titleTh?.toString())?.id?.toString() || personData.titleTh || ''}
                   onChange={handlePersonChange}
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none"
                 >
@@ -1932,7 +1933,7 @@ export default function UserProfile() {
                   <div className="w-full aspect-[3/4] bg-slate-200 rounded-xl flex items-center justify-center mb-4 overflow-hidden border border-slate-300 relative group">
                     {doc ? (
                       <img 
-                        src={`http://localhost:8085${doc.filePath}?t=${new Date(doc.uploadedAt).getTime()}`} 
+                        src={`${API_ORIGIN}${doc.filePath}?t=${new Date(doc.uploadedAt).getTime()}`} 
                         alt={type.label} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                       />

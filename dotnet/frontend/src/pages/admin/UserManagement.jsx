@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { 
   Users, UserPlus, Search, Filter, Shield, ShieldCheck, Eye, 
@@ -86,7 +87,7 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      let url = `http://localhost:8085/api/users?search=${encodeURIComponent(search)}&role=${selectedRole}`;
+      let url = `${API_BASE_URL}/users?search=${encodeURIComponent(search)}&role=${selectedRole}`;
       if (selectedStatus !== 'all') {
         url += `&isActive=${selectedStatus === 'active'}`;
       }
@@ -105,7 +106,7 @@ export default function UserManagement() {
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch(`http://localhost:8085/api/roles`, { headers: getAuthOnlyHeaders() });
+      const res = await fetch(`${API_BASE_URL}/roles`, { headers: getAuthOnlyHeaders() });
       if (res.ok) {
         const data = await res.json();
         setRoles(data);
@@ -205,7 +206,7 @@ export default function UserManagement() {
       };
 
       if (currentUser) {
-        const res = await fetch(`http://localhost:8085/api/users/${currentUser.id}`, {
+        const res = await fetch(`${API_BASE_URL}/users/${currentUser.id}`, {
           method: 'PUT',
           headers: getAuthHeaders(),
           body: JSON.stringify(payload)
@@ -214,7 +215,7 @@ export default function UserManagement() {
         if (!res.ok) throw new Error(data.message || 'บันทึกข้อมูลไม่สำเร็จ');
         showAlert("success", "แก้ไขข้อมูลผู้ใช้งานเรียบร้อยแล้ว");
       } else {
-        const res = await fetch(`http://localhost:8085/api/users`, {
+        const res = await fetch(`${API_BASE_URL}/users`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify(payload)
@@ -240,7 +241,7 @@ export default function UserManagement() {
     }
 
     try {
-      const res = await fetch(`http://localhost:8085/api/users/${currentUser.id}/password`, {
+      const res = await fetch(`${API_BASE_URL}/users/${currentUser.id}/password`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ newPassword })
@@ -257,7 +258,7 @@ export default function UserManagement() {
 
   const handleDeleteUser = async () => {
     try {
-      const res = await fetch(`http://localhost:8085/api/users/${currentUser.id}`, {
+      const res = await fetch(`${API_BASE_URL}/users/${currentUser.id}`, {
         method: 'DELETE',
         headers: getAuthOnlyHeaders()
       });
@@ -279,7 +280,7 @@ export default function UserManagement() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:8085/api/users/${targetUser.id}/toggle-status`, {
+      const res = await fetch(`${API_BASE_URL}/users/${targetUser.id}/toggle-status`, {
         method: 'PATCH',
         headers: getAuthOnlyHeaders()
       });
@@ -318,7 +319,7 @@ export default function UserManagement() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:8085/api/roles/${role.id}`, {
+      const res = await fetch(`${API_BASE_URL}/roles/${role.id}`, {
         headers: getAuthOnlyHeaders()
       });
       if (res.ok) {
@@ -341,7 +342,7 @@ export default function UserManagement() {
     e.preventDefault();
     try {
       if (currentRole) {
-        const res = await fetch(`http://localhost:8085/api/roles/${currentRole.id}`, {
+        const res = await fetch(`${API_BASE_URL}/roles/${currentRole.id}`, {
           method: 'PUT',
           headers: getAuthHeaders(),
           body: JSON.stringify({
@@ -355,7 +356,7 @@ export default function UserManagement() {
         }
         showAlert("success", "แก้ไขข้อมูล Role สำเร็จ");
       } else {
-        const res = await fetch(`http://localhost:8085/api/roles`, {
+        const res = await fetch(`${API_BASE_URL}/roles`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify(roleFormData)
@@ -397,7 +398,7 @@ export default function UserManagement() {
 
   const handleSavePermissions = async () => {
     try {
-      const res = await fetch(`http://localhost:8085/api/roles/${currentRole.id}`, {
+      const res = await fetch(`${API_BASE_URL}/roles/${currentRole.id}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -426,7 +427,7 @@ export default function UserManagement() {
 
   const handleDeleteRole = async () => {
     try {
-      const res = await fetch(`http://localhost:8085/api/roles/${currentRole.id}`, {
+      const res = await fetch(`${API_BASE_URL}/roles/${currentRole.id}`, {
         method: 'DELETE',
         headers: getAuthOnlyHeaders()
       });

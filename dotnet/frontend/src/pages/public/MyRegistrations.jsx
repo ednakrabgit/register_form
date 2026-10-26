@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,7 +18,7 @@ export default function MyRegistrations() {
       }
 
       try {
-        const res = await fetch(`http://localhost:8085/api/person/${user.nationId}`);
+        const res = await fetch(`${API_BASE_URL}/person/${user.nationId}`);
         if (res.ok) {
           const data = await res.json();
           setPersonData(data);

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -20,7 +21,7 @@ export function AuthProvider({ children }) {
       const savedToken = localStorage.getItem('authToken');
       if (savedToken) {
         try {
-          const res = await fetch('http://localhost:8085/api/auth/me', {
+          const res = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: {
               'Authorization': `Bearer ${savedToken}`
             }
@@ -45,7 +46,7 @@ export function AuthProvider({ children }) {
 
   const login = async (usernameOrEmail, password) => {
     try {
-      const res = await fetch('http://localhost:8085/api/auth/login', {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameOrEmail, password })
@@ -69,7 +70,7 @@ export function AuthProvider({ children }) {
 
   const register = async (registerData) => {
     try {
-      const res = await fetch('http://localhost:8085/api/auth/register', {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(registerData)

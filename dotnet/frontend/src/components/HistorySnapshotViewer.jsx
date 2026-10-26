@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
 import React, { useState, useMemo } from 'react';
 import { 
   User, Phone, Home, Mail, Building, Award, Briefcase, 
@@ -330,20 +331,20 @@ export default function HistorySnapshotViewer({
       fetch(url).then(r => r.ok ? r.json() : []).then(d => Array.isArray(d) ? d : []).catch(() => []);
 
     Promise.all([
-      safeFetch('http://localhost:8085/api/masterdata/titles'),
-      safeFetch('http://localhost:8085/api/masterdata/religion'),
-      safeFetch('http://localhost:8085/api/masterdata/gender'),
-      safeFetch('http://localhost:8085/api/masterdata/blood'),
-      safeFetch('http://localhost:8085/api/masterdata/provinces'),
-      safeFetch('http://localhost:8085/api/masterdata/agent-branches'),
-      safeFetch('http://localhost:8085/api/masterdata/renew-courses'),
-      safeFetch('http://localhost:8085/api/masterdata/territories'),
-      safeFetch('http://localhost:8085/api/masterdata/expertises'),
-      safeFetch('http://localhost:8085/api/masterdata/companies'),
-      safeFetch('http://localhost:8085/api/masterdata/renewcourse'),
-      safeFetch('http://localhost:8085/api/masterdata/renew-other-courses'),
-      safeFetch('http://localhost:8085/api/masterdata/districts'),
-      safeFetch('http://localhost:8085/api/masterdata/subdistricts')
+      safeFetch(`${API_BASE_URL}/masterdata/titles`),
+      safeFetch(`${API_BASE_URL}/masterdata/religion`),
+      safeFetch(`${API_BASE_URL}/masterdata/gender`),
+      safeFetch(`${API_BASE_URL}/masterdata/blood`),
+      safeFetch(`${API_BASE_URL}/masterdata/provinces`),
+      safeFetch(`${API_BASE_URL}/masterdata/agent-branches`),
+      safeFetch(`${API_BASE_URL}/masterdata/renew-courses`),
+      safeFetch(`${API_BASE_URL}/masterdata/territories`),
+      safeFetch(`${API_BASE_URL}/masterdata/expertises`),
+      safeFetch(`${API_BASE_URL}/masterdata/companies`),
+      safeFetch(`${API_BASE_URL}/masterdata/renewcourse`),
+      safeFetch(`${API_BASE_URL}/masterdata/renew-other-courses`),
+      safeFetch(`${API_BASE_URL}/masterdata/districts`),
+      safeFetch(`${API_BASE_URL}/masterdata/subdistricts`)
     ]).then(([
       titles, religions, genders, bloods, provinces, agentBranches,
       courses, territories, expertises, companies, renewCourseCheckboxes, 

@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../../config/api';
 import { useState, useEffect } from 'react';
 import { useRegistration } from '../../../context/RegistrationContext';
 import Button from '../../../components/Button';
@@ -105,7 +106,7 @@ export default function Tab6Confirm() {
       });
       
       
-      const res = await fetch('http://localhost:8085/api/registration', {
+      const res = await fetch(`${API_BASE_URL}/registration`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

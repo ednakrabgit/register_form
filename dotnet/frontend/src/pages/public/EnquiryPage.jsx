@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -33,7 +34,7 @@ export default function EnquiryPage() {
     try {
       // Use the existing Person API to fetch data
       const cleanId = nationalId.replace(/\D/g, '');
-      const res = await fetch(`http://localhost:8085/api/person/${cleanId}`);
+      const res = await fetch(`${API_BASE_URL}/person/${cleanId}`);
       
       if (!res.ok) {
         if (res.status === 404) {

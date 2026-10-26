@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { useRegistration } from '../context/RegistrationContext';
@@ -29,7 +30,7 @@ export default function CascadingAddress({ prefix = "", errors = {} }) {
     const provinceId = formData[provinceIdField];
     if (provinceId) {
       setLoadingDistricts(true);
-      fetch(`http://localhost:8085/api/masterdata/districts/${provinceId}`)
+      fetch(`${API_BASE_URL}/masterdata/districts/${provinceId}`)
         .then(res => res.json())
         .then(data => {
           setDistricts(data.map(d => ({ value: d.districtId, label: d.districtThai })));
@@ -46,7 +47,7 @@ export default function CascadingAddress({ prefix = "", errors = {} }) {
     const districtId = formData[districtIdField];
     if (districtId) {
       setLoadingSubDistricts(true);
-      fetch(`http://localhost:8085/api/masterdata/subdistricts/${districtId}`)
+      fetch(`${API_BASE_URL}/masterdata/subdistricts/${districtId}`)
         .then(res => res.json())
         .then(data => {
           setSubDistricts(data.map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode })));

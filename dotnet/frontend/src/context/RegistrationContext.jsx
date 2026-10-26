@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -58,16 +59,16 @@ export function RegistrationProvider({ children }) {
     const fetchMasterData = async () => {
       try {
         const [provRes, titlesRes, bloodRes, genderRes, religionRes, branchesRes, territoriesRes, expertisesRes, companiesRes, configRes] = await Promise.all([
-          fetch('http://localhost:8085/api/masterdata/provinces'),
-          fetch('http://localhost:8085/api/masterdata/titles'),
-          fetch('http://localhost:8085/api/masterdata/blood'),
-          fetch('http://localhost:8085/api/masterdata/gender'),
-          fetch('http://localhost:8085/api/masterdata/religion'),
-          fetch('http://localhost:8085/api/masterdata/agent-branches'),
-          fetch('http://localhost:8085/api/masterdata/territory'),
-          fetch('http://localhost:8085/api/masterdata/expertise'),
-          fetch('http://localhost:8085/api/masterdata/company'),
-          fetch('http://localhost:8085/api/config')
+          fetch(`${API_BASE_URL}/masterdata/provinces`),
+          fetch(`${API_BASE_URL}/masterdata/titles`),
+          fetch(`${API_BASE_URL}/masterdata/blood`),
+          fetch(`${API_BASE_URL}/masterdata/gender`),
+          fetch(`${API_BASE_URL}/masterdata/religion`),
+          fetch(`${API_BASE_URL}/masterdata/agent-branches`),
+          fetch(`${API_BASE_URL}/masterdata/territory`),
+          fetch(`${API_BASE_URL}/masterdata/expertise`),
+          fetch(`${API_BASE_URL}/masterdata/company`),
+          fetch(`${API_BASE_URL}/config`)
         ]);
         
         const safeJson = async (res) => {

@@ -19,6 +19,18 @@ __pycache__/
 env/
 venv/
 
+# Large binary and dump files
+*.sql
+*.exe
+*.zip
+*.dll
+*.mp4
+restart_apache.bat
+appserv*
+extract_php/
+php/
+unzipped/
+
 # IDE
 .vscode/
 .idea/

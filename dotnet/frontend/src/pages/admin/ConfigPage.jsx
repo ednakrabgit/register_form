@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -6,7 +7,7 @@ import {
   Code2, Eye, RefreshCw, Layers, FileText, Info, HelpCircle
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8085/api';
+const API_BASE = API_BASE_URL;
 
 // Format date string for datetime-local input
 const toDateTimeLocal = (dateStr) => {

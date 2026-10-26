@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../../config/api';
 import { useState, useEffect } from 'react';
 import { useRegistration } from '../../../context/RegistrationContext';
 import Button from '../../../components/Button';
@@ -89,7 +90,7 @@ export default function Tab5Course() {
       try {
         setIsLoadingCourses(true);
         const agentType = formData.agentType || 'agent'; // Default to agent if not set
-        const res = await fetch(`http://localhost:8085/api/masterdata/renew-courses?agentType=${agentType}`);
+        const res = await fetch(`${API_BASE_URL}/masterdata/renew-courses?agentType=${agentType}`);
         if (res.ok) {
           const data = await res.json();
           setCourseOptions(data);
@@ -107,7 +108,7 @@ export default function Tab5Course() {
   useEffect(() => {
     const fetchRenewCheckboxes = async () => {
       try {
-        const res = await fetch(`http://localhost:8085/api/masterdata/renewcourse`);
+        const res = await fetch(`${API_BASE_URL}/masterdata/renewcourse`);
         if (res.ok) {
           const data = await res.json();
           setRenewCourseCheckboxes(data.map(item => ({ id: item.id.toString(), name: item.name })));
@@ -122,7 +123,7 @@ export default function Tab5Course() {
   useEffect(() => {
     const fetchRenewOtherOptions = async () => {
       try {
-        const res = await fetch(`http://localhost:8085/api/masterdata/renew-other-courses`);
+        const res = await fetch(`${API_BASE_URL}/masterdata/renew-other-courses`);
         if (res.ok) {
           const data = await res.json();
           setRenewOtherOptions(data.map(item => ({ id: item.id.toString(), name: item.displayName })));

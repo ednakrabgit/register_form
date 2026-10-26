@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect, Fragment } from 'react';
 import TraineeEditModal from './TraineeEditModal';
 import { useAuth } from '../../context/AuthContext';
@@ -30,19 +31,19 @@ export default function TraineesList() {
           branches, renewcourses, companies, territories, expertises, renewother,
           basicCourses, genders, bloods, religions
         ] = await Promise.all([
-          fetch('http://localhost:8085/api/masterdata/provinces').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/districts').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/subdistricts').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/agent-branches?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/renewcourse?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/company?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/territory?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/expertise?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/renew-other-courses?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/renew-courses?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/gender?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/blood?all=true').then(r => r.json()),
-          fetch('http://localhost:8085/api/masterdata/religion?all=true').then(r => r.json())
+          fetch(`${API_BASE_URL}/masterdata/provinces`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/districts`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/subdistricts`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/agent-branches?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/renewcourse?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/company?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/territory?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/expertise?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/renew-other-courses?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/renew-courses?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/gender?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/blood?all=true`).then(r => r.json()),
+          fetch(`${API_BASE_URL}/masterdata/religion?all=true`).then(r => r.json())
         ]);
         
         const map = {
@@ -102,7 +103,7 @@ export default function TraineesList() {
     try {
       const token = localStorage.getItem('authToken') || localStorage.getItem('admin_token');
       const qs = new URLSearchParams({ search: searchTerm, page, pageSize: pageSize === 'All' ? 0 : pageSize, sortBy, sortDir });
-      const response = await fetch(`http://localhost:8085/api/admin/trainees?${qs.toString()}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/trainees?${qs.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -137,7 +138,7 @@ export default function TraineesList() {
     setDocuments([]);
     try {
       const token = localStorage.getItem('authToken') || localStorage.getItem('admin_token');
-      const res = await fetch(`http://localhost:8085/api/admin/trainees/${trainee.idCard}/documents?_t=${Date.now()}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/trainees/${trainee.idCard}/documents?_t=${Date.now()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -160,7 +161,7 @@ export default function TraineesList() {
       formData.append(docType, file);
 
       const token = localStorage.getItem('authToken') || localStorage.getItem('admin_token');
-      const res = await fetch('http://localhost:8085/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -670,7 +671,7 @@ export default function TraineesList() {
                       <div className="w-full aspect-[3/4] bg-gray-200 rounded flex items-center justify-center mb-4 overflow-hidden border border-gray-300">
                         {doc ? (
                           <img 
-                            src={`http://localhost:8085${doc.filePath}?t=${new Date(doc.uploadedAt || Date.now()).getTime()}`} 
+                            src={`${API_ORIGIN}${doc.filePath}?t=${new Date(doc.uploadedAt || Date.now()).getTime()}`} 
                             alt={type.label} 
                             className="w-full h-full object-cover" 
                           />
