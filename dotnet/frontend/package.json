@@ -22,13 +22,11 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.2.16",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.5.2",
-    "lightningcss-win32-x64-msvc": "^1.33.0",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.16",
     "tailwindcss": "^4.3.2",
