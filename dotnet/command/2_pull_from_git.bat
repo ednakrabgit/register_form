@@ -27,19 +27,18 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: Get current branch name
-for /f "tokens=*" %%i in ('git branch --show-current 2^>nul') do set CURRENT_BRANCH=%%i
-if "%CURRENT_BRANCH%"=="" set CURRENT_BRANCH=feature/dotnet
-
-echo [INFO] Active Branch: %CURRENT_BRANCH%
-echo.
-
 :: Check Remote Configuration
 set REMOTE_NAME=origin
 git remote | findstr /i "ednakrabgit" >nul
 if %errorlevel% equ 0 set REMOTE_NAME=ednakrabgit
 
 echo [INFO] Using Remote: %REMOTE_NAME%
+
+:: Get current branch name
+for /f "tokens=*" %%i in ('git branch --show-current 2^>nul') do set CURRENT_BRANCH=%%i
+if "%CURRENT_BRANCH%"=="" set CURRENT_BRANCH=main
+
+echo [INFO] Active Branch: %CURRENT_BRANCH%
 echo.
 
 :: Check for uncommitted local changes
@@ -80,6 +79,12 @@ echo.
 echo [2/2] Pulling latest commits into %CURRENT_BRANCH%...
 git pull %REMOTE_NAME% %CURRENT_BRANCH%
 if %errorlevel% equ 0 (
+    :: Keep both local main and feature/dotnet pointers synchronized
+    if /i "%CURRENT_BRANCH%"=="main" (
+        git branch -f feature/dotnet main >nul 2>&1
+    ) else (
+        git branch -f main %CURRENT_BRANCH% >nul 2>&1
+    )
     echo.
     echo ===============================================================================
     echo [SUCCESS] Code successfully updated from GitHub!

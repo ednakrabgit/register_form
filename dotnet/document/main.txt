@@ -5,7 +5,7 @@
 
 1. Git Repository (ศูนย์กลางการจัดเก็บซอร์สโค้ดและสคริปต์):
    - URL: https://github.com/ednakrabgit/register_form
-   - Branch หลัก: feature/dotnet
+   - Branch หลัก: main (ซิงค์คู่ขนานกับ feature/dotnet อัตโนมัติ - ไม่ต้องกด Pull Request)
 
 2. นโยบายระบบฐานข้อมูล (Database Policy):
    - มาตรฐานระบบฐานข้อมูล: Microsoft SQL Server (Enterprise / Standard)
