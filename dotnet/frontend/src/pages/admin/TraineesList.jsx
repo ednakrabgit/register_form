@@ -1,5 +1,8 @@
 import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect, Fragment } from 'react';
+import { Link } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import TraineeEditModal from './TraineeEditModal';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +21,7 @@ export default function TraineesList() {
   const [selectedTrainee, setSelectedTrainee] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [editingTraineeId, setEditingTraineeId] = useState(null);
   
@@ -188,6 +192,141 @@ export default function TraineesList() {
     { key: 'IDCard', altKeys: ['idCard', 'IDCard', 'idcard'], label: 'ภาพถ่ายบัตร ปชช. (IDCard)' }
   ];
 
+  const formatDateThai = (val) => {
+    if (!val) return '';
+    if (typeof val === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(val)) return val;
+    const str = String(val).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      const parts = str.substring(0, 10).split('-');
+      const y = parseInt(parts[0], 10);
+      const yearStr = y < 2400 ? String(y + 543) : String(y);
+      return `${parts[2]}/${parts[1]}/${yearStr}`;
+    }
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      let year = d.getFullYear();
+      if (year < 2400) year += 543;
+      return `${day}/${month}/${year}`;
+    }
+    return val;
+  };
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      let queryTerm = searchTerm?.trim() || null;
+      if (user?.role === 'Applicant') {
+        queryTerm = user.nationalId || user.idCard || user.username || queryTerm;
+      }
+
+      const payload = {
+        searchTerm: queryTerm,
+        allColumns: true
+      };
+
+      const token = localStorage.getItem('authToken') || localStorage.getItem('admin_token');
+      const res = await fetch(`${API_BASE_URL}/reports/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error(`ไม่สามารถดึงข้อมูลได้ (HTTP ${res.status})`);
+      }
+
+      const rawData = await res.json();
+      if (!rawData || rawData.length === 0) {
+        alert('ไม่พบข้อมูลตามเงื่อนไขที่ระบุสำหรับการ Export');
+        return;
+      }
+
+      const rows = rawData.map((r, idx) => ({
+        'ลำดับ': r.id || (idx + 1),
+        'เลขประจำตัวประชาชน': r.nationalId || '',
+        'คำนำหน้า': r.title || '',
+        'ชื่อ': r.firstName || '',
+        'ชื่อกลาง': r.middleNameTh || '',
+        'นามสกุล': r.lastName || '',
+        'เพศ': r.gender || '',
+        'วันเดือนปีเกิด': formatDateThai(r.birthDate),
+        'ศาสนา': r.religion || '',
+        'กรุ๊ปเลือด': r.bloodGroup || '',
+        'เบอร์โทรศัพท์': r.phone || '',
+        'อีเมล': r.email || '',
+        'Line ID': r.lineId || '',
+        'Facebook': r.facebook || '',
+        'ที่อยู่ตามทะเบียนบ้าน': r.address || '',
+        'จังหวัด (ทะเบียนบ้าน)': r.address_Province || '',
+        'อำเภอ/เขต (ทะเบียนบ้าน)': r.address_District || '',
+        'ตำบล/แขวง (ทะเบียนบ้าน)': r.address_SubDistrict || '',
+        'รหัสไปรษณีย์ (ทะเบียนบ้าน)': r.address_Postcode || '',
+        'ที่อยู่ที่ติดต่อได้': r.contactAddress || '',
+        'จังหวัด (ติดต่อ)': r.contact_Province || '',
+        'อำเภอ/เขต (ติดต่อ)': r.contact_District || '',
+        'ตำบล/แขวง (ติดต่อ)': r.contact_SubDistrict || '',
+        'รหัสไปรษณีย์ (ติดต่อ)': r.contact_Postcode || '',
+        'ภาค': r.region || '',
+        'สาขา': r.branch || '',
+        'รหัสตัวแทนวิริยะ': r.affiliation_ViriyahAgentCode || '',
+        'ประเภทหลักสูตร': r.affiliation_BrokerType || r.courseType || '',
+        'เลขที่ใบอนุญาต': r.licenseNo || '',
+        'วันออกใบอนุญาต': formatDateThai(r.licenseIssueDate),
+        'วันหมดอายุใบอนุญาต': formatDateThai(r.licenseExpiryDate),
+        'วิชาที่เลือก': r.mergedSubjects || r.course_RenewOtherIds || '',
+        'รอบวันที่อบรม': r.course_CourseDateIds || '',
+        'วันที่สมัคร/ลงทะเบียน': r.createdAt || formatDateThai(r.onboardDate) || '',
+        'อาหารที่แพ้': r.foodAllergy || '',
+        'โรคประจำตัว': r.medicalCondition || '',
+        'ผู้ติดต่อฉุกเฉิน': r.emergencyContactName || '',
+        'เบอร์โทรฉุกเฉิน': r.emergencyContactPhone || '',
+        'สถานะ': 'ยืนยันแล้ว'
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+
+      if (rows.length > 0) {
+        const colKeys = Object.keys(rows[0]);
+        ws['!cols'] = colKeys.map(key => {
+          let maxLen = key.length * 2;
+          for (let i = 0; i < Math.min(rows.length, 50); i++) {
+            const val = rows[i][key];
+            if (val != null) {
+              const strLen = String(val).length;
+              if (strLen > maxLen) maxLen = strLen;
+            }
+          }
+          return { wch: Math.min(Math.max(maxLen + 3, 12), 65) };
+        });
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อผู้ลงทะเบียน');
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const d = new Date();
+      const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+      const fileName = `Trainees_List_${dateStr}.xlsx`;
+
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' 
+      });
+      saveAs(blob, fileName);
+
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      alert('เกิดข้อผิดพลาดในการ Export ข้อมูล: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (loading) return <div className="text-center p-10">กำลังโหลดข้อมูล...</div>;
 
   return (
@@ -211,9 +350,33 @@ export default function TraineesList() {
             </button>
           </form>
 
-          <button className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
-            <i className="fas fa-file-excel mr-2"></i> Export
+          <button 
+            type="button"
+            onClick={handleExportExcel}
+            disabled={isExporting}
+            className={`flex items-center px-4 py-2 rounded shadow text-white font-medium transition-colors ${
+              isExporting ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+            }`}
+            title="ส่งออกข้อมูลเป็นไฟล์ Excel (.xlsx)"
+          >
+            {isExporting ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i> กำลัง Export...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-file-excel mr-2"></i> Export
+              </>
+            )}
           </button>
+
+          <Link 
+            to="/admin/reports/export" 
+            className="flex items-center px-3 py-2 border border-gray-300 rounded shadow bg-white hover:bg-gray-50 text-gray-700 text-sm transition-colors"
+            title="ไปยังระบบส่งออกข้อมูลขั้นสูง (แยกตามหลักสูตร / รูปแบบ LMS Bulk Import)"
+          >
+            <i className="fas fa-sliders-h mr-1.5 text-primary"></i> ส่งออกขั้นสูง
+          </Link>
         </div>
       </div>
 

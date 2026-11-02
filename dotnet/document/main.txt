@@ -1,0 +1,61 @@
+================================================================================
+โครงการ: ระบบลงทะเบียนขอรับและขอต่ออายุใบอนุญาตตัวแทนและนายหน้าประกันวินาศภัย
+องค์กร:  บริษัท วิริยะประกันภัย จำกัด (มหาชน)
+================================================================================
+
+1. Git Repository (ศูนย์กลางการจัดเก็บซอร์สโค้ดและสคริปต์):
+   - URL: https://github.com/ednakrabgit/register_form
+   - Branch หลัก: feature/dotnet
+
+2. นโยบายระบบฐานข้อมูล (Database Policy):
+   - มาตรฐานระบบฐานข้อมูล: Microsoft SQL Server (Enterprise / Standard)
+   - หมายเหตุสำคัญ: เลิกใช้งาน MySQL แล้วอย่างสมบูรณ์ (Deprecate MySQL)
+
+3. รายการเอกสารอย่างเป็นทางการ (ในโฟลเดอร์นี้):
+   - 1_Business_Requirements_Document_BRD.docx
+     (เอกสารกำหนดความต้องการทางธุรกิจ)
+   - 2_System_Requirements_Specification_SRS.docx
+     (เอกสารกำหนดข้อกำหนดทางระบบและซอฟต์แวร์)
+   - 3_Database_Architecture_and_Data_Dictionary.docx
+     (สรุปโครงสร้างฐานข้อมูล 46 ตาราง 6 โดเมน พร้อมไดอะแกรม)
+   - Viriyah_Registration_System_Executive_Presentation.pptx
+     (สไลด์สรุปนำเสนอผู้บริหาร 12 สไลด์ 16:9 ธีมเรียบหรูระดับองค์กร)
+
+4. Local Service URLs:
+   - Frontend SPA (Apache Port 80):
+     http://localhost/  หรือ  http://127.0.0.1/
+   - Login Page:
+     http://localhost/login
+   - Backend Web API (.NET 8 Port 8085):
+     http://localhost:8085/api
+   - Interactive Database ERD Infographic:
+     file:///C:/Users/ednak/OneDrive/Desktop/datamangement/www/register_form/dotnet/frontend/public/db_infographic.html
+
+5. สคริปต์คำสั่งอำนวยความสะดวก (ในโฟลเดอร์ ..\command):
+   - 1_deploy_to_git.bat
+     (บันทึกและ Push โค้ดทั้งหมดขึ้น GitHub)
+   - 2_pull_from_git.bat
+     (ดึงโค้ดล่าสุดจาก GitHub ลงมาที่ Local)
+   - 3_run_www_local.bat
+     (เริ่มต้น Apache + Docker Backend + เปิดเบราว์เซอร์อัตโนมัติ)
+   - menu.bat
+     (เมนูควบคุมและสั่งงานรวมศูนย์ All-in-One)
+
+6. บัญชีผู้ใช้งานระบบ (User & Password for System Login):
+   -----------------------------------------------------------------------------
+   | บทบาท (Role)        | Username / Email      | Password    | สิทธิ์การใช้งาน       |
+   -----------------------------------------------------------------------------
+   | 👑 ซูเปอร์แอดมิน      | superadmin            | password123 | ดูแลและตั้งค่าระบบทั้งหมด |
+   | 🛡️ แอดมิน (Admin)    | admin                 | password123 | จัดการข้อมูลผู้ลงทะเบียน  |
+   | 👁️ สาขา (Viewer)     | viewer                | password123 | ดูข้อมูลรายชื่อ (Read-only)|
+   | 👤 ผู้สมัคร (Applicant)| karnindy@gmail.com    | password123 | ดูโปรไฟล์และสถานะของตนเอง |
+   -----------------------------------------------------------------------------
+   *หมายเหตุ: บัญชี admin และ viewer สามารถใช้รหัสผ่านเดิม 'editor' และ 'viewer' ได้เช่นกัน
+
+7. ข้อมูลการเชื่อมต่อฐานข้อมูล (Database Connection Credentials):
+   - Database Engine: Microsoft SQL Server 2025 (Docker Container: mssql2025)
+   - Host / Port: localhost:14333 (ภายนอก) / mssql:1433 (ภายใน Docker Network)
+   - Database Name: thaiairp_iptc
+   - SA Username: sa
+   - SA Password: Pass@456981@XKTT
+================================================================================

@@ -88,6 +88,49 @@ function formatThaiDate($dateStr) {
 
 
 // ------------------------
+// Format date to Thai short format: 11 ก.พ. 2569
+// - Uses day + abbreviated Thai month + Buddhist year
+// - Does NOT display time
+// ------------------------
+function formatThaiDateShort($dateStr) {
+    $dateStr = trim((string)$dateStr);
+    if ($dateStr === '' || $dateStr === 'ไม่มีข้อมูล') return '';
+
+    $dt = null;
+
+    if (preg_match('/^\d{2}\/\d{2}\/\d{4}(\s+\d{2}:\d{2}:\d{2})?$/', $dateStr)) {
+        $fmt = (strpos($dateStr, ' ') !== false) ? 'd/m/Y H:i:s' : 'd/m/Y';
+        $dt = DateTime::createFromFormat($fmt, $dateStr);
+    } elseif (preg_match('/^\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}:\d{2})?$/', $dateStr)) {
+        $fmt = (strpos($dateStr, ' ') !== false) ? 'Y-m-d H:i:s' : 'Y-m-d';
+        $dt = DateTime::createFromFormat($fmt, $dateStr);
+    }
+
+    if (!$dt) {
+        $ts = strtotime($dateStr);
+        if ($ts !== false) {
+            $dt = new DateTime();
+            $dt->setTimestamp($ts);
+        }
+    }
+
+    if (!$dt) return '';
+
+    $months = array(
+        1 => 'ม.ค.', 2 => 'ก.พ.', 3 => 'มี.ค.', 4 => 'เม.ย.',
+        5 => 'พ.ค.', 6 => 'มิ.ย.', 7 => 'ก.ค.', 8 => 'ส.ค.',
+        9 => 'ก.ย.', 10 => 'ต.ค.', 11 => 'พ.ย.', 12 => 'ธ.ค.'
+    );
+
+    $day = (int)$dt->format('j');
+    $month = (int)$dt->format('n');
+    $year = (int)$dt->format('Y') + 543;
+
+    return $day . ' ' . $months[$month] . ' ' . $year;
+}
+
+
+// ------------------------
 // Format delimited text into multi-line for display
 // - Replaces delimiter with new line, trims each line, removes empty lines
 // ------------------------
@@ -324,7 +367,7 @@ if ($qId !== '' || isset($_GET['citizen_id'])) {
             $db->set_charset("utf8mb4");
 
             // Try to search in table `register` (default in this project)
-            $table = 'register';
+            $table = defined('DB_TABLE_REGISTER') ? DB_TABLE_REGISTER : 'register';
             $cols = getRegisterColumns($db, $table);
 
             
@@ -344,7 +387,7 @@ if (empty($cols)) {
                 $errMsg = "ไม่มีข้อมูล";
             } else {
                 // Candidate columns (project has used different names over time)
-                $idCol = pickFirstExisting(array('citizen_id','national_id','id_code','idcard','id_card','citizenid'), $cols);
+                $idCol = pickFirstExisting(array('national_id','citizen_id','id_code','idcard','id_card','citizenid'), $cols);
 
                 $firstNameCol = pickFirstExisting(array('first_name_th','firstname_th','first_name','firstname'), $cols);
                 $lastNameCol  = pickFirstExisting(array('last_name_th','lastname_th','last_name','lastname'), $cols);
@@ -389,7 +432,8 @@ $agentLevelCol  = pickFirstExisting(array('agent_level'), $cols);
                 $renewBroker1Col = pickFirstExisting(array('renew_broker_1'), $cols);
                 $renewBroker2Col = pickFirstExisting(array('renew_broker_2'), $cols);
                 $renewBroker3Col = pickFirstExisting(array('renew_broker_3'), $cols);
-$completionCol = pickFirstExisting(array('completion_time','completed_at','completion_datetime','updated_at','submit_time'), $cols);
+$completionCol = pickFirstExisting(array('completion_time', 'complete_time', 'completed_at', 'completion_datetime'), $cols);
+$pkCol = pickFirstExisting(array('id', 'register_id', 'rid'), $cols);
 
                 if ($idCol === '') {
                     $errMsg = "ไม่มีข้อมูล";
@@ -418,86 +462,49 @@ $completionCol = pickFirstExisting(array('completion_time','completed_at','compl
                     if ($renewBroker3Col !== '') $selectParts[] = "`$renewBroker3Col` AS renew_broker_3";
 
                     $selectParts[] = "`$idCol` AS citizen_id";
+                    if ($completionCol !== '') $selectParts[] = "`$completionCol` AS completion_time";
 
-                    $orderBy = "";
-                    if ($completionCol !== '') {
-                        $orderBy = " ORDER BY `$completionCol` DESC ";
-                    }
-
-                    $sql = "SELECT " . implode(", ", $selectParts) . "
-                            FROM `$table`
-                            WHERE LEFT(REPLACE(REPLACE(`$idCol`,'-',''),' ',''),13) = ?
-                            $orderBy
-                            LIMIT 1";
-
-                    $stmt = $db->prepare($sql);
-                    if (!$stmt) {
-                        $errMsg = "ไม่มีข้อมูล";
+                    // Search ONLY completed transactions.
+                    // completion_time must exist and must not be NULL / empty / whitespace / '0000-00-00 00:00:00'.
+                    // If duplicate national_id exist, select the record with the latest completion_time.
+                    if ($completionCol === '') {
+                        // If the table does not have completion_time, treat it as "not found".
+                        $notFoundMsg = "ไม่พบข้อมูลการอบรมของท่าน";
                     } else {
-                        $stmt->bind_param("s", $qIdDigits);
-                        if ($stmt->execute()) {
-                            $res = $stmt->get_result();
-                            if ($res && $res->num_rows > 0) {
-                                $result = $res->fetch_assoc();
+                        $orderParts = array("`$completionCol` DESC");
+                        if (!empty($pkCol)) {
+                            $orderParts[] = "`$pkCol` DESC";
+                        }
+                        $orderBy = " ORDER BY " . implode(", ", $orderParts) . " ";
 
-                                // Merge renew_other for the same national_id
-                                if ($wantCourseCol === 'renew_other') {
-                                    $cteSql = "WITH RECURSIVE seq AS (
-                                        SELECT 1 n
-                                        UNION ALL
-                                        SELECT n + 1
-                                        FROM seq
-                                        WHERE n < 20
-                                    ),
-                                    split_data AS (
-                                        SELECT
-                                            r.`$idCol`,
-                                            TRIM(
-                                                SUBSTRING_INDEX(
-                                                    SUBSTRING_INDEX(r.renew_other, ';', n),
-                                                    ';',
-                                                    -1
-                                                )
-                                            ) AS subject
-                                        FROM `$table` r
-                                        JOIN seq
-                                            ON n <= 1 + LENGTH(IFNULL(r.renew_other,''))
-                                                  - LENGTH(REPLACE(IFNULL(r.renew_other,''), ';', ''))
-                                        WHERE LEFT(REPLACE(REPLACE(r.`$idCol`,'-',''),' ',''),13) = ?
-                                    )
-                                    SELECT
-                                        GROUP_CONCAT(
-                                            DISTINCT subject
-                                            ORDER BY subject
-                                            SEPARATOR ' ; '
-                                        ) AS renew_other_all
-                                    FROM split_data
-                                    WHERE subject <> ''";
-                                    
-                                    $db->query("SET SESSION group_concat_max_len = 100000;");
-                                    $stmtCte = $db->prepare($cteSql);
-                                    if ($stmtCte) {
-                                        $stmtCte->bind_param("s", $qIdDigits);
-                                        if ($stmtCte->execute()) {
-                                            $resCte = $stmtCte->get_result();
-                                            if ($resCte && $resCte->num_rows > 0) {
-                                                $rowCte = $resCte->fetch_assoc();
-                                                if (!empty($rowCte['renew_other_all'])) {
-                                                    $result['want_courses'] = $rowCte['renew_other_all'];
-                                                }
-                                            }
-                                        }
-                                        $stmtCte->close();
-                                    }
+                        $sql = "SELECT " . implode(", ", $selectParts) . "
+                                FROM `$table`
+                                WHERE LEFT(REPLACE(REPLACE(`$idCol`,'-',''),' ',''),13) = ?
+                                  AND `$completionCol` IS NOT NULL
+                                  AND TRIM(`$completionCol`) <> ''
+                                  AND `$completionCol` <> '0000-00-00 00:00:00'
+                                $orderBy
+                                LIMIT 1";
+
+                        $stmt = $db->prepare($sql);
+                        if (!$stmt) {
+                            $errMsg = "ไม่มีข้อมูล";
+                        } else {
+                            $stmt->bind_param("s", $qIdDigits);
+                            if ($stmt->execute()) {
+                                $res = $stmt->get_result();
+                                if ($res && $res->num_rows > 0) {
+                                    $result = $res->fetch_assoc();
+                                } else {
+                                    $notFoundMsg = "ไม่พบข้อมูลการอบรมของท่าน";
                                 }
                             } else {
-                                $notFoundMsg = "ไม่พบข้อมูลการอบรมของท่าน";
+                                $errMsg = "ไม่มีข้อมูล";
                             }
-                        } else {
-                            $errMsg = "ไม่มีข้อมูล";
+                            $stmt->close();
                         }
-                        $stmt->close();
                     }
+
                 }
             }
             $db->close();
@@ -867,7 +874,13 @@ if (!empty($wantCandidates)) {
 
                         $maskedId = isset($result['citizen_id']) ? maskCitizenIdLast6($result['citizen_id']) : maskCitizenIdLast6($qIdDigits);
                     ?>
-                    <div class="msg ok"><span class="badge">พบข้อมูล</span> แสดงรายละเอียดข้อมูลการอบรม</div>
+                    <?php
+    $registrationDate = isset($result['completion_time']) ? formatThaiDateShort($result['completion_time']) : '';
+    if ($registrationDate === '') $registrationDate = 'ไม่ทราบวันที่';
+?>
+<div class="msg ok">
+    <span class="badge">พบข้อมูล</span> ข้อมูลที่ท่านลงทะเบียนด้วยตนเองในวันที่ <b><?php echo e($registrationDate); ?></b>
+</div>
 
                     <div class="result">
                         <div class="row">
