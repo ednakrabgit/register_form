@@ -67,6 +67,10 @@ jobs:
     steps:
       - name: Trigger Webhook API
         run: |
+          if [ -z "${{ secrets.DEPLOY_WEBHOOK_URL }}" ]; then
+            echo "DEPLOY_WEBHOOK_URL secret is not configured in GitHub Secrets. Skipping deploy webhook."
+            exit 0
+          fi
           curl -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             -H "Authorization: Bearer ${{ secrets.DEPLOY_API_TOKEN }}" \
             -H "Content-Type: application/json" \
