@@ -203,11 +203,23 @@ function formatPastCourses($s) {
     $s = trim((string)$s);
     if ($s === '' || $s === 'ไม่มีข้อมูล') return $s;
 
-    $parts = preg_split('/\s*;\s*/', $s);
+    $parts = preg_split('/\s*;\s*|\n+/', $s);
     $items = array();
+    $seen = array();
     foreach ($parts as $p) {
         $p = trim((string)$p);
         if ($p === '') continue;
+
+        // Normalize key to deduplicate
+        $clean = preg_replace('/^\s*\d+[\.\)\s]+/u', '', $p);
+        $clean = str_replace('กฏ', 'กฎ', $clean);
+        $clean = preg_replace('/[\s\.\:\-\_\(\)\[\]]+/u', '', $clean);
+        $key = mb_strtolower($clean, 'UTF-8');
+        if ($key !== '') {
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+        }
+
         $items[] = $p;
     }
     if (empty($items)) return 'ไม่มีข้อมูล';
@@ -309,12 +321,40 @@ function formatWantCourses($s) {
         return 0;
     });
 
+    // Deduplicate courses: ถ้ามีรายการวิชาที่ซ้ำกัน ให้ตัดเหลือแค่รายการเดียว
+    $uniqueItems = array();
+    $seen = array();
+    foreach ($items as $row) {
+        $item = trim((string)$row['item']);
+        if ($item === '') continue;
+
+        // แยกเฉพาะชื่อวิชา (ข้อความหลังเครื่องหมาย :) มาทำ normalize key
+        $courseTitle = $item;
+        $pos = strpos($item, ':');
+        if ($pos !== false) {
+            $courseTitle = trim(substr($item, $pos + 1));
+        }
+        $courseNorm = str_replace('กฏ', 'กฎ', $courseTitle);
+        $courseNorm = str_replace('(ทางไกล)', '', $courseNorm);
+        $courseNorm = preg_replace('/[\s\.\:\-\_\(\)\[\]]+/u', '', $courseNorm);
+        $dedupKey = mb_strtolower($courseNorm, 'UTF-8');
+
+        if ($dedupKey !== '') {
+            if (isset($seen[$dedupKey])) {
+                continue; // ตัดรายการวิชาที่ซ้ำออก
+            }
+            $seen[$dedupKey] = true;
+        }
+
+        $uniqueItems[] = $row;
+    }
+
     // Output format:
     // 1. [Pillar X] ...:
     // วิชา...
     $out = array();
     $i = 1;
-    foreach ($items as $row) {
+    foreach ($uniqueItems as $row) {
         $item = trim((string)$row['item']);
         if ($item === '') continue;
 
