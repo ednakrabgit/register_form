@@ -24,11 +24,12 @@ echo   [3] Run and Start Local WWW Web Application (3_run_www_local.bat)
 echo   [4] Restart Apache24 Web Server
 echo   [5] View Docker Containers Status (mssql, backend, frontend)
 echo   [6] Open Documentation Directory in File Explorer
+echo   [7] Backup SQL Server Database to www\db (backup_sqlserver_db.bat)
 echo   [0] Exit
 echo -------------------------------------------------------------------------------
 echo.
 
-set /p M_CHOICE="Enter choice [0-6]: "
+set /p M_CHOICE="Enter choice [0-7]: "
 
 if "%M_CHOICE%"=="1" (
     call "%~dp01_deploy_to_git.bat"
@@ -68,6 +69,10 @@ if "%M_CHOICE%"=="5" (
 )
 if "%M_CHOICE%"=="6" (
     explorer "%~dp0..\document"
+    goto :MENU
+)
+if "%M_CHOICE%"=="7" (
+    call "%~dp0..\..\db\backup_sqlserver_db.bat"
     goto :MENU
 )
 if "%M_CHOICE%"=="0" (
