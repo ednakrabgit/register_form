@@ -10,6 +10,8 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sameAddress, setSameAddress] = useState(true);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [saveErrorMsg, setSaveErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     nationId: '',
@@ -550,13 +552,16 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
   };
 
   // Submit Handler
+  // Submit Handler (Keeps modal open on save without browser alert)
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    setSaveSuccessMsg('');
+    setSaveErrorMsg('');
 
     const validationErrors = validateForm(formData, masterData);
     if (validationErrors.length > 0) {
       setActiveTab(validationErrors[0].tab);
-      alert(`⚠️ กรุณาตรวจสอบข้อมูล:\n\n• ${validationErrors[0].msg}`);
+      setSaveErrorMsg(`⚠️ กรุณาตรวจสอบข้อมูล: ${validationErrors[0].msg}`);
       return;
     }
 
@@ -599,15 +604,20 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
       });
 
       if (res.ok) {
-        alert('บันทึกข้อมูลและประวัติการแก้ไขเรียบร้อยแล้ว');
-        onSuccess();
+        setSaveSuccessMsg('บันทึกข้อมูลและประวัติการแก้ไขเรียบร้อยแล้ว');
+        if (onSuccess) {
+          onSuccess(false); // Update background list silently, DO NOT close modal
+        }
+        setTimeout(() => {
+          setSaveSuccessMsg('');
+        }, 5000);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.message || 'ไม่สามารถบันทึกข้อมูลได้');
+        setSaveErrorMsg(err.message || 'ไม่สามารถบันทึกข้อมูลได้');
       }
     } catch (err) {
       console.error(err);
-      alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+      setSaveErrorMsg('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -697,6 +707,49 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
             5. ข้อมูลอื่นๆ & ธุรกิจ
           </button>
         </div>
+
+        {/* In-Modal Notification Banners */}
+        {saveSuccessMsg && (
+          <div className="mx-6 mt-3 p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600">
+                <i className="fas fa-check text-base"></i>
+              </div>
+              <div>
+                <p className="font-bold text-sm text-emerald-900">{saveSuccessMsg}</p>
+                <p className="text-xs text-emerald-700">ระบบบันทึกข้อมูลและประวัติการแก้ไขเรียบร้อยแล้ว หน้าต่างนี้ยังคงเปิดอยู่เพื่อให้คุณแก้ไขหรือตรวจสอบต่อได้</p>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setSaveSuccessMsg('')} 
+              className="text-emerald-500 hover:text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
+            >
+              <i className="fas fa-times text-sm"></i>
+            </button>
+          </div>
+        )}
+
+        {saveErrorMsg && (
+          <div className="mx-6 mt-3 p-3.5 bg-red-50 border border-red-300 text-red-800 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 text-red-600">
+                <i className="fas fa-exclamation text-base"></i>
+              </div>
+              <div>
+                <p className="font-bold text-sm text-red-900">ไม่สามารถบันทึกข้อมูลได้</p>
+                <p className="text-xs text-red-700">{saveErrorMsg}</p>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setSaveErrorMsg('')} 
+              className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              <i className="fas fa-times text-sm"></i>
+            </button>
+          </div>
+        )}
 
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-1 bg-gray-50">
@@ -1666,23 +1719,37 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 flex-shrink-0">
-          <button 
-            type="button" 
-            onClick={onClose} 
-            className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-semibold text-sm hover:bg-gray-100 transition-all"
-          >
-            ยกเลิก
-          </button>
-          <button 
-            type="submit" 
-            form="editPersonForm" 
-            disabled={saving} 
-            className="px-6 py-2.5 bg-primary hover:bg-[#002882] text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
-          >
-            {saving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
-            {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล (Update Current)'}
-          </button>
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {saveSuccessMsg && (
+              <span className="text-emerald-700 font-semibold text-xs flex items-center gap-1.5 bg-emerald-100/70 border border-emerald-300 px-3 py-1.5 rounded-lg animate-in fade-in">
+                <i className="fas fa-check-circle text-emerald-600"></i> บันทึกข้อมูลสำเร็จ (หน้าต่างยังคงเปิดอยู่)
+              </span>
+            )}
+            {saveErrorMsg && (
+              <span className="text-red-700 font-semibold text-xs flex items-center gap-1.5 bg-red-100/70 border border-red-300 px-3 py-1.5 rounded-lg animate-in fade-in">
+                <i className="fas fa-exclamation-circle text-red-600"></i> บันทึกไม่สำเร็จ
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-semibold text-sm hover:bg-gray-100 transition-all flex items-center gap-1.5"
+            >
+              <i className="fas fa-times text-xs"></i> ปิดหน้าต่าง
+            </button>
+            <button 
+              type="submit" 
+              form="editPersonForm" 
+              disabled={saving} 
+              className="px-6 py-2.5 bg-primary hover:bg-[#002882] text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {saving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
+              {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล (Update Current)'}
+            </button>
+          </div>
         </div>
 
       </div>

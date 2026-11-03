@@ -872,8 +872,10 @@ export default function TraineesList() {
         <TraineeEditModal 
           nationId={editingTraineeId} 
           onClose={() => setEditingTraineeId(null)} 
-          onSuccess={() => {
-            setEditingTraineeId(null);
+          onSuccess={(closeModal = false) => {
+            if (closeModal) {
+              setEditingTraineeId(null);
+            }
             fetchTrainees();
           }} 
         />
