@@ -1,61 +1,160 @@
 ================================================================================
 โครงการ: ระบบลงทะเบียนขอรับและขอต่ออายุใบอนุญาตตัวแทนและนายหน้าประกันวินาศภัย
 องค์กร:  บริษัท วิริยะประกันภัย จำกัด (มหาชน)
+เอกสารศูนย์กลางข้อมูลระบบและการดำเนินงาน (Master Project Reference)
+ปรับปรุงล่าสุด: 3 พฤศจิกายน 2569
 ================================================================================
 
+--------------------------------------------------------------------------------
 1. Git Repository (ศูนย์กลางการจัดเก็บซอร์สโค้ดและสคริปต์):
-   - URL: https://github.com/ednakrabgit/register_form
-   - Branch หลัก: main (ซิงค์คู่ขนานกับ feature/dotnet อัตโนมัติ - ไม่ต้องกด Pull Request)
+--------------------------------------------------------------------------------
+   - Repository URL : https://github.com/ednakrabgit/register_form
+   - Remote Name    : ednakrabgit (หรือ origin)
+   - Branch หลัก    : main (ซิงค์คู่ขนานกับ feature/dotnet อัตโนมัติ - ไม่ต้องกด Pull Request)
+   - นโยบาย Deploy  : สคริปต์ 1_deploy_to_git.bat จะ Push ตรงเข้า main และ feature/dotnet โดยอัตโนมัติ
 
-2. นโยบายระบบฐานข้อมูล (Database Policy):
-   - มาตรฐานระบบฐานข้อมูล: Microsoft SQL Server (Enterprise / Standard)
-   - หมายเหตุสำคัญ: เลิกใช้งาน MySQL แล้วอย่างสมบูรณ์ (Deprecate MySQL)
+--------------------------------------------------------------------------------
+2. นโยบายระบบฐานข้อมูล (Database Architecture & Policy):
+--------------------------------------------------------------------------------
+   - มาตรฐานฐานข้อมูลหลัก (Primary Production Standard):
+     * Microsoft SQL Server 2022 / 2025 (Enterprise / Standard Edition)
+     * โครงสร้างตาราง: 46 ตาราง ครอบคลุม 6 โดเมนข้อมูล (Trainee, Course, License, Master, Audit, RBAC)
+   - สถานะระบบเดิม (Legacy Deprecation):
+     * ยกเลิกการใช้งาน MySQL แล้วอย่างสมบูรณ์ 100% (Fully Deprecated MySQL)
+   - ฐานข้อมูลสำหรับการรันบน Cloud Run (Cloud Run Runtime):
+     * ใช้ Embedded SQLite (app.db) ซึ่งซิงค์ข้อมูลตรงจาก Microsoft SQL Server เพื่อความรวดเร็วและเป็นอิสระ
 
-3. รายการเอกสารอย่างเป็นทางการ (ในโฟลเดอร์นี้):
-   - 1_Business_Requirements_Document_BRD.docx
-     (เอกสารกำหนดความต้องการทางธุรกิจ)
-   - 2_System_Requirements_Specification_SRS.docx
-     (เอกสารกำหนดข้อกำหนดทางระบบและซอฟต์แวร์)
-   - 3_Database_Architecture_and_Data_Dictionary.docx
-     (สรุปโครงสร้างฐานข้อมูล 46 ตาราง 6 โดเมน พร้อมไดอะแกรม)
-   - Viriyah_Registration_System_Executive_Presentation.pptx
-     (สไลด์สรุปนำเสนอผู้บริหาร 12 สไลด์ 16:9 ธีมเรียบหรูระดับองค์กร)
+--------------------------------------------------------------------------------
+3. นโยบายการจัดเก็บเอกสาร (Documentation Directory Policy):
+--------------------------------------------------------------------------------
+   * โฟลเดอร์จัดเก็บเอกสารทั้งหมดของโครงการ (Official Document Root):
+     C:\Users\ednak\OneDrive\Desktop\datamangement\www\register_form\dotnet\document
 
-4. Local Service URLs:
-   - Frontend SPA (Apache Port 80):
-     http://localhost/  หรือ  http://127.0.0.1/
-   - Login Page:
-     http://localhost/login
-   - Backend Web API (.NET 8 Port 8085):
-     http://localhost:8085/api
-   - Interactive Database ERD Infographic:
-     file:///C:/Users/ednak/OneDrive/Desktop/datamangement/www/register_form/dotnet/frontend/public/db_infographic.html
+   * รายการเอกสารทางการที่จัดเก็บอยู่ในโฟลเดอร์นี้:
+     1) 1_Business_Requirements_Document_BRD.docx
+        - เอกสารกำหนดความต้องการทางธุรกิจ (Business Requirements)
+     2) 2_System_Requirements_Specification_SRS.docx
+        - เอกสารกำหนดข้อกำหนดทางระบบและซอฟต์แวร์ (System & Software Specs)
+     3) 3_Database_Architecture_and_Data_Dictionary.docx
+        - สรุปโครงสร้างสถาปัตยกรรมฐานข้อมูล 46 ตาราง 6 โดเมน พร้อม Data Dictionary และไดอะแกรม
+     4) Viriyah_Registration_System_Executive_Presentation.pptx
+        - สไลด์สรุปนำเสนอผู้บริหาร 12 สไลด์ อัตราส่วน 16:9 สไตล์องค์กรทันสมัย
+     5) main.txt
+        - เอกสารสรุปภาพรวมระบบ บัญชีผู้ใช้ คำสั่ง และ URL ทั้งหมด (ไฟล์นี้)
+     6) diagrams/ & notebookLM/
+        - ไดอะแกรมความสัมพันธ์ ERD, Workflows และชุดข้อมูลสำหรับ AI Analysis
 
-5. สคริปต์คำสั่งอำนวยความสะดวก (ในโฟลเดอร์ ..\command):
+   * นโยบายการเพิ่มเอกสาร:
+     หลังจากนี้ หากมีเอกสาร, คู่มือ, หรือรายงานเพิ่มเติม ให้บันทึกและจัดวางไว้ที่โฟลเดอร์นี้ทั้งหมด
+
+--------------------------------------------------------------------------------
+4. รายการ URLs สำหรับเข้าใช้งานระบบ (Service URLs):
+--------------------------------------------------------------------------------
+   [ก] ระบบบนเครื่อง Local (Local Environment):
+       - Frontend Web Application (Apache Port 80):
+         http://localhost/  หรือ  http://127.0.0.1/
+       - หน้าเข้าสู่ระบบ (Login Page):
+         http://localhost/login
+       - Backend Web API (.NET 8 Port 8085):
+         http://localhost:8085/api
+       - หน้า Swagger API Documentation:
+         http://localhost:8085/swagger
+       - Interactive Database ERD Infographic:
+         file:///C:/Users/ednak/OneDrive/Desktop/datamangement/www/register_form/dotnet/frontend/public/db_infographic.html
+
+   [ข] ระบบบนคลาวด์เซิร์ฟเวอร์ (Google Cloud Production Environment):
+       - Frontend Production Web URL:
+         https://register-frontend-779142529105.us-central1.run.app/login
+       - Backend Production Web API:
+         https://register-backend-779142529105.us-central1.run.app/api
+       - Google Cloud Storage Bucket (สำหรับเก็บไฟล์ Backup .bak และสื่อหลักสูตร):
+         gs://viriyahiptc2/  (โฟลเดอร์ db_backup/)
+       - Google Cloud Project:
+         project-86010b3e-ea84-4c5a-8ec (NeonX)
+
+--------------------------------------------------------------------------------
+5. สคริปต์คำสั่งอำนวยความสะดวก (Automation Scripts):
+--------------------------------------------------------------------------------
+   ตำแหน่งสคริปต์: C:\Users\ednak\OneDrive\Desktop\datamangement\www\register_form\dotnet\command\
+
    - 1_deploy_to_git.bat
-     (บันทึกและ Push โค้ดทั้งหมดขึ้น GitHub)
+     บันทึก Commit และ Push โค้ดทั้งหมดขึ้น GitHub (main และ feature/dotnet) โดยไม่ต้องสร้าง Pull Request
    - 2_pull_from_git.bat
-     (ดึงโค้ดล่าสุดจาก GitHub ลงมาที่ Local)
+     ดึงโค้ดเวอร์ชันล่าสุดจาก GitHub ลงมาอัปเดตเครื่อง Local
    - 3_run_www_local.bat
-     (เริ่มต้น Apache + Docker Backend + เปิดเบราว์เซอร์อัตโนมัติ)
+     เริ่มต้นบริการ Apache24 + Docker Compose (SQL Server & Backend) และเปิดเว็บเบราว์เซอร์อัตโนมัติ
+   - backup_db.bat (หรือกด [7] ใน menu.bat)
+     เรียกใช้สคริปต์สำรองข้อมูลและ Deploy ข้อมูลขึ้นเซิร์ฟเวอร์
    - menu.bat
-     (เมนูควบคุมและสั่งงานรวมศูนย์ All-in-One)
+     เมนูรวมศูนย์ All-in-One สำหรับสั่งการทุกฟังก์ชันของระบบผ่านหน้าจอเดียว
 
-6. บัญชีผู้ใช้งานระบบ (User & Password for System Login):
-   -----------------------------------------------------------------------------
-   | บทบาท (Role)        | Username / Email      | Password    | สิทธิ์การใช้งาน       |
-   -----------------------------------------------------------------------------
-   | 👑 ซูเปอร์แอดมิน      | superadmin            | password123 | ดูแลและตั้งค่าระบบทั้งหมด |
-   | 🛡️ แอดมิน (Admin)    | admin                 | password123 | จัดการข้อมูลผู้ลงทะเบียน  |
-   | 👁️ สาขา (Viewer)     | viewer                | password123 | ดูข้อมูลรายชื่อ (Read-only)|
-   | 👤 ผู้สมัคร (Applicant)| karnindy@gmail.com    | password123 | ดูโปรไฟล์และสถานะของตนเอง |
-   -----------------------------------------------------------------------------
-   *หมายเหตุ: บัญชี admin และ viewer สามารถใช้รหัสผ่านเดิม 'editor' และ 'viewer' ได้เช่นกัน
+--------------------------------------------------------------------------------
+6. ระบบสำรองข้อมูลและ Deploy ขึ้นคลาวด์ (Database Backup & Cloud Deploy):
+--------------------------------------------------------------------------------
+   * สคริปต์หลัก:
+     C:\Users\ednak\OneDrive\Desktop\datamangement\www\db\backup_sqlserver_db.bat
 
-7. ข้อมูลการเชื่อมต่อฐานข้อมูล (Database Connection Credentials):
-   - Database Engine: Microsoft SQL Server 2025 (Docker Container: mssql2025)
-   - Host / Port: localhost:14333 (ภายนอก) / mssql:1433 (ภายใน Docker Network)
-   - Database Name: thaiairp_iptc
-   - SA Username: sa
-   - SA Password: Pass@456981@XKTT
+   * ขั้นตอนที่สคริปต์ทำงานอัตโนมัติแบบครบวงจร (One-Click Automated Pipeline):
+     1) ตรวจสอบความพร้อมของ Docker Engine และคอนเทนเนอร์ mssql2025 (หากปิดอยู่จะ Start ให้อัตโนมัติ)
+     2) สั่งคำสั่ง BACKUP DATABASE [thaiairp_iptc] WITH COMPRESSION ใน SQL Server
+     3) ดึงไฟล์ .bak ออกมาเก็บไว้ที่เครื่อง Local:
+        C:\Users\ednak\OneDrive\Desktop\datamangement\www\db\thaiairp_iptc_backup_YYYYMMDD_HHMMSS.bak
+     4) อัปโหลดไฟล์ .bak ขึ้น Google Cloud Storage Bucket:
+        - gs://viriyahiptc2/db_backup/thaiairp_iptc_backup_YYYYMMDD_HHMMSS.bak
+        - gs://viriyahiptc2/db_backup/latest.bak (สำเนาเวอร์ชันล่าสุด)
+     5) ซิงค์ข้อมูลจาก SQL Server 46 ตาราง เข้าสู่ SQLite app.db ผ่าน export_mssql_to_sqlite.py
+     6) สั่ง Deploy คอนเทนเนอร์ register-backend เวอร์ชันใหม่ขึ้นสู่ Google Cloud Run อัตโนมัติ
+
+--------------------------------------------------------------------------------
+7. บัญชีผู้ใช้งานระบบและการยืนยันตัวตน (Authentication & User Accounts):
+--------------------------------------------------------------------------------
+   * นโยบายการเข้าสู่ระบบ (Dual-Identifier Login):
+     - ช่องระบุตัวตน: สามารถกรอก "อีเมล (Email)" หรือ "รหัสประจำตัวประชาชน 13 หลัก" (ทั้งแบบมีขีดหรือไม่มีขีด)
+     - รหัสผ่านเริ่มต้นสำหรับผู้เข้าอบรม: "เลขบัตรประชาชน 5 หลักสุดท้าย"
+     - ระบบจับคู่รหัสผ่านอย่างแม่นยำแม้ในกรณีอีเมลตัวแทน/สาขาซ้ำกัน
+
+   * สรุปจำนวนบัญชีในระบบ:
+     ตาราง admin_users มีผู้ใช้งานทั้งหมด 3,960 บัญชี (1 แอดมิน + 3,959 ผู้เข้าอบรม)
+
+   * บัญชีหลักสำหรับทดสอบระบบ (Test Accounts):
+   ---------------------------------------------------------------------------------------------
+   | บทบาท (Role)        | ข้อมูลล็อกอิน (Email / รหัส ปชช.) | รหัสผ่าน     | สิทธิ์และรายละเอียด       |
+   ---------------------------------------------------------------------------------------------
+   | 👑 ซูเปอร์แอดมิน      | superadmin                      | password123 | ดูแลและตั้งค่าระบบทั้งหมด |
+   | 🛡️ แอดมิน (Admin)    | admin                           | password123 | จัดการข้อมูลผู้ลงทะเบียน  |
+   | 👁️ สาขา (Viewer)     | viewer                          | password123 | ดูข้อมูลรายชื่อ (Read-only)|
+   | 👤 ผู้เข้าอบรม 1     | 1100200314511                   | 14511       | นางสาวพรรณพิลาส ถนอมรัตน์ |
+   |                      | (หรือ thanomrat.2530@gmail.com) |             |                           |
+   | 👤 ผู้เข้าอบรม 2     | 1100200216161                   | 16161       | นางสาวภควดี เสมาเงิน     |
+   |                      | (หรือ a.p.insurancee@gmail.com) |             |                           |
+   | 👤 ผู้สมัครเดิม       | karnindy@gmail.com              | password123 | ผู้สมัครทดสอบระบบเดิม     |
+   ---------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+8. ข้อมูลการเชื่อมต่อฐานข้อมูล (Database Connection Credentials):
+--------------------------------------------------------------------------------
+   - RDBMS Engine     : Microsoft SQL Server 2025 (Enterprise Edition on Linux Container)
+   - Docker Container : mssql2025
+   - External Host    : 127.0.0.1:14333 (หรือ localhost:14333)
+   - Internal Host    : mssql:1433 (ภายใน Docker Network)
+   - Database Name    : thaiairp_iptc
+   - SA User          : sa
+   - SA Password      : Pass@456981@XKTT
+   - App User         : thaiairp_iptc / Pass@456981@XKTT
+
+--------------------------------------------------------------------------------
+9. Master Data และการปรับปรุงสำคัญของระบบ:
+--------------------------------------------------------------------------------
+   - Master Data ที่อยู่ตามกรมการปกครอง:
+     * 77 จังหวัด (mst_provinces)
+     * 928 อำเภอ (mst_districts)
+     * 7,442 ตำบล (mst_sub_districts)
+     * ระบบเชื่อมโยงความสัมพันธ์ตำบล-อำเภอ-จังหวัดถูกต้องตรงตามรหัสมาตรฐาน
+   - Master Data หมวดวิชาการอบรม (Pillars):
+     * Pillar 1: การประกันภัยและการกำกับดูแล
+     * Pillar 2: การตลาดและการจัดการ
+     * Pillar 3: กฎหมาย จรรยาบรรณ และการคุ้มครองข้อมูล (PDPA/AML)
+     * Pillar 4: เทคโนโลยีและนวัตกรรมประกันภัย
+   - หน้าจัดการผู้ใช้งาน (User Management):
+     * รองรับระบบแบ่งหน้า (Pagination) 10, 25, 50, 100 รายการต่อหน้า ทำให้การโหลด 3,960 รายชื่อทำงานได้อย่างรวดเร็ว
 ================================================================================
