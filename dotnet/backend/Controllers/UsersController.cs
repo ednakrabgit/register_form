@@ -174,6 +174,12 @@ namespace backend.Controllers
                 {
                     return BadRequest(new { message = "เลขประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก" });
                 }
+
+                var existingNationId = await _context.Users.AnyAsync(u => u.NationId == cleanNationId);
+                if (existingNationId)
+                {
+                    return BadRequest(new { message = "เลขประจำตัวประชาชนนี้มีอยู่ในระบบแล้ว" });
+                }
             }
 
             var cleanFullName = !string.IsNullOrWhiteSpace(dto.FullName)
@@ -275,6 +281,11 @@ namespace backend.Controllers
             if (!string.IsNullOrWhiteSpace(dto.NationId))
             {
                 cleanNationId = Regex.Replace(dto.NationId, @"\D", "");
+                var existingNationId = await _context.Users.AnyAsync(u => u.Id != id && u.NationId == cleanNationId);
+                if (existingNationId)
+                {
+                    return BadRequest(new { message = "เลขประจำตัวประชาชนนี้มีผู้ใช้งานอื่นใช้แล้ว" });
+                }
                 user.NationId = cleanNationId;
             }
             else

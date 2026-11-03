@@ -156,5 +156,28 @@
      * Pillar 3: กฎหมาย จรรยาบรรณ และการคุ้มครองข้อมูล (PDPA/AML)
      * Pillar 4: เทคโนโลยีและนวัตกรรมประกันภัย
    - หน้าจัดการผู้ใช้งาน (User Management):
-     * รองรับระบบแบ่งหน้า (Pagination) 10, 25, 50, 100 รายการต่อหน้า ทำให้การโหลด 3,960 รายชื่อทำงานได้อย่างรวดเร็ว
+     * รองรับระบบแบ่งหน้า (Pagination) 10, 25, 50, 100 รายการต่อหน้า ทำให้การโหลด 3,937 รายชื่อทำงานได้อย่างรวดเร็ว
+
+--------------------------------------------------------------------------------
+10. นโยบายความไม่ซ้ำซ้อนของข้อมูล (Data Uniqueness & Deduplication Policy):
+--------------------------------------------------------------------------------
+   - กฎเหล็กของระบบ (Strict Uniqueness Rules):
+     * "อีเมล (Email)" และ "เลขประจำตัวประชาชน (National ID)" ต้องไม่ซ้ำกันในระบบอย่างเด็ดขาด
+     * หากพบข้อมูลที่เคยซ้ำในอดีต ระบบทำการคัดกรองเก็บเฉพาะ Record ล่าสุด (Latest Record) ไว้เพียง Record เดียว และลบ Record เก่าที่ซ้ำทิ้งทั้งหมด
+   - โครงสร้าง Unique Constraints / Indexes ใน SQL Server:
+     * admin_users : UQ_admin_users_Email (Email), UQ_admin_users_NationId (NationId)
+     * person      : UQ_person_EmailAlt (EmailAlt), NationId (Primary Key)
+     * register    : UQ_register_email_alt (email_alt), UQ_register_national_id (national_id)
+   - การตรวจสอบที่ระดับ Backend Web API:
+     * UsersController (CreateUser / UpdateUser) และ AuthController (Register) ตรวจสอบความซ้ำซ้อนล่วงหน้า ทั้ง Email และ เลขบัตรประชาชน หากมีอยู่ในระบบแล้ว จะปฏิเสธคำขอทันทีพร้อมแจ้งเตือนผู้ใช้ชัดเจน
+
+--------------------------------------------------------------------------------
+11. การทำงานร่วมกับ GitHub Actions (CI/CD) และ Google Cloud Storage:
+--------------------------------------------------------------------------------
+   - รายละเอียดข้อผิดพลาดของ GitHub Actions ใน Commit 3fb3dbe:
+     * สาเหตุ: เกิดจากไฟล์ package.json ในฝั่ง Frontend เดิมมี dependency ฝั่ง win32 (Windows-specific binary) ติดอยู่ ทำให้คำสั่ง npm install ใน GitHub Actions runner (Ubuntu-latest) ล้มเหลวในขั้นตอน build-and-push-images
+     * การแก้ไข: ได้รับการแก้ไขเรียบร้อยแล้วใน Commit bfa103c โดยนำแพ็กเกจ win32 ที่ไม่จำเป็นออก และทุก Workflow Runs หลังจากนั้น (Commit 491b424, 55668ed, 54bf19d, 7562353, 4153059) สำเร็จเป็นสีเขียว (Success 100%) ทั้งหมด
+   - ภาพรวม Google Cloud Storage Buckets (ในโครงการ NeonX):
+     * viriyahiptc2 (Multi-region asia) : Bucket หลักที่ระบบใช้จัดเก็บไฟล์สำรองฐานข้อมูล (.bak) ที่โฟลเดอร์ db_backup/ รวมถึงสื่อรูปภาพและหลักสูตร
+     * run-sources-* : Bucket ชั่วคราวที่ Google Cloud Run Source Deploy สร้างขึ้นอัตโนมัติขณะคอมไพล์ซอร์สโค้ด
 ================================================================================
