@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Architecture & Relationship Infographic | thaiairp_iptc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 26, 44, 0.75);
+      --bg-card-hover: rgba(28, 38, 64, 0.9);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.4);
+      --accent: #8b5cf6;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --cyan: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --font-en: 'Outfit', sans-serif;
+      --font-th: 'Prompt', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-th), var(--font-en);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .badge-pill .pulse {
+      width: 8px;
+      height: 8px;
+      background-color: #3b82f6;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #3b82f6;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    h1 {
+      font-family: var(--font-en), var(--font-th);
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 750px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 12px 24px -10px var(--primary-glow);
+    }
+
+    .stat-card .val {
+      font-family: var(--font-en);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .stat-card .lbl {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+
+    /* Tabs Navigation */
+    .tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.4rem;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .tab-btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Main Content Area */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      margin-bottom: 2.5rem;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title span.dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: inline-block;
+    }
+
+    /* Diagram Viewport */
+    .diagram-container {
+      background: rgba(8, 12, 22, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 1.5rem;
+      min-height: 550px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+      position: relative;
+    }
+
+    .diagram-controls {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 10;
+    }
+
+    .ctrl-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+    }
+
+    .ctrl-btn:hover {
+      background: var(--primary);
+    }
+
+    /* Table Explorer */
+    .search-box {
+      width: 100%;
+      padding: 0.85rem 1.2rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 1.5rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .table-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .table-box:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .table-box-header {
+      padding: 0.9rem 1.2rem;
+      background: rgba(30, 41, 59, 0.5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-box-title {
+      font-family: var(--font-en);
+      font-weight: 700;
+      color: #60a5fa;
+      font-size: 1rem;
+    }
+
+    .table-badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+    }
+
+    .columns-list {
+      padding: 0.8rem 1.2rem;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      font-family: var(--font-en);
+    }
+
+    .col-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .col-item:last-child {
+      border-bottom: none;
+    }
+
+    .col-name {
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .col-type {
+      color: #64748b;
+      font-size: 0.8rem;
+    }
+
+    .tag-pk {
+      background: #e11d48;
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .tag-fk {
+      background: #8b5cf6;
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-pill">
+        <span class="pulse"></span>
+        Enterprise Database Model • SQL Server 2025 / MySQL 8.0
+      </div>
+      <h1>Viriyah Insurance Registration System</h1>
+      <p class="subtitle">
+        แผนผังโครงสร้างฐานข้อมูลเชิงสัมพันธ์ระดับองค์รวม (Comprehensive Entity Relationship & Architecture Diagram)
+      </p>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="val" style="color: #60a5fa;">46</div>
+        <div class="lbl">Total Database Tables</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color: #a78bfa;">481</div>
+        <div class="lbl">Database Columns / Fields</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color: #34d399;">6</div>
+        <div class="lbl">Functional Domains</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color: #fbbf24;">3,580+</div>
+        <div class="lbl">Registration Records</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color: #f43f5e;">7,436</div>
+        <div class="lbl">Sub-districts (Thailand)</div>
+      </div>
+    </div>
+
+    <!-- Domain Filter Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchDomain('global')">🌐 Global ER Diagram (ภาพรวมทั้งหมด)</button>
+      <button class="tab-btn" onclick="switchDomain('person')">👤 1. Person & Registration (ผู้สมัคร)</button>
+      <button class="tab-btn" onclick="switchDomain('master')">📍 2. Geographic & Master Data (ข้อมูลหลัก)</button>
+      <button class="tab-btn" onclick="switchDomain('course')">📚 3. Curriculum & Training (หลักสูตร/ผลสอบ)</button>
+      <button class="tab-btn" onclick="switchDomain('oic')">🔗 4. OIC Gateway Integration (ระบบ คปภ.)</button>
+      <button class="tab-btn" onclick="switchDomain('security')">🔐 5. Security & System Config (ผู้ใช้/สิทธิ์)</button>
+    </div>
+
+    <!-- Diagram Section -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="dot"></span>
+        <span id="diagram-title">Global Unified Entity Relationship Diagram (ERD)</span>
+      </div>
+
+      <div class="diagram-container" id="diagram-viewport">
+        <div class="mermaid" id="mermaid-target">
+erDiagram
+    person ||--o{ personregistration : "has"
+    person ||--o{ personaddress : "has"
+    person ||--o{ personaffiliation : "has"
+    person ||--o{ personlicense : "has"
+    person ||--o{ personcourse : "registers"
+    person ||--o{ persontraining5y : "has"
+    person ||--o{ personother : "has"
+    person ||--o{ persondocument : "uploads"
+    person ||--o{ trn_training_result : "completes"
+    person ||--o{ registrationhistory : "audit"
+
+    personother ||--o{ personothersalesarea : "selects"
+    personother ||--o{ personothercompanies : "selects"
+    personother ||--o{ personotherspecialty : "selects"
+
+    mst_titles ||--o{ person : "lookup Title"
+    mst_gender ||--o{ person : "lookup Gender"
+    mst_blood ||--o{ person : "lookup Blood"
+    mst_religion ||--o{ person : "lookup Religion"
+    
+    mst_provinces ||--o{ personaddress : "Province"
+    mst_districts ||--o{ personaddress : "District"
+    mst_sub_districts ||--o{ personaddress : "SubDistrict"
+    
+    mst_agent_regions ||--o{ mst_agent_branches : "contains"
+    mst_agent_branches ||--o{ personaffiliation : "belongs to"
+    
+    mst_companies ||--o{ personothercompanies : "references"
+    mst_territories ||--o{ personothersalesarea : "references"
+    mst_expertises ||--o{ personotherspecialty : "references"
+
+    mst_renew_pillars ||--o{ mst_renew_course : "groups"
+    mst_renew_pillars ||--o{ mst_renew_basic : "groups"
+    mst_renew_course ||--o{ mst_course_curriculum : "defines"
+    mst_course_curriculum ||--o{ mst_course_sub_detail : "details"
+    mst_renew_dates ||--o{ personcourse : "schedules"
+    
+    personregistration ||--o{ trn_training_result : "results"
+
+    oic_raw_api_store ||--o{ oic_agent_profile_store : "parses to"
+    oic_api_request_log ||--o{ oic_raw_api_store : "logs"
+
+    roles ||--o{ role_permissions : "grants"
+    roles ||--o{ users : "assigns"
+        </div>
+      </div>
+    </div>
+
+    <!-- Searchable Data Dictionary -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="dot" style="background: var(--accent);"></span>
+        <span>Searchable Data Dictionary & Table Explorer (พจนานุกรมตารางและคอลัมน์)</span>
+      </div>
+
+      <input type="text" id="table-search" class="search-box" placeholder="🔍 พิมพ์เพื่อค้นหาตารางหรือคอลัมน์ เช่น person, license, curriculum, province..." oninput="filterTables()">
+
+      <div class="tables-grid" id="tables-container">
+        <!-- Javascript will populate tables dynamically -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>Viriyah Insurance Registration Database Platform • Architecture Documentation • 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090d16',
+        primaryColor: '#1e293b',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#3b82f6',
+        lineColor: '#60a5fa',
+        secondaryColor: '#334155',
+        tertiaryColor: '#0f172a'
+      }
+    });
+
+    const diagrams = {
+      global: {
+        title: "Global Unified Entity Relationship Diagram (ERD)",
+        code: `erDiagram
+    person ||--o{ personregistration : "has"
+    person ||--o{ personaddress : "has"
+    person ||--o{ personaffiliation : "has"
+    person ||--o{ personlicense : "has"
+    person ||--o{ personcourse : "registers"
+    person ||--o{ persontraining5y : "has"
+    person ||--o{ personother : "has"
+    person ||--o{ persondocument : "uploads"
+    person ||--o{ trn_training_result : "completes"
+    person ||--o{ registrationhistory : "audit"
+
+    personother ||--o{ personothersalesarea : "selects"
+    personother ||--o{ personothercompanies : "selects"
+    personother ||--o{ personotherspecialty : "selects"
+
+    mst_titles ||--o{ person : "lookup Title"
+    mst_gender ||--o{ person : "lookup Gender"
+    mst_blood ||--o{ person : "lookup Blood"
+    mst_religion ||--o{ person : "lookup Religion"
+    
+    mst_provinces ||--o{ personaddress : "Province"
+    mst_districts ||--o{ personaddress : "District"
+    mst_sub_districts ||--o{ personaddress : "SubDistrict"
+    
+    mst_agent_regions ||--o{ mst_agent_branches : "contains"
+    mst_agent_branches ||--o{ personaffiliation : "belongs to"
+    
+    mst_companies ||--o{ personothercompanies : "references"
+    mst_territories ||--o{ personothersalesarea : "references"
+    mst_expertises ||--o{ personotherspecialty : "references"
+
+    mst_renew_pillars ||--o{ mst_renew_course : "groups"
+    mst_renew_pillars ||--o{ mst_renew_basic : "groups"
+    mst_renew_course ||--o{ mst_course_curriculum : "defines"
+    mst_course_curriculum ||--o{ mst_course_sub_detail : "details"
+    mst_renew_dates ||--o{ personcourse : "schedules"
+    
+    personregistration ||--o{ trn_training_result : "results"
+
+    oic_raw_api_store ||--o{ oic_agent_profile_store : "parses to"
+    oic_api_request_log ||--o{ oic_raw_api_store : "logs"
+
+    roles ||--o{ role_permissions : "grants"
+    roles ||--o{ users : "assigns"`
+      },
+      person: {
+        title: "Domain 1: Core Person & Registration (ระบบผู้สมัครและการลงทะเบียน)",
+        code: `erDiagram
+    person ||--o{ personregistration : "submits"
+    person ||--o{ personaddress : "has addresses"
+    person ||--o{ personaffiliation : "belongs to branch"
+    person ||--o{ personlicense : "holds"
+    person ||--o{ personcourse : "selects courses"
+    person ||--o{ persontraining5y : "exemption records"
+    person ||--o{ personother : "experiences"
+    person ||--o{ persondocument : "uploads files"
+    person ||--o{ registrationhistory : "audit logs"
+
+    personother ||--o{ personothersalesarea : "sales regions"
+    personother ||--o{ personothercompanies : "companies"
+    personother ||--o{ personotherspecialty : "specialties"`
+      },
+      master: {
+        title: "Domain 2: Geographic & Master Data (ข้อมูลหลักและภูมิศาสตร์)",
+        code: `erDiagram
+    mst_provinces ||--o{ mst_districts : "contains"
+    mst_districts ||--o{ mst_sub_districts : "contains"
+    mst_agent_regions ||--o{ mst_agent_branches : "contains"
+    
+    mst_titles ||--o{ person : "title"
+    mst_gender ||--o{ person : "gender"
+    mst_blood ||--o{ person : "blood"
+    mst_religion ||--o{ person : "religion"`
+      },
+      course: {
+        title: "Domain 3: Course Curriculum & Training Results (หลักสูตรและการอบรม)",
+        code: `erDiagram
+    mst_renew_pillars ||--o{ mst_renew_course : "pillar mapping"
+    mst_renew_pillars ||--o{ mst_renew_basic : "pillar mapping"
+    mst_renew_course ||--o{ mst_course_curriculum : "curriculum code"
+    mst_course_curriculum ||--o{ mst_course_sub_detail : "sub modules"
+    mst_renew_dates ||--o{ personcourse : "training date"
+    personregistration ||--o{ trn_training_result : "lms result"`
+      },
+      oic: {
+        title: "Domain 4: OIC Gateway Integration (การเชื่อมโยงระบบ คปภ.)",
+        code: `erDiagram
+    oic_api_request_log ||--o{ oic_raw_api_store : "records"
+    oic_raw_api_store ||--o{ oic_agent_profile_store : "normalizes"
+    oic_field_mapping ||--o{ oic_agent_profile_store : "maps schema"
+    oic_value_mapping ||--o{ oic_agent_profile_store : "transforms values"`
+      },
+      security: {
+        title: "Domain 5: Security & System Config (ผู้ใช้และสิทธิ์)",
+        code: `erDiagram
+    roles ||--o{ role_permissions : "grants permissions"
+    roles ||--o{ users : "assigned user"
+    users ||--o{ admin_login_logs : "audit logins"`
+      }
+    };
+
+    function switchDomain(domainKey) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const data = diagrams[domainKey];
+      document.getElementById('diagram-title').innerText = data.title;
+      
+      const target = document.getElementById('mermaid-target');
+      target.removeAttribute('data-processed');
+      target.innerHTML = data.code;
+      mermaid.run({ nodes: [target] });
+    }
+
+    // Sample data dictionary of key tables
+    const tableData = [
+      {
+        name: 'person',
+        domain: 'Core Person',
+        cols: [
+          { name: 'NationId', type: 'nvarchar(13)', isPk: true, isFk: false },
+          { name: 'TitleTh', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'FirstNameTh', type: 'nvarchar(200)', isPk: false, isFk: false },
+          { name: 'LastNameTh', type: 'nvarchar(200)', isPk: false, isFk: false },
+          { name: 'BirthDate', type: 'datetime', isPk: false, isFk: false },
+          { name: 'ReligionId', type: 'int', isPk: false, isFk: true },
+          { name: 'GenderId', type: 'int', isPk: false, isFk: true },
+          { name: 'BloodGroupId', type: 'int', isPk: false, isFk: true },
+          { name: 'PhoneOtp', type: 'nvarchar(50)', isPk: false, isFk: false },
+          { name: 'EmailAlt', type: 'nvarchar(200)', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'personregistration',
+        domain: 'Registration',
+        cols: [
+          { name: 'Id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'NationId', type: 'nvarchar(13)', isPk: false, isFk: true },
+          { name: 'PdpaConsent', type: 'bit', isPk: false, isFk: false },
+          { name: 'start_time', type: 'datetime', isPk: false, isFk: false },
+          { name: 'completion_time', type: 'datetime', isPk: false, isFk: false },
+          { name: 'confirmed', type: 'bit', isPk: false, isFk: false },
+          { name: 'DeductionPrivilege', type: 'nvarchar(max)', isPk: false, isFk: false },
+          { name: 'MasterDegreeStatus', type: 'nvarchar(max)', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'personaddress',
+        domain: 'Address',
+        cols: [
+          { name: 'Id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'NationId', type: 'nvarchar(13)', isPk: false, isFk: true },
+          { name: 'AddressType', type: 'nvarchar(50)', isPk: false, isFk: false },
+          { name: 'HouseNo', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'ProvinceId', type: 'int', isPk: false, isFk: true },
+          { name: 'DistrictId', type: 'int', isPk: false, isFk: true },
+          { name: 'SubDistrictId', type: 'int', isPk: false, isFk: true },
+          { name: 'Postcode', type: 'nvarchar(20)', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'personlicense',
+        domain: 'License',
+        cols: [
+          { name: 'Id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'NationId', type: 'nvarchar(13)', isPk: false, isFk: true },
+          { name: 'LicenseNo', type: 'nvarchar(50)', isPk: false, isFk: false },
+          { name: 'LicenseExpiry', type: 'datetime', isPk: false, isFk: false },
+          { name: 'LicenseType', type: 'nvarchar(50)', isPk: false, isFk: false },
+          { name: 'RenewTimes', type: 'int', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'personcourse',
+        domain: 'Courses',
+        cols: [
+          { name: 'Id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'NationId', type: 'nvarchar(13)', isPk: false, isFk: true },
+          { name: 'CourseId', type: 'int', isPk: false, isFk: true },
+          { name: 'CourseName', type: 'nvarchar(200)', isPk: false, isFk: false },
+          { name: 'PillarId', type: 'int', isPk: false, isFk: true },
+          { name: 'TrainingDate', type: 'datetime', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'trn_training_result',
+        domain: 'Training Results',
+        cols: [
+          { name: 'id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'nation_id', type: 'nvarchar(13)', isPk: false, isFk: true },
+          { name: 'person_registration_id', type: 'int', isPk: false, isFk: true },
+          { name: 'training_course_code', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'training_status', type: 'nvarchar(50)', isPk: false, isFk: false },
+          { name: 'progress_percent', type: 'nvarchar(20)', isPk: false, isFk: false },
+          { name: 'score_percent', type: 'nvarchar(20)', isPk: false, isFk: false },
+          { name: 'stamp_date', type: 'datetime', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'mst_course_curriculum',
+        domain: 'Curriculum',
+        cols: [
+          { name: 'id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'course_type', type: 'nvarchar(20)', isPk: false, isFk: false },
+          { name: 'course_id', type: 'int', isPk: false, isFk: true },
+          { name: 'agent_type', type: 'nvarchar(20)', isPk: false, isFk: false },
+          { name: 'training_course_code', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'announcement_code', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'curriculum_code', type: 'nvarchar(100)', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'mst_provinces',
+        domain: 'Master Geographic',
+        cols: [
+          { name: 'id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'province_id', type: 'int', isPk: false, isFk: false },
+          { name: 'province_thai', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'province_english', type: 'nvarchar(100)', isPk: false, isFk: false },
+          { name: 'is_active_frontend', type: 'bit', isPk: false, isFk: false },
+          { name: 'is_active_backend', type: 'bit', isPk: false, isFk: false }
+        ]
+      },
+      {
+        name: 'users',
+        domain: 'Security & Auth',
+        cols: [
+          { name: 'Id', type: 'int (identity)', isPk: true, isFk: false },
+          { name: 'Username', type: 'nvarchar(50)', isPk: false, isFk: false },
+          { name: 'PasswordHash', type: 'nvarchar(max)', isPk: false, isFk: false },
+          { name: 'Email', type: 'nvarchar(200)', isPk: false, isFk: false },
+          { name: 'RoleId', type: 'int', isPk: false, isFk: true },
+          { name: 'IsActive', type: 'bit', isPk: false, isFk: false }
+        ]
+      }
+    ];
+
+    function renderTables(tables) {
+      const container = document.getElementById('tables-container');
+      container.innerHTML = tables.map(t => `
+        <div class="table-box">
+          <div class="table-box-header">
+            <span class="table-box-title">${t.name}</span>
+            <span class="table-badge">${t.domain}</span>
+          </div>
+          <div class="columns-list">
+            ${t.cols.map(c => `
+              <div class="col-item">
+                <span class="col-name">
+                  ${c.isPk ? '<span class="tag-pk">PK</span>' : ''}
+                  ${c.isFk ? '<span class="tag-fk">FK</span>' : ''}
+                  ${c.name}
+                </span>
+                <span class="col-type">${c.type}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterTables() {
+      const q = document.getElementById('table-search').value.toLowerCase().trim();
+      if (!q) {
+        renderTables(tableData);
+        return;
+      }
+      const filtered = tableData.filter(t => 
+        t.name.toLowerCase().includes(q) ||
+        t.domain.toLowerCase().includes(q) ||
+        t.cols.some(c => c.name.toLowerCase().includes(q) || c.type.toLowerCase().includes(q))
+      );
+      renderTables(filtered);
+    }
+
+    renderTables(tableData);
+  </script>
+</body>
+</html>

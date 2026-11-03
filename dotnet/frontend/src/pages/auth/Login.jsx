@@ -69,7 +69,7 @@ export default function Login() {
         <p className="mt-1 text-center text-sm text-slate-500">
           {isAdminLogin 
             ? 'เข้าสู่ระบบสำหรับเจ้าหน้าที่และผู้สมัครเพื่อจัดการข้อมูล' 
-            : 'กรุณาเข้าสู่ระบบด้วยอีเมลหรือชื่อผู้ใช้งานเพื่อเริ่มทำรายการ'}
+            : 'กรุณาเข้าสู่ระบบด้วยอีเมล หรือรหัสบัตรประชาชนเพื่อเริ่มทำรายการ'}
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default function Login() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                อีเมล หรือ ชื่อผู้ใช้งาน (Email / Username)
+                อีเมล หรือ รหัสบัตรประชาชน (Email / Citizen ID)
               </label>
               <div className="relative rounded-lg shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -96,7 +96,7 @@ export default function Login() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="เช่น user@email.com หรือ admin"
+                  placeholder="เช่น user@email.com หรือ เลขบัตร ปชช. 13 หลัก"
                   className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
                 />
               </div>
@@ -126,6 +126,9 @@ export default function Login() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              <p className="mt-1.5 text-xs text-slate-500">
+                * สำหรับผู้เข้าอบรม: รหัสผ่านเริ่มต้นคือ <span className="font-semibold text-primary">เลขบัตรประชาชน 5 หลักสุดท้าย</span>
+              </p>
             </div>
 
             <div className="pt-2">
@@ -158,13 +161,13 @@ export default function Login() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('karnindy@gmail.com', 'password123')}
+                onClick={() => handleQuickLogin('1100200314511', '14511')}
                 className="p-2 bg-white border border-blue-200 rounded-lg text-left hover:border-blue-500 hover:bg-blue-50/50 transition-colors shadow-sm"
               >
                 <div className="font-bold text-blue-700 flex items-center gap-1">
                   👤 ผู้สมัคร (Applicant)
                 </div>
-                <div className="text-[11px] text-slate-500 truncate">karnindy@gmail.com</div>
+                <div className="text-[11px] text-slate-500 truncate">1100200314511 / 14511</div>
               </button>
 
               <button

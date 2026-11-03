@@ -39,5 +39,6 @@ unzipped/
 # Logs & OS
 *.log
 logs/
+scratch/
 .DS_Store
 Thumbs.db

@@ -35,6 +35,8 @@ export default function UserManagement() {
   const [search, setSearch] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Modals state (Users)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -117,6 +119,7 @@ export default function UserManagement() {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchUsers();
     fetchRoles();
   }, [search, selectedRole, selectedStatus]);
@@ -442,6 +445,12 @@ export default function UserManagement() {
     }
   };
 
+  // Pagination calculation
+  const totalPages = Math.ceil(users.length / (pageSize === 'All' ? users.length || 1 : pageSize)) || 1;
+  const paginatedUsers = pageSize === 'All' 
+    ? users 
+    : users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   // Stats calculation
   const totalCount = users.length;
   const adminCount = users.filter(u => u.role === 'Admin' || u.role === 'Superadmin').length;
@@ -711,7 +720,7 @@ export default function UserManagement() {
                       </td>
                     </tr>
                   ) : (
-                    users.map(u => {
+                    paginatedUsers.map(u => {
                       const isTargetSuperadmin = u.role === 'Superadmin';
                       const canManageThisUser = canManageRole(u.role);
 
@@ -802,6 +811,74 @@ export default function UserManagement() {
               </table>
             </div>
           </div>
+
+          {/* Pagination Controls */}
+          {users.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm mt-4">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span>แสดง</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(e.target.value === 'All' ? 'All' : Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 border border-slate-300 rounded-lg bg-white text-slate-700 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value="All">ทั้งหมด</option>
+                </select>
+                <span>รายการต่อหน้า</span>
+                <span className="text-slate-300">|</span>
+                <span>
+                  {pageSize === 'All'
+                    ? `1 - ${users.length} จากทั้งหมด ${users.length} รายการ`
+                    : `${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, users.length)} จากทั้งหมด ${users.length} รายการ`}
+                </span>
+              </div>
+
+              {pageSize !== 'All' && totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="หน้าแรก"
+                  >
+                    «
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed font-medium"
+                  >
+                    ก่อนหน้า
+                  </button>
+                  <span className="px-3 py-1.5 text-xs font-bold text-primary bg-primary/5 rounded-lg border border-primary/20">
+                    หน้า {currentPage} จาก {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed font-medium"
+                  >
+                    ถัดไป
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="หน้าสุดท้าย"
+                  >
+                    »
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
