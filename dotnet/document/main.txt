@@ -193,17 +193,17 @@
      * สเปคเครื่อง : e2-micro (RAM 969 MiB + /swapfile 2.0 GiB, Debian 12 Bookworm, Disk 30 GB)
      * External IP : 34.29.162.204 (Tags: http-server, https-server)
    - URL และ Domain เข้าใช้งานระบบบน VM (HTTPS ฟรีด้วย Let's Encrypt):
-     * Domain ภาษาไทย (IDN) : agentportal.วิริยะ.com (Punycode: agentportal.xn--z3cbl2brb.com) -> ชี้ A Record มาที่ 34.29.162.204 (ควรลบ A Record เก่า 103.107.54.242 ออกให้เหลือ IP เดียว)
-     * หน้าเว็บไซต์หลัก / Login : https://agentportal.วิริยะ.com/ , https://34.29.162.204/ , https://34.29.162.204/login
-     * Swagger API Docs : https://34.29.162.204/swagger/index.html
-     * Health Check : https://34.29.162.204/health
-     * หมายเหตุ: หากเข้าด้วย http://34.29.162.204/... ระบบจะ Redirect (301) ไปยัง https://34.29.162.204/... อัตโนมัติ ส่วน http://agentportal.วิริยะ.com/ จะเปิดผ่านพอร์ต 80 ชั่วคราวจนกว่า DNS จะชี้มาที่ 34.29.162.204 เพียง IP เดียวและออกใบรับรองสำเร็จ จากนั้นจะ Redirect 301 ไป HTTPS อัตโนมัติ
+     * Domain ภาษาไทย (IDN) : agentportal.วิริยะ.com (Punycode: agentportal.xn--z3cbl2brb.com) -> ชี้ A Record มาที่ 34.29.162.204 เรียบร้อยแล้ว
+     * หน้าเว็บไซต์หลัก / Login : https://agentportal.วิริยะ.com/ , https://agentportal.วิริยะ.com/login , https://34.29.162.204/
+     * Swagger API Docs : https://agentportal.วิริยะ.com/swagger/index.html , https://34.29.162.204/swagger/index.html
+     * Health Check : https://agentportal.วิริยะ.com/health , https://34.29.162.204/health
+     * หมายเหตุ: หากเข้าด้วย http:// ระบบ Nginx จะ Redirect (301) ไปยัง https:// อัตโนมัติทั้งโดเมนและ IP
    - ระบบ HTTPS / SSL ฟรี (Let's Encrypt IP & Domain Certificate):
      * Certbot เวอร์ชัน 5.10.0 (ติดตั้งใน Python venv ที่ /opt/certbot)
-     * ใบรับรอง IP 34.29.162.204 : โปรไฟล์ shortlived (อายุ 6 วัน) ที่ /etc/letsencrypt/live/34.29.162.204/{fullchain.pem,privkey.pem}
-     * ใบรับรอง Domain agentportal.xn--z3cbl2brb.com : /usr/local/bin/viriyah-ensure-domain-ssl.py และ viriyah-domain-ssl.timer (เช็คทุก 2 นาที) จะตรวจสอบ Google/Cloudflare DoH + HTTP probe และขอใบรับรอง 90 วันให้อัตโนมัติทันทีที่ DNS เหลือเฉพาะ 34.29.162.204 แล้วอัปเดต Nginx เป็น HTTPS + ปิด Bootstrap timer เอง
+     * ใบรับรอง Domain agentportal.xn--z3cbl2brb.com : ECDSA (อายุ 90 วัน, หมดอายุ 2027-02-10 05:09:27+00:00) ที่ /etc/letsencrypt/live/agentportal.xn--z3cbl2brb.com/{fullchain.pem,privkey.pem}
+     * ใบรับรอง IP 34.29.162.204 : ECDSA โปรไฟล์ shortlived (อายุ 6 วัน) ที่ /etc/letsencrypt/live/34.29.162.204/{fullchain.pem,privkey.pem}
      * ช่องทางตรวจสอบ : พอร์ต 80 เปิดเฉพาะ /.well-known/acme-challenge/ (root: /var/www/certbot)
-     * ต่ออายุอัตโนมัติ : systemd timer ชื่อ viriyah-certbot-renew.timer ทำงานทุก 12 ชั่วโมง พร้อม renew_hook = systemctl reload nginx
+     * ต่ออายุอัตโนมัติ : systemd timer ชื่อ viriyah-certbot-renew.timer ทำงานทุก 12 ชั่วโมง พร้อม renew_hook = systemctl reload nginx (ส่วน viriyah-domain-ssl.timer ปิดอัตโนมัติหลังออกใบรับรองสำเร็จแล้ว)
      * ข้อควรทราบเรื่อง Ephemeral IP : หาก Stop แล้ว Start VM ใหม่แล้ว IP เปลี่ยน ให้รัน certbot certonly --ip-address <NEW_IP> และอัปเดตพาธ SSL + DNS A Record ใหม่
    - สถาปัตยกรรมและโครงสร้างไฟล์บน VM:
      * โค้ดและไฟล์ทั้งหมด : /opt/register_form/dotnet (เจ้าของไฟล์ www-data:www-data)

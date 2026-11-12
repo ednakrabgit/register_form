@@ -21,7 +21,7 @@ flowchart LR
 
 | Environment | Frontend / Web URL | Backend / API | Database | หมายเหตุ |
 | :--- | :--- | :--- | :--- | :--- |
-| **GCE VM (`free-tier-vm`)** | `https://34.29.162.204/`<br/>`https://agentportal.วิริยะ.com/` *(รอถอด IP เก่าใน DNS)* | Same-Origin `/api` → Nginx Proxy → `127.0.0.1:8085` | SQLite (`app.db`, WAL Mode, 46 ตาราง) | ติดตั้ง Native `.NET 8 + Nginx` (ไม่ใช้ Docker เพื่อประหยัด RAM บน `e2-micro`) |
+| **GCE VM (`free-tier-vm`)** | `https://agentportal.วิริยะ.com/`<br/>`https://34.29.162.204/` | Same-Origin `/api` → Nginx Proxy → `127.0.0.1:8085` | SQLite (`app.db`, WAL Mode, 46 ตาราง) | ติดตั้ง Native `.NET 8 + Nginx` + Let's Encrypt HTTPS |
 | **Google Cloud Run** | `https://register-frontend-779142529105.us-central1.run.app/login` | `https://register-backend-779142529105.us-central1.run.app/api` | Embedded SQLite (`/App/app.db`) | ใช้คู่กับ GCS Backup `gs://viriyahiptc2/db_backup/` |
 | **Local Development** | `http://localhost/` (Apache) | `http://localhost:8085/api` | MS SQL Server (`thaiairp_iptc`) | ซิงค์เข้า `app.db` ผ่าน `export_mssql_to_sqlite.py` |
 
@@ -60,13 +60,13 @@ flowchart LR
 - **Domain (IDN ภาษาไทย):** `agentportal.วิริยะ.com`
 - **Punycode (ACE Name สำหรับ DNS / Nginx / SSL):** `agentportal.xn--z3cbl2brb.com`
 - **Authoritative Nameservers (`xn--z3cbl2brb.com`):** `ns-cloud-c1..c4.googledomains.com`
-- **สถานะ DNS (`A` Record):** ปัจจุบันมี `34.29.162.204` และ IP เดิม `103.107.54.242` (`TTL: 14400`, ไม่มี `AAAA`/`CAA`) — **ต้องลบ `103.107.54.242` ออกให้เหลือเฉพาะ `34.29.162.204`** เพื่อให้ทราฟฟิกทั้งหมดและระบบออกใบรับรอง SSL ของโดเมนทำงานได้ 100%
+- **สถานะ DNS (`A` Record):** ชี้ตรงมาที่ **`34.29.162.204`** เพียง IP เดียว (`TTL: 14400`, ไม่มี `AAAA`/`CAA`) และออกใบรับรอง SSL เรียบร้อยแล้ว
 
-### URLs บน VM
-- หน้าเว็บไซต์หลัก: https://34.29.162.204/ (และ https://agentportal.วิริยะ.com/ เมื่อ DNS ชี้ IP เดียวแล้ว)
-- หน้าเข้าสู่ระบบ: https://34.29.162.204/login
-- Swagger API Docs: https://34.29.162.204/swagger/index.html
-- Health Check: https://34.29.162.204/health
+### URLs บน VM (HTTPS พร้อม HTTP → HTTPS `301` Redirect)
+- หน้าเว็บไซต์หลัก: https://agentportal.วิริยะ.com/ (หรือ https://34.29.162.204/)
+- หน้าเข้าสู่ระบบ: https://agentportal.วิริยะ.com/login
+- Swagger API Docs: https://agentportal.วิริยะ.com/swagger/index.html
+- Health Check: https://agentportal.วิริยะ.com/health
 
 ---
 
@@ -195,16 +195,18 @@ location / {
 ```
 
 ### 5.3 Nginx Site Config (`/etc/nginx/sites-available/viriyah-register`)
-> จัดการอัตโนมัติโดย `/usr/local/bin/viriyah-ensure-domain-ssl.py`: ระหว่างรอ DNS ชี้มาที่ `34.29.162.204` เพียง IP เดียว พอร์ต `80` จะให้บริการ `agentportal.xn--z3cbl2brb.com` โดยตรง และ Redirect เฉพาะ IP `34.29.162.204` ไป HTTPS ทันทีที่ออกใบรับรองให้โดเมนเสร็จ ระบบจะสลับ Redirect `301` ไป HTTPS ทั้ง IP และ Domain
+- **Port 80 (`default_server`):** เปิดรับ `/.well-known/acme-challenge/` (`/var/www/certbot`) สำหรับต่ออายุ Certbot และ Redirect `301` → `https://$host$request_uri` สำหรับทุกคำขออื่น (ทั้ง `agentportal.xn--z3cbl2brb.com` และ `34.29.162.204`)
+- **Port 443 (`agentportal.xn--z3cbl2brb.com`):** ใช้ใบรับรอง `/etc/letsencrypt/live/agentportal.xn--z3cbl2brb.com/{fullchain.pem,privkey.pem}`
+- **Port 443 (`default_server`, `34.29.162.204 _`):** ใช้ใบรับรอง `/etc/letsencrypt/live/34.29.162.204/{fullchain.pem,privkey.pem}`
 
 ### 5.4 ระบบ HTTPS / Let's Encrypt และ Systemd Timers
-1. **ใบรับรองสำหรับ IP (`34.29.162.204`):**
+1. **ใบรับรองสำหรับ Domain (`agentportal.xn--z3cbl2brb.com`):**
+   - ออกใบรับรอง ECDSA มาตรฐาน (อายุ 90 วัน, รอบแรกหมดอายุ `2027-02-10 05:09:27+00:00`) ที่ `/etc/letsencrypt/live/agentportal.xn--z3cbl2brb.com/{fullchain.pem,privkey.pem}`
+   - ปิด `viriyah-domain-ssl.timer` หลังออกใบรับรองและอัปเดต Nginx เป็น HTTPS สำเร็จแล้ว
+2. **ใบรับรองสำหรับ IP (`34.29.162.204`):**
    - ขอผ่านโปรไฟล์ `--preferred-profile shortlived` (`Key Type: ECDSA`, อายุ `6 days`, รองรับ ARI `ari_retry_after`) เก็บที่ `/etc/letsencrypt/live/34.29.162.204/{fullchain.pem,privkey.pem}`
-2. **ใบรับรองสำหรับ Domain (`agentportal.xn--z3cbl2brb.com`):**
-   - สคริปต์ `/usr/local/bin/viriyah-ensure-domain-ssl.py` ถูกเรียกโดย `viriyah-domain-ssl.timer` (`OnBootSec=1min`, `OnUnitActiveSec=2min`)
-   - ตรวจสอบผ่านทั้ง `dns.google` และ `cloudflare-dns.com` รวมถึง HTTP-01 probe ก่อนขอใบรับรองอายุ 90 วัน และตั้งค่า Nginx + ปิดตัวเองโดยอัตโนมัติ
 3. **การต่ออายุอัตโนมัติ (`viriyah-certbot-renew.timer`):**
-   - ทำงานทุก `12h` (`OnBootSec=5min`, `OnUnitActiveSec=12h`, `RandomizedDelaySec=1h`) เรียก `/opt/certbot/bin/certbot renew --quiet` พร้อม `renew_hook = systemctl reload nginx`
+   - ทำงานทุก `12h` (`OnBootSec=5min`, `OnUnitActiveSec=12h`, `RandomizedDelaySec=1h`) เรียก `/opt/certbot/bin/certbot renew --quiet` เพื่อต่ออายุทั้งใบรับรอง Domain และ IP พร้อม `renew_hook = systemctl reload nginx`
 
 ---
 
@@ -248,3 +250,4 @@ free -h && df -h /
      --ip-address <NEW_IP> --deploy-hook "systemctl reload nginx"
    ```
 3. อัปเดตค่า `VM_IP` ใน `/usr/local/bin/viriyah-ensure-domain-ssl.py` และพาธ `ssl_certificate` ใน `/etc/nginx/sites-available/viriyah-register` แล้วรัน `sudo nginx -t && sudo systemctl reload nginx`
+
