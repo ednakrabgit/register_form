@@ -41,7 +41,9 @@
         - สไลด์สรุปนำเสนอผู้บริหาร 12 สไลด์ อัตราส่วน 16:9 สไตล์องค์กรทันสมัย
      5) main.txt
         - เอกสารสรุปภาพรวมระบบ บัญชีผู้ใช้ คำสั่ง และ URL ทั้งหมด (ไฟล์นี้)
-     6) diagrams/ & notebookLM/
+     6) SERVER_ARCHITECTURE_AND_DEPLOY.md
+        - เอกสารสถาปัตยกรรมเซิร์ฟเวอร์ GCE VM (free-tier-vm), Nginx, Systemd, SQLite และ Let's Encrypt HTTPS ฉบับสมบูรณ์
+     7) diagrams/ & notebookLM/
         - ไดอะแกรมความสัมพันธ์ ERD, Workflows และชุดข้อมูลสำหรับ AI Analysis
 
    * นโยบายการเพิ่มเอกสาร:
