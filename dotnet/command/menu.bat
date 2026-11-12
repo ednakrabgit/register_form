@@ -25,11 +25,12 @@ echo   [4] Restart Apache24 Web Server
 echo   [5] View Docker Containers Status (mssql, backend, frontend)
 echo   [6] Open Documentation Directory in File Explorer
 echo   [7] Backup SQL Server Database to www\db (backup_sqlserver_db.bat)
+echo   [8] Deploy /dotnet & SQLite DB to GCE VM (4_deploy_to_vm.bat)
 echo   [0] Exit
 echo -------------------------------------------------------------------------------
 echo.
 
-set /p M_CHOICE="Enter choice [0-7]: "
+set /p M_CHOICE="Enter choice [0-8]: "
 
 if "%M_CHOICE%"=="1" (
     call "%~dp01_deploy_to_git.bat"
@@ -73,6 +74,10 @@ if "%M_CHOICE%"=="6" (
 )
 if "%M_CHOICE%"=="7" (
     call "%~dp0..\..\db\backup_sqlserver_db.bat"
+    goto :MENU
+)
+if "%M_CHOICE%"=="8" (
+    call "%~dp04_deploy_to_vm.bat"
     goto :MENU
 )
 if "%M_CHOICE%"=="0" (

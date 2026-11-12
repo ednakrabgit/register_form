@@ -38,10 +38,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         dbPath = Path.Combine(Directory.GetCurrentDirectory(), "app.db");
     }
 
-    if (isCloudRun || connectionString?.Contains("app.db", StringComparison.OrdinalIgnoreCase) == true || (File.Exists(dbPath) && (string.IsNullOrEmpty(connectionString) || connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase) && isCloudRun)))
+    var isExplicitSqlite = connectionString?.Contains(".db", StringComparison.OrdinalIgnoreCase) == true;
+    if (isCloudRun || isExplicitSqlite || (File.Exists(dbPath) && (string.IsNullOrEmpty(connectionString) || (connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase) && isCloudRun))))
     {
-        Serilog.Log.Information("Using SQLite Database: {DbPath}", dbPath);
-        options.UseSqlite($"Data Source={dbPath}");
+        var sqliteConnStr = (isExplicitSqlite && connectionString!.Contains("Data Source=", StringComparison.OrdinalIgnoreCase))
+            ? connectionString
+            : $"Data Source={dbPath}";
+        Serilog.Log.Information("Using SQLite Database: {SqliteConnStr}", sqliteConnStr);
+        options.UseSqlite(sqliteConnStr);
     }
     else
     {
@@ -109,6 +113,12 @@ try
         // Ensure DB exists (without running schema scripts which contain GO)
         context.Database.EnsureCreated();
 
+        if (context.Database.IsSqlite())
+        {
+            context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
+        }
+        else if (context.Database.IsSqlServer())
+        {
         // Ensure new columns exist
         string[] schemaMigrations = new[]
         {
@@ -214,6 +224,7 @@ try
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to update is_latest column in oic_raw_api_store or oic_agent_profile_store");
+        }
         }
     }
 }

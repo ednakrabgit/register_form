@@ -1,12 +1,20 @@
 // Centralized API Configuration for Viriyah Registration System
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (
-  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+const isCloudRunFrontend = hostname.endsWith('.run.app');
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (
+  isLocalDev
     ? 'http://localhost:8085/api'
-    : 'https://register-backend-779142529105.us-central1.run.app/api'
+    : (isCloudRunFrontend
+        ? 'https://register-backend-779142529105.us-central1.run.app/api'
+        : '/api')
 );
 
-export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || (
-  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN ?? (
+  isLocalDev
     ? 'http://localhost:8085'
-    : 'https://register-backend-779142529105.us-central1.run.app'
+    : (isCloudRunFrontend
+        ? 'https://register-backend-779142529105.us-central1.run.app'
+        : '')
 );

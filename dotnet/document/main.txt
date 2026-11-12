@@ -83,6 +83,8 @@
      ดึงโค้ดเวอร์ชันล่าสุดจาก GitHub ลงมาอัปเดตเครื่อง Local
    - 3_run_www_local.bat
      เริ่มต้นบริการ Apache24 + Docker Compose (SQL Server & Backend) และเปิดเว็บเบราว์เซอร์อัตโนมัติ
+   - 4_deploy_to_vm.bat (หรือกด [8] ใน menu.bat)
+     Sync ข้อมูล SQL Server -> SQLite, Build Frontend/Backend (linux-x64) และ Deploy ขึ้น GCE VM (free-tier-vm) อัตโนมัติ
    - backup_db.bat (หรือกด [7] ใน menu.bat)
      เรียกใช้สคริปต์สำรองข้อมูลและ Deploy ข้อมูลขึ้นเซิร์ฟเวอร์
    - menu.bat
@@ -180,4 +182,25 @@
    - ภาพรวม Google Cloud Storage Buckets (ในโครงการ NeonX):
      * viriyahiptc2 (Multi-region asia) : Bucket หลักที่ระบบใช้จัดเก็บไฟล์สำรองฐานข้อมูล (.bak) ที่โฟลเดอร์ db_backup/ รวมถึงสื่อรูปภาพและหลักสูตร
      * run-sources-* : Bucket ชั่วคราวที่ Google Cloud Run Source Deploy สร้างขึ้นอัตโนมัติขณะคอมไพล์ซอร์สโค้ด
+
+--------------------------------------------------------------------------------
+12. ระบบบน Google Compute Engine VM (free-tier-vm):
+--------------------------------------------------------------------------------
+   - ข้อมูล VM Instance:
+     * ชื่อ VM / Zone : free-tier-vm (us-central1-a) / Project: project-86010b3e-ea84-4c5a-8ec
+     * สเปคเครื่อง : e2-micro (RAM 969 MiB + /swapfile 2.0 GiB, Debian 12 Bookworm, Disk 30 GB)
+     * External IP : 34.29.162.204 (Tags: http-server, https-server)
+   - URL เข้าใช้งานระบบบน VM:
+     * หน้าเว็บไซต์หลัก / Login : http://34.29.162.204/ , http://34.29.162.204/login
+     * Swagger API Docs : http://34.29.162.204/swagger
+     * Health Check : http://34.29.162.204/health
+   - สถาปัตยกรรมและโครงสร้างไฟล์บน VM:
+     * โค้ดและไฟล์ทั้งหมด : /opt/register_form/dotnet (เจ้าของไฟล์ www-data:www-data)
+     * Web Server / Proxy : Nginx (/etc/nginx/sites-available/viriyah-register) พอร์ต 80, client_max_body_size 50M
+       ให้บริการ SPA ที่ /opt/register_form/dotnet/frontend/dist และ Proxy /api/, /LocalData/, /swagger, /health -> 127.0.0.1:8085
+     * Backend Service : systemd ชื่อ viriyah-backend.service รันด้วย aspnetcore-runtime-8.0 จาก /opt/register_form/dotnet/backend/out_linux บน 127.0.0.1:8085
+     * ฐานข้อมูล SQLite : /opt/register_form/dotnet/backend/app.db (คัดลอกจาก MS SQL Server thaiairp_iptc ทั้ง 46 ตารางผ่าน export_mssql_to_sqlite.py พร้อม PK/AUTOINCREMENT, Defaults, Indexes และ WAL Mode เนื่องจาก e2-micro RAM 969 MiB ต่ำกว่าขั้นต่ำ 2,000 MB ของ SQL Server)
+     * ไฟล์ Config เฉพาะ VM : /opt/register_form/dotnet/backend/appsettings.Production.json ("DefaultConnection": "Data Source=/opt/register_form/dotnet/backend/app.db") วางแยกเฉพาะบน VM เพื่อไม่ให้กระทบ Cloud Run
+   - การ Deploy อัปเดตโค้ดและ DB ขึ้น VM:
+     * รัน dotnet/command/4_deploy_to_vm.bat (หรือเลือก [8] ใน dotnet/command/menu.bat)
 ================================================================================
