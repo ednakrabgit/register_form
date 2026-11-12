@@ -190,20 +190,22 @@
      * ชื่อ VM / Zone : free-tier-vm (us-central1-a) / Project: project-86010b3e-ea84-4c5a-8ec
      * สเปคเครื่อง : e2-micro (RAM 969 MiB + /swapfile 2.0 GiB, Debian 12 Bookworm, Disk 30 GB)
      * External IP : 34.29.162.204 (Tags: http-server, https-server)
-   - URL เข้าใช้งานระบบบน VM (HTTPS ฟรีด้วย Let's Encrypt):
-     * หน้าเว็บไซต์หลัก / Login : https://34.29.162.204/ , https://34.29.162.204/login
+   - URL และ Domain เข้าใช้งานระบบบน VM (HTTPS ฟรีด้วย Let's Encrypt):
+     * Domain ภาษาไทย (IDN) : agentportal.วิริยะ.com (Punycode: agentportal.xn--z3cbl2brb.com) -> ชี้ A Record มาที่ 34.29.162.204 (ควรลบ A Record เก่า 103.107.54.242 ออกให้เหลือ IP เดียว)
+     * หน้าเว็บไซต์หลัก / Login : https://agentportal.วิริยะ.com/ , https://34.29.162.204/ , https://34.29.162.204/login
      * Swagger API Docs : https://34.29.162.204/swagger/index.html
      * Health Check : https://34.29.162.204/health
-     * หมายเหตุ: หากเข้าด้วย http://34.29.162.204/... ระบบจะ Redirect (301) ไปยัง https://34.29.162.204/... อัตโนมัติ
-   - ระบบ HTTPS / SSL ฟรี (Let's Encrypt IP Certificate):
-     * Certbot เวอร์ชัน 5.10.0 (ติดตั้งใน Python venv ที่ /opt/certbot) ขอใบรับรองตรงกับ IP 34.29.162.204 ผ่านโปรไฟล์ shortlived (อายุ 6 วัน, ไม่ต้องซื้อ Domain, Trusted ในเบราว์เซอร์)
-     * ไฟล์ใบรับรอง : /etc/letsencrypt/live/34.29.162.204/fullchain.pem และ privkey.pem
-     * ช่องทางตรวจสอบ : พอร์ต 80 เปิดเฉพาะ /.well-known/acme-challenge/ (root: /var/www/certbot) ส่วนคำขออื่น Redirect 301 ไป HTTPS
+     * หมายเหตุ: หากเข้าด้วย http://34.29.162.204/... ระบบจะ Redirect (301) ไปยัง https://34.29.162.204/... อัตโนมัติ ส่วน http://agentportal.วิริยะ.com/ จะเปิดผ่านพอร์ต 80 ชั่วคราวจนกว่า DNS จะชี้มาที่ 34.29.162.204 เพียง IP เดียวและออกใบรับรองสำเร็จ จากนั้นจะ Redirect 301 ไป HTTPS อัตโนมัติ
+   - ระบบ HTTPS / SSL ฟรี (Let's Encrypt IP & Domain Certificate):
+     * Certbot เวอร์ชัน 5.10.0 (ติดตั้งใน Python venv ที่ /opt/certbot)
+     * ใบรับรอง IP 34.29.162.204 : โปรไฟล์ shortlived (อายุ 6 วัน) ที่ /etc/letsencrypt/live/34.29.162.204/{fullchain.pem,privkey.pem}
+     * ใบรับรอง Domain agentportal.xn--z3cbl2brb.com : /usr/local/bin/viriyah-ensure-domain-ssl.py และ viriyah-domain-ssl.timer (เช็คทุก 2 นาที) จะตรวจสอบ Google/Cloudflare DoH + HTTP probe และขอใบรับรอง 90 วันให้อัตโนมัติทันทีที่ DNS เหลือเฉพาะ 34.29.162.204 แล้วอัปเดต Nginx เป็น HTTPS + ปิด Bootstrap timer เอง
+     * ช่องทางตรวจสอบ : พอร์ต 80 เปิดเฉพาะ /.well-known/acme-challenge/ (root: /var/www/certbot)
      * ต่ออายุอัตโนมัติ : systemd timer ชื่อ viriyah-certbot-renew.timer ทำงานทุก 12 ชั่วโมง พร้อม renew_hook = systemctl reload nginx
-     * ข้อควรทราบเรื่อง Ephemeral IP : หาก Stop แล้ว Start VM ใหม่แล้ว IP เปลี่ยน ให้รัน certbot certonly --ip-address <NEW_IP> และอัปเดตพาธ SSL ใน Nginx ใหม่
+     * ข้อควรทราบเรื่อง Ephemeral IP : หาก Stop แล้ว Start VM ใหม่แล้ว IP เปลี่ยน ให้รัน certbot certonly --ip-address <NEW_IP> และอัปเดตพาธ SSL + DNS A Record ใหม่
    - สถาปัตยกรรมและโครงสร้างไฟล์บน VM:
      * โค้ดและไฟล์ทั้งหมด : /opt/register_form/dotnet (เจ้าของไฟล์ www-data:www-data)
-     * Web Server / Proxy : Nginx (/etc/nginx/sites-available/viriyah-register) พอร์ต 80 (ACME + Redirect) และพอร์ต 443 (SSL/TLSv1.2+1.3/HTTP2), client_max_body_size 50M
+     * Web Server / Proxy : Nginx (/etc/nginx/sites-available/viriyah-register และ snippets /etc/nginx/snippets/viriyah-{app-locations,ssl-params}.conf) พอร์ต 80 และพอร์ต 443 (SSL/TLSv1.2+1.3/HTTP2), client_max_body_size 50M
        ให้บริการ SPA ที่ /opt/register_form/dotnet/frontend/dist และ Proxy /api/, /LocalData/, /swagger, /health -> 127.0.0.1:8085
      * Backend Service : systemd ชื่อ viriyah-backend.service รันด้วย aspnetcore-runtime-8.0 จาก /opt/register_form/dotnet/backend/out_linux บน 127.0.0.1:8085
      * ฐานข้อมูล SQLite : /opt/register_form/dotnet/backend/app.db (คัดลอกจาก MS SQL Server thaiairp_iptc ทั้ง 46 ตารางผ่าน export_mssql_to_sqlite.py พร้อม PK/AUTOINCREMENT, Defaults, Indexes และ WAL Mode เนื่องจาก e2-micro RAM 969 MiB ต่ำกว่าขั้นต่ำ 2,000 MB ของ SQL Server)
