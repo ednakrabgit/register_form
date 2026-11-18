@@ -17,12 +17,38 @@ export default function ExportDataReport() {
 
   const [courses, setCourses] = useState([]);
   const [groupedCourses, setGroupedCourses] = useState([]);
+  const [yearGroups, setYearGroups] = useState([]);
   const [selectedCourses, setSelectedCourses] = useState({});
 
   const [exportType, setExportType] = useState('all');
   const [loading, setLoading] = useState(false);
+  const [expandedYears, setExpandedYears] = useState({});
   const [expandedCourses, setExpandedCourses] = useState({});
   const [courseTypeFilter, setCourseTypeFilter] = useState('ทั้งหมด');
+
+  const extractBuddhistYear = (courseDate, dateDisplay) => {
+    if (courseDate) {
+      const str = String(courseDate).trim();
+      const isoMatch = str.match(/^(\d{4})-/);
+      if (isoMatch) {
+        const y = parseInt(isoMatch[1], 10);
+        return String(y < 2400 ? y + 543 : y);
+      }
+      const parsed = new Date(courseDate);
+      if (!isNaN(parsed.getTime())) {
+        const y = parsed.getFullYear();
+        return String(y < 2400 ? y + 543 : y);
+      }
+    }
+    if (dateDisplay) {
+      const text = String(dateDisplay);
+      const beMatch = text.match(/\b(2[56]\d{2})\b/);
+      if (beMatch) return beMatch[1];
+      const adMatch = text.match(/\b(20\d{2})\b/);
+      if (adMatch) return String(parseInt(adMatch[1], 10) + 543);
+    }
+    return 'ไม่ระบุปี';
+  };
 
   useEffect(() => {
     Promise.all([
@@ -41,39 +67,125 @@ export default function ExportDataReport() {
           }
           if (item.dateId && item.dateDisplay) {
             if (!groups[item.courseName].dates.find(d => d.dateId === item.dateId)) {
-              groups[item.courseName].dates.push({ dateId: item.dateId, display: item.dateDisplay });
+              groups[item.courseName].dates.push({
+                dateId: item.dateId,
+                display: item.dateDisplay,
+                year: extractBuddhistYear(item.courseDate, item.dateDisplay)
+              });
             }
           }
         });
 
         const tor4Name = "ขอต่อใบอนุญาตเป็นตัวแทน/นายหน้าประกันวินาศภัย 4 เป็นต้นไป";
         if (groups[tor4Name]) {
-          groups[tor4Name].dates = otherCoursesData.map(o => ({ dateId: o.id, display: o.displayName }));
+          groups[tor4Name].dates = otherCoursesData.map(o => ({
+            dateId: o.id,
+            display: o.displayName,
+            year: extractBuddhistYear(o.courseDate, o.dateDisplay || o.displayName)
+          }));
         }
 
-        setGroupedCourses(Object.values(groups));
+        const courseList = Object.values(groups);
+        setGroupedCourses(courseList);
+
+        // Build 3-level hierarchy: Year -> Course -> Dates
+        const byYear = {};
+        courseList.forEach(course => {
+          if (course.dates.length === 0) {
+            const yr = 'ไม่ระบุปี';
+            if (!byYear[yr]) byYear[yr] = {};
+            byYear[yr][course.courseId] = {
+              courseId: course.courseId,
+              courseName: course.courseName,
+              dates: []
+            };
+            return;
+          }
+
+          course.dates.forEach(d => {
+            const yr = d.year || 'ไม่ระบุปี';
+            if (!byYear[yr]) byYear[yr] = {};
+            if (!byYear[yr][course.courseId]) {
+              byYear[yr][course.courseId] = {
+                courseId: course.courseId,
+                courseName: course.courseName,
+                dates: []
+              };
+            }
+            byYear[yr][course.courseId].dates.push(d);
+          });
+        });
+
+        const sortedYears = Object.keys(byYear).sort((a, b) => {
+          const na = parseInt(a, 10);
+          const nb = parseInt(b, 10);
+          if (isNaN(na) && isNaN(nb)) return a.localeCompare(b);
+          if (isNaN(na)) return 1;
+          if (isNaN(nb)) return -1;
+          return nb - na; // Newest year first
+        });
+
+        const structured = sortedYears.map(yr => ({
+          year: yr,
+          courses: Object.values(byYear[yr])
+        }));
+
+        setYearGroups(structured);
+
+        // Expand the latest year by default for immediate visibility
+        if (structured.length > 0) {
+          setExpandedYears({ [structured[0].year]: true });
+        }
       })
       .catch(err => console.error('Failed to fetch courses:', err));
   }, []);
 
-  const handleCourseCheck = (courseId, checked) => {
-    if (checked) {
-      const course = groupedCourses.find(c => c.courseId === courseId);
-      setSelectedCourses(prev => ({
-        ...prev,
-        [courseId]: course.dates.map(d => d.dateId)
-      }));
-    } else {
-      const newSelected = { ...selectedCourses };
-      delete newSelected[courseId];
-      setSelectedCourses(newSelected);
-    }
+  const handleYearCheck = (yearCourses, checked) => {
+    setSelectedCourses(prev => {
+      const next = { ...prev };
+      yearCourses.forEach(course => {
+        const yearDateIds = course.dates.map(d => d.dateId);
+        const existing = new Set(next[course.courseId] || []);
+        if (checked) {
+          yearDateIds.forEach(id => existing.add(id));
+          if (existing.size > 0) next[course.courseId] = Array.from(existing);
+        } else {
+          yearDateIds.forEach(id => existing.delete(id));
+          if (existing.size === 0) {
+            delete next[course.courseId];
+          } else {
+            next[course.courseId] = Array.from(existing);
+          }
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleCourseCheck = (courseId, dateIdsInYear, checked) => {
+    setSelectedCourses(prev => {
+      const next = { ...prev };
+      const existing = new Set(next[courseId] || []);
+      if (checked) {
+        dateIdsInYear.forEach(id => existing.add(id));
+        if (existing.size > 0) next[courseId] = Array.from(existing);
+      } else {
+        dateIdsInYear.forEach(id => existing.delete(id));
+        if (existing.size === 0) {
+          delete next[courseId];
+        } else {
+          next[courseId] = Array.from(existing);
+        }
+      }
+      return next;
+    });
   };
 
   const handleDateCheck = (courseId, dateId, checked) => {
     setSelectedCourses(prev => {
       const courseDates = prev[courseId] || [];
       if (checked) {
+        if (courseDates.includes(dateId)) return prev;
         return { ...prev, [courseId]: [...courseDates, dateId] };
       } else {
         const newDates = courseDates.filter(d => d !== dateId);
@@ -87,8 +199,13 @@ export default function ExportDataReport() {
     });
   };
 
-  const toggleCourseExpand = (courseId) => {
-    setExpandedCourses(prev => ({ ...prev, [courseId]: !prev[courseId] }));
+  const toggleYearExpand = (year) => {
+    setExpandedYears(prev => ({ ...prev, [year]: !prev[year] }));
+  };
+
+  const toggleCourseExpand = (year, courseId) => {
+    const key = `${year}__${courseId}`;
+    setExpandedCourses(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const formatDateToDDMMYYYY = (val) => {
@@ -432,54 +549,125 @@ export default function ExportDataReport() {
           </label>
         </div>
 
-        <div className="bg-white border border-gray-300 rounded mb-6">
-          {groupedCourses
-            .filter(c => {
+        <div className="bg-white border border-gray-300 rounded mb-6 overflow-hidden">
+          {yearGroups.map((yg) => {
+            const visibleCourses = yg.courses.filter(c => {
               if (courseTypeFilter === 'ทั้งหมด') return true;
               return c.courseName.includes(courseTypeFilter);
-            })
-            .map((c) => (
-              <div key={c.courseId} className="border-b last:border-b-0">
-                <div className="flex items-center p-3 hover:bg-gray-50">
-                  <button
-                    type="button"
-                    className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 mr-2 focus:outline-none"
-                    onClick={() => toggleCourseExpand(c.courseId)}
-                  >
-                    <i className={`fas fa-${expandedCourses[c.courseId] ? 'minus' : 'plus'}`}></i>
-                  </button>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 mr-3 accent-primary"
-                    checked={selectedCourses[c.courseId]?.length === c.dates.length && c.dates.length > 0}
-                    ref={el => {
-                      if (el) {
-                        const selectedCount = selectedCourses[c.courseId]?.length || 0;
-                        el.indeterminate = selectedCount > 0 && selectedCount < c.dates.length;
-                      }
-                    }}
-                    onChange={(e) => handleCourseCheck(c.courseId, e.target.checked)}
-                  />
-                  <span className="text-sm text-gray-800">{c.courseName} ({c.dates.length} รอบ)</span>
+            });
+
+            if (visibleCourses.length === 0) return null;
+
+            const totalYearDates = visibleCourses.reduce((sum, c) => sum + c.dates.length, 0);
+            const selectedYearDates = visibleCourses.reduce(
+              (sum, c) => sum + c.dates.filter(d => (selectedCourses[c.courseId] || []).includes(d.dateId)).length,
+              0
+            );
+            const allYearSelected = totalYearDates > 0 && selectedYearDates === totalYearDates;
+            const someYearSelected = selectedYearDates > 0 && selectedYearDates < totalYearDates;
+            const isYearExpanded = !!expandedYears[yg.year];
+            const yearLabel = yg.year === 'ไม่ระบุปี' ? 'ไม่ระบุปี' : `ปี พ.ศ. ${yg.year}`;
+
+            return (
+              <div key={yg.year} className="border-b last:border-b-0 border-gray-200">
+                {/* Level 1: Year */}
+                <div className="flex items-center justify-between p-3 bg-blue-50/70 hover:bg-blue-50 transition-colors">
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      className="w-6 h-6 flex items-center justify-center text-blue-600 hover:text-blue-800 mr-2 focus:outline-none"
+                      onClick={() => toggleYearExpand(yg.year)}
+                      aria-label={`สลับการแสดง ${yearLabel}`}
+                    >
+                      <i className={`fas fa-${isYearExpanded ? 'minus' : 'plus'}`}></i>
+                    </button>
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 mr-3 accent-primary cursor-pointer"
+                      checked={allYearSelected}
+                      ref={el => {
+                        if (el) el.indeterminate = someYearSelected;
+                      }}
+                      onChange={(e) => handleYearCheck(visibleCourses, e.target.checked)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleYearExpand(yg.year)}
+                      className="text-sm font-bold text-blue-900 flex items-center gap-2 text-left"
+                    >
+                      <i className="fas fa-calendar-alt text-blue-600"></i>
+                      <span>{yearLabel}</span>
+                      <span className="font-normal text-xs text-blue-700">
+                        ({visibleCourses.length} หลักสูตร • {totalYearDates} รอบ)
+                      </span>
+                    </button>
+                  </div>
+                  {selectedYearDates > 0 && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-600 text-white">
+                      เลือกแล้ว {selectedYearDates} รอบ
+                    </span>
+                  )}
                 </div>
 
-                {expandedCourses[c.courseId] && (
-                  <div className="pl-12 pr-4 pb-2 bg-gray-50/50">
-                    {c.dates.map(d => (
-                      <div key={d.dateId} className="flex items-center py-2 border-b last:border-0 border-gray-100">
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 mr-3 accent-primary"
-                          checked={(selectedCourses[c.courseId] || []).includes(d.dateId)}
-                          onChange={(e) => handleDateCheck(c.courseId, d.dateId, e.target.checked)}
-                        />
-                        <span className="text-sm text-gray-600">{d.display}</span>
-                      </div>
-                    ))}
+                {/* Level 2: Courses inside Year */}
+                {isYearExpanded && (
+                  <div className="divide-y divide-gray-200 border-t border-blue-100">
+                    {visibleCourses.map((c) => {
+                      const courseKey = `${yg.year}__${c.courseId}`;
+                      const courseDateIds = c.dates.map(d => d.dateId);
+                      const selectedInCourse = courseDateIds.filter(id => (selectedCourses[c.courseId] || []).includes(id)).length;
+                      const allCourseSelected = c.dates.length > 0 && selectedInCourse === c.dates.length;
+                      const someCourseSelected = selectedInCourse > 0 && selectedInCourse < c.dates.length;
+                      const isCourseExpanded = !!expandedCourses[courseKey];
+
+                      return (
+                        <div key={courseKey}>
+                          <div className="flex items-center pl-8 pr-3 py-2.5 hover:bg-gray-50">
+                            <button
+                              type="button"
+                              className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 mr-2 focus:outline-none"
+                              onClick={() => toggleCourseExpand(yg.year, c.courseId)}
+                            >
+                              <i className={`fas fa-${isCourseExpanded ? 'minus' : 'plus'}`}></i>
+                            </button>
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 mr-3 accent-primary cursor-pointer"
+                              checked={allCourseSelected}
+                              ref={el => {
+                                if (el) el.indeterminate = someCourseSelected;
+                              }}
+                              onChange={(e) => handleCourseCheck(c.courseId, courseDateIds, e.target.checked)}
+                            />
+                            <span className="text-sm font-medium text-gray-800">
+                              {c.courseName} <span className="text-gray-500 font-normal">({c.dates.length} รอบ)</span>
+                            </span>
+                          </div>
+
+                          {/* Level 3: Dates / Rounds inside Course */}
+                          {isCourseExpanded && (
+                            <div className="pl-16 pr-4 pb-2 bg-gray-50/50 border-t border-gray-100">
+                              {c.dates.map(d => (
+                                <div key={`${courseKey}__${d.dateId}`} className="flex items-center py-2 border-b last:border-0 border-gray-100">
+                                  <input
+                                    type="checkbox"
+                                    className="w-4 h-4 mr-3 accent-primary cursor-pointer"
+                                    checked={(selectedCourses[c.courseId] || []).includes(d.dateId)}
+                                    onChange={(e) => handleDateCheck(c.courseId, d.dateId, e.target.checked)}
+                                  />
+                                  <span className="text-sm text-gray-600">{d.display}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            ))}
+            );
+          })}
         </div>
 
         <div className="space-y-2 mb-6">
