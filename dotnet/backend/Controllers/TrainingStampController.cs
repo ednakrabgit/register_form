@@ -26,6 +26,21 @@ namespace backend.Controllers
         }
 
         /// <summary>
+        /// ดาวน์โหลดไฟล์ต้นแบบ Excel (.xlsx) สำหรับนำเข้าผลการอบรม
+        /// </summary>
+        [HttpGet("template")]
+        public IActionResult DownloadTemplate()
+        {
+            var fileBytes = _importService.GenerateTemplateExcel();
+            const string fileName = "template_training_result_stamp.xlsx";
+            return File(
+                fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
+
+        /// <summary>
         /// อัปโหลดไฟล์ Excel จากระบบอบรมเพื่อดูตัวอย่าง (Preview) ก่อนทำการบันทึก/Stamp
         /// </summary>
         [HttpPost("preview")]

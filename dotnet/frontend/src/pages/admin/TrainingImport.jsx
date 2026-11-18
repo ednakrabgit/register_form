@@ -12,6 +12,8 @@ export default function TrainingImport() {
   const [syncVerified, setSyncVerified] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [showFormatGuide, setShowFormatGuide] = useState(false);
 
   // History state
   const [historyList, setHistoryList] = useState([]);
@@ -26,6 +28,30 @@ export default function TrainingImport() {
       fetchHistory();
     }
   }, [activeTab, page]);
+
+  const handleDownloadTemplate = async () => {
+    try {
+      setDownloadingTemplate(true);
+      setErrorMessage(null);
+      const res = await fetch(`${API_BASE_URL}/TrainingStamp/template`);
+      if (!res.ok) {
+        throw new Error('ไม่สามารถดาวน์โหลดไฟล์ต้นแบบได้');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'template_training_result_stamp.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setErrorMessage(err.message);
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -213,12 +239,70 @@ export default function TrainingImport() {
         <div className="space-y-6">
           {/* File Upload Box */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-              <i className="fas fa-file-excel text-emerald-600"></i> เลือกไฟล์ Excel จากระบบอบรม
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              รองรับไฟล์ Excel ผลการอบรม เช่น <code className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 font-mono text-xs">post_VIRIYAH_NA4_20260819-20260825.xlsx</code>
-            </p>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <i className="fas fa-file-excel text-emerald-600"></i> เลือกไฟล์ Excel จากระบบอบรม
+                </h3>
+                <p className="text-sm text-gray-500">
+                  รองรับไฟล์ Excel ผลการอบรม เช่น <code className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 font-mono text-xs">post_VIRIYAH_NA4_20260819-20260825.xlsx</code> (ข้อมูลเริ่มแถวที่ 4)
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowFormatGuide((prev) => !prev)}
+                  className="px-3.5 py-2 border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                >
+                  <i className="fas fa-info-circle text-blue-600"></i>
+                  {showFormatGuide ? 'ซ่อนรูปแบบคอลัมน์' : 'ดูรูปแบบคอลัมน์ (Format)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadTemplate}
+                  disabled={downloadingTemplate}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center gap-2"
+                >
+                  {downloadingTemplate ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-download"></i>}
+                  ดาวน์โหลดไฟล์ตัวอย่าง (.xlsx)
+                </button>
+              </div>
+            </div>
+
+            {showFormatGuide && (
+              <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">
+                <div className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                  <i className="fas fa-table text-blue-600"></i>
+                  โครงสร้างไฟล์ Excel ที่รองรับ (Sheet แรก, แถวที่ 1–3 เป็นหัวตาราง, ข้อมูลเริ่มแถวที่ 4 เป็นต้นไป)
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse bg-white rounded border border-slate-200">
+                    <thead className="bg-slate-100 text-slate-700">
+                      <tr>
+                        <th className="p-2 border-b w-20">คอลัมน์</th>
+                        <th className="p-2 border-b">ชื่อหัวคอลัมน์ (แถว 3)</th>
+                        <th className="p-2 border-b w-24">ความจำเป็น</th>
+                        <th className="p-2 border-b">ตัวอย่าง / ค่าที่รองรับ</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      <tr><td className="p-2 font-mono font-bold">Col E</td><td className="p-2">เลขที่ใบอนุญาต</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2 font-mono">6504000001 (Text 10 หลัก)</td></tr>
+                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col F</td><td className="p-2 font-semibold">หมายเลขบัตรประชาชน</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2 font-mono">1100100000001 (Text 13 หลัก ใช้จับคู่ Person)</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col G–I</td><td className="p-2">คำนำหน้า / ชื่อ / นามสกุล</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2">นาย / สมชาย / ใจดี</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col J</td><td className="p-2">สิทธิลดหย่อนเฉพาะต่อ 4 ขึ้นไป</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">Y หรือ N</td></tr>
+                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col L</td><td className="p-2 font-semibold">สถานะการลงทะเบียน</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2">อนุมัติ / ผ่าน / ไม่ผ่าน (อนุมัติหรือผ่านจะ Stamp confirmed)</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col M</td><td className="p-2">สถานะเอกสารลดหย่อน</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2">ผ่านการตรวจสอบ</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col Q</td><td className="p-2">รอบการเรียน</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2 font-mono">19/08/2569</td></tr>
+                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col R–S</td><td className="p-2 font-semibold">รหัสหลักสูตร / ชื่อหลักสูตร</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2 font-mono">A4P1_04 / การวางแผนเพื่อวัยเกษียณ</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col T–V</td><td className="p-2">คำนำหน้า / ชื่อ / นามสกุล (จากระบบ)</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2">ข้อมูลตรวจสอบแล้ว (ใช้ตรวจ Mismatch และซิงค์เข้า Person)</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col W–Y</td><td className="p-2">เลขที่ใบอนุญาต / วันออก / วันหมดอายุ</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">6504000001 / 2024-01-15 / 2029-01-14</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col Z–AB</td><td className="p-2">ประเภทผู้สมัคร / ใบอนุญาต / การประกัน</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2">ตัวแทน / ต่ออายุครั้งที่ 4 เป็นต้นไป / ประกันวินาศภัย</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col AC–AE</td><td className="p-2">% ความคืบหน้า / % คะแนน / ลิงก์</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">100% / 85% / https://vonlinelearning.viriyah.co.th/</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <input

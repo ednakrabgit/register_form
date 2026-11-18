@@ -70,6 +70,234 @@ namespace backend.Services
             _context = context;
         }
 
+        public byte[] GenerateTemplateExcel()
+        {
+            using var workbook = new XLWorkbook();
+
+            // Sheet 1: Exact structure expected by ParseExcelRows (Headers on Row 1 & Row 3, Data starts at Row 4)
+            var ws = workbook.Worksheets.Add("Sheet1");
+
+            // Row 1: Technical field codes (Col C..K)
+            ws.Cell(1, 3).Value = "F_CMD";
+            ws.Cell(1, 4).Value = "ITEM";
+            ws.Cell(1, 5).Value = "AG_LICENSE";
+            ws.Cell(1, 6).Value = "AG_ID_CARD";
+            ws.Cell(1, 7).Value = "PREFIX_CODE";
+            ws.Cell(1, 8).Value = "AG_FNAME_TH";
+            ws.Cell(1, 9).Value = "AG_LNAME_TH";
+            ws.Cell(1, 10).Value = "F_DEDUCTION";
+            ws.Cell(1, 11).Value = "REMARK";
+
+            var row1Range = ws.Range(1, 1, 1, 31);
+            row1Range.Style.Font.FontSize = 9;
+            row1Range.Style.Font.FontColor = XLColor.FromHtml("#475569");
+            row1Range.Style.Fill.BackgroundColor = XLColor.FromHtml("#F1F5F9");
+
+            // Row 2: Blank spacer row (matches Viriyah Online Learning export format)
+
+            // Row 3: Thai column headers (Col A..AE)
+            string[] headers =
+            {
+                "1.H.0.0.0",                           // A (1)
+                "EID",                                 // B (2)
+                "คำสั่ง",                               // C (3)
+                "ลำดับ",                                // D (4)
+                "เลขที่ใบอนุญาต",                        // E (5)
+                "หมายเลขบัตรประชาชน",                    // F (6)
+                "คำนำหน้า",                             // G (7)
+                "ชื่อ",                                 // H (8)
+                "นามสกุล",                              // I (9)
+                "สิทธิลดหย่อนเฉพาะต่อ 4 ขึ้นไป",           // J (10)
+                "หมายเหตุ",                             // K (11)
+                "สถานะการลงทะเบียน",                    // L (12)
+                "สถานะเอกสารลดหย่อน",                   // M (13)
+                "สถานะเอกสารเพิ่มเติม",                   // N (14)
+                "อีเมล",                                // O (15)
+                "เบอร์โทร",                             // P (16)
+                "รอบการเรียน",                          // Q (17)
+                "รหัสหลักสูตร",                          // R (18)
+                "ชื่อหลักสูตร",                          // S (19)
+                "คำนำหน้า (จากระบบ)",                   // T (20)
+                "ชื่อ (จากระบบ)",                       // U (21)
+                "นามสกุล (จากระบบ)",                    // V (22)
+                "เลขที่ใบอนุญาตประกันวินาศภัย",            // W (23)
+                "วันที่ออกใบอนุญาตประกันวินาศภัย",         // X (24)
+                "วันที่ใบอนุญาตประกันวินาศภัยหมดอายุ",      // Y (25)
+                "ประเภทผู้สมัคร",                        // Z (26)
+                "ประเภทใบอนุญาต",                       // AA (27)
+                "ประเภทการประกัน",                      // AB (28)
+                "% ความคืบหน้าการเรียน",                 // AC (29)
+                "% คะแนนแบบทดสอบหลังเรียน",             // AD (30)
+                "ลิงก์"                                 // AE (31)
+            };
+
+            for (int col = 1; col <= headers.Length; col++)
+            {
+                ws.Cell(3, col).Value = headers[col - 1];
+            }
+
+            var headerRange = ws.Range(3, 1, 3, headers.Length);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Font.FontColor = XLColor.White;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+            headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            headerRange.Style.Alignment.WrapText = true;
+            ws.Row(3).Height = 28;
+
+            // Format ID / License / Phone columns as text so Excel preserves leading zeros & 13-digit IDs
+            int[] textCols = { 5, 6, 16, 23, 24, 25 };
+            foreach (int col in textCols)
+            {
+                ws.Column(col).Style.NumberFormat.Format = "@";
+            }
+
+            // Sample Data Row 4 (Passed / Approved)
+            string[] sampleRow1 =
+            {
+                "1.1.N.0.0",
+                "EID0000001",
+                "[1.1.N.0.0]-ADD",
+                "1",
+                "6504000001",
+                "1100100000001",
+                "นาย",
+                "สมชาย",
+                "ใจดี",
+                "N",
+                "P",
+                "อนุมัติ",
+                "",
+                "",
+                "somchai@example.com",
+                "0810000001",
+                "19/08/2569",
+                "A4P1_04",
+                "การวางแผนเพื่อวัยเกษียณ",
+                "นาย",
+                "สมชาย",
+                "ใจดี",
+                "6504000001",
+                "2024-01-15",
+                "2029-01-14",
+                "ตัวแทน",
+                "ต่ออายุครั้งที่ 4 เป็นต้นไป",
+                "ประกันวินาศภัย",
+                "100%",
+                "85%",
+                "https://vonlinelearning.viriyah.co.th/"
+            };
+
+            // Sample Data Row 5 (Failed + Deduction Privilege Y)
+            string[] sampleRow2 =
+            {
+                "1.1.N.0.0",
+                "EID0000002",
+                "[1.1.N.0.0]-ADD",
+                "2",
+                "6502000002",
+                "1100100000002",
+                "นางสาว",
+                "สมหญิง",
+                "รักเรียน",
+                "Y",
+                "",
+                "ไม่ผ่าน",
+                "ผ่านการตรวจสอบ",
+                "",
+                "somying@example.com",
+                "0810000002",
+                "19/08/2569",
+                "B0N0O00",
+                "ขอรับใบอนุญาตตัวแทนประกันวินาศภัย",
+                "นางสาว",
+                "สมหญิง",
+                "รักเรียน",
+                "6502000002",
+                "2025-03-01",
+                "2026-02-28",
+                "นายหน้า",
+                "ขอรับใบอนุญาต",
+                "ประกันวินาศภัย",
+                "60%",
+                "50%",
+                "https://vonlinelearning.viriyah.co.th/"
+            };
+
+            for (int col = 1; col <= sampleRow1.Length; col++)
+            {
+                ws.Cell(4, col).Value = sampleRow1[col - 1];
+                ws.Cell(5, col).Value = sampleRow2[col - 1];
+            }
+
+            var dataRange = ws.Range(4, 1, 5, headers.Length);
+            dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            dataRange.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+            dataRange.Style.Border.InsideBorderColor = XLColor.FromHtml("#CBD5E1");
+
+            ws.SheetView.FreezeRows(3);
+            ws.Columns(1, headers.Length).AdjustToContents();
+
+            // Sheet 2: Instructions & Column Guide (ignored by ParseExcelRows which reads only Worksheets.FirstOrDefault())
+            var guide = workbook.Worksheets.Add("คำอธิบายคอลัมน์");
+            guide.Cell(1, 1).Value = "คู่มือรูปแบบไฟล์นำเข้าผลการอบรม (Training Result Stamp)";
+            guide.Cell(1, 1).Style.Font.Bold = true;
+            guide.Cell(1, 1).Style.Font.FontSize = 14;
+            guide.Cell(1, 1).Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
+
+            guide.Cell(2, 1).Value = "หมายเหตุสำคัญ: ระบบจะอ่านข้อมูลจาก Sheet แรก (Sheet1) โดยเริ่มอ่านข้อมูลตั้งแต่แถวที่ 4 เป็นต้นไป (แถวที่ 1-3 เป็นหัวตาราง ห้ามลบออก)";
+            guide.Cell(2, 1).Style.Font.Bold = true;
+            guide.Cell(2, 1).Style.Font.FontColor = XLColor.FromHtml("#B91C1C");
+
+            string[] guideHeaders = { "คอลัมน์", "ชื่อหัวคอลัมน์ (แถว 3)", "ความจำเป็น", "รูปแบบ / ค่าที่รองรับ", "คำอธิบายการใช้งานในระบบ" };
+            for (int c = 1; c <= guideHeaders.Length; c++)
+            {
+                guide.Cell(4, c).Value = guideHeaders[c - 1];
+            }
+            var gHead = guide.Range(4, 1, 4, guideHeaders.Length);
+            gHead.Style.Font.Bold = true;
+            gHead.Style.Font.FontColor = XLColor.White;
+            gHead.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+
+            string[][] guideRows =
+            {
+                new[] { "E", "เลขที่ใบอนุญาต", "แนะนำ", "ตัวเลข 10 หลัก (Text)", "เลขที่ใบอนุญาตเดิมของผู้เข้าอบรม" },
+                new[] { "F", "หมายเลขบัตรประชาชน", "จำเป็น *", "ตัวเลข 13 หลัก (Text)", "ใช้จับคู่กับผู้สมัครในระบบ (Person)" },
+                new[] { "G - I", "คำนำหน้า / ชื่อ / นามสกุล", "แนะนำ", "ข้อความภาษาไทย", "ชื่อ-สกุลเดิมจากใบสมัคร" },
+                new[] { "J", "สิทธิลดหย่อนเฉพาะต่อ 4 ขึ้นไป", "ไม่บังคับ", "Y หรือ N", "หากเป็น Y ระบบจะบันทึกสิทธิลดหย่อนให้" },
+                new[] { "L", "สถานะการลงทะเบียน", "จำเป็น *", "อนุมัติ / ผ่าน / ไม่ผ่าน", "หากเป็น 'อนุมัติ' หรือ 'ผ่าน' จะ Stamp confirmed = true" },
+                new[] { "M", "สถานะเอกสารลดหย่อน", "ไม่บังคับ", "ข้อความ", "สถานะตรวจเอกสารลดหย่อน" },
+                new[] { "Q", "รอบการเรียน", "แนะนำ", "เช่น 19/08/2569", "วันที่/รอบการอบรมที่แสดงในรายงาน" },
+                new[] { "R", "รหัสหลักสูตร", "จำเป็น *", "เช่น A4P1_04, B0N0O00", "ใช้จับคู่หลักสูตรในระบบ (mst_course_curriculum)" },
+                new[] { "S", "ชื่อหลักสูตร", "แนะนำ", "ข้อความ", "ชื่อหลักสูตรที่เข้าอบรม" },
+                new[] { "T - V", "คำนำหน้า / ชื่อ / นามสกุล (จากระบบ)", "แนะนำ", "ข้อความภาษาไทย", "ข้อมูลที่ผ่านการตรวจสอบแล้ว (ใช้ตรวจ Mismatch และซิงค์เข้า Person)" },
+                new[] { "W", "เลขที่ใบอนุญาตประกันวินาศภัย", "แนะนำ", "ตัวเลข 10 หลัก (Text)", "เลขที่ใบอนุญาตที่ผ่านการตรวจสอบแล้ว (ใช้ซิงค์เข้า PersonLicense)" },
+                new[] { "X - Y", "วันที่ออก / วันหมดอายุใบอนุญาต", "ไม่บังคับ", "yyyy-MM-dd หรือ dd/MM/yyyy", "วันออกและวันหมดอายุใบอนุญาต (ใช้ซิงค์เมื่อเปิด syncVerifiedData)" },
+                new[] { "Z - AB", "ประเภทผู้สมัคร / ใบอนุญาต / การประกัน", "ไม่บังคับ", "ข้อความ", "ข้อมูลจำแนกจากระบบอบรม" },
+                new[] { "AC - AE", "% ความคืบหน้า / % คะแนน / ลิงก์", "ไม่บังคับ", "เช่น 100%, 85%, URL", "ผลความคืบหน้า คะแนนสอบ และลิงก์หลักสูตร" }
+            };
+
+            for (int i = 0; i < guideRows.Length; i++)
+            {
+                int r = 5 + i;
+                for (int c = 0; c < guideRows[i].Length; c++)
+                {
+                    guide.Cell(r, c + 1).Value = guideRows[i][c];
+                }
+            }
+
+            var gBody = guide.Range(4, 1, 4 + guideRows.Length, guideHeaders.Length);
+            gBody.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            gBody.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            gBody.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+            gBody.Style.Border.InsideBorderColor = XLColor.FromHtml("#CBD5E1");
+            guide.Columns(1, guideHeaders.Length).AdjustToContents();
+
+            using var ms = new MemoryStream();
+            workbook.SaveAs(ms);
+            return ms.ToArray();
+        }
+
         public async Task<TrainingImportSummaryDto> ParseAndPreviewExcelAsync(Stream fileStream, string fileName)
         {
             var rows = ParseExcelRows(fileStream);
