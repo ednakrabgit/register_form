@@ -37,6 +37,9 @@ namespace backend.Services
         public string? ProgressPercent { get; set; } // Col AC
         public string? ScorePercent { get; set; } // Col AD
         public string? EnrollmentUrl { get; set; } // Col AE
+        public string? PassedSubjectsDisplay { get; set; } // รายการวิชาที่ผ่าน
+        public int PassedSubjectCount { get; set; }
+        public int TotalSubjectCount { get; set; }
 
         // Matching & Audit status
         public bool IsPersonMatched { get; set; }
@@ -72,6 +75,21 @@ namespace backend.Services
 
         public byte[] GenerateTemplateExcel()
         {
+            var candidates = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "Templates", "template_training_result_stamp.xlsx"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Templates", "template_training_result_stamp.xlsx"),
+                Path.Combine(Directory.GetCurrentDirectory(), "dotnet", "backend", "Templates", "template_training_result_stamp.xlsx")
+            };
+
+            foreach (var path in candidates)
+            {
+                if (File.Exists(path))
+                {
+                    return File.ReadAllBytes(path);
+                }
+            }
+
             using var workbook = new XLWorkbook();
 
             // Sheet 1: Exact structure expected by ParseExcelRows (Headers on Row 1 & Row 3, Data starts at Row 4)
@@ -357,7 +375,7 @@ namespace backend.Services
                         result.PersonRegistrationId = latestReg.Id;
 
                         // If passed in training system ("อนุมัติ" or "ผ่าน"), stamp confirmed status
-                        if (r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน")
+                        if (r.TrainingStatus != null && (r.TrainingStatus.StartsWith("อนุมัติ") || r.TrainingStatus.StartsWith("ผ่าน")))
                         {
                             latestReg.confirmed = true;
                             latestReg.completion_time = DateTime.Now;
@@ -417,61 +435,259 @@ namespace backend.Services
 
         private List<TrainingImportRowDto> ParseExcelRows(Stream fileStream)
         {
-            var list = new List<TrainingImportRowDto>();
-
             using (var workbook = new XLWorkbook(fileStream))
             {
-                var worksheet = workbook.Worksheets.FirstOrDefault();
-                if (worksheet == null) return list;
-
-                // Find the header row (typically row 3 has headers like 'คำสั่ง', 'เลขที่ใบอนุญาต', 'หมายเลขบัตรประชาชน', etc.)
-                int startRow = 4;
-                int maxRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
-
-                for (int row = startRow; row <= maxRow; row++)
+                // 1. Check if the workbook contains sheet "นำส่งข้อมูลผู้ผ่านการอบรม" (official ITA Post format)
+                var itaSheet = workbook.Worksheets.FirstOrDefault(w => w.Name == "นำส่งข้อมูลผู้ผ่านการอบรม");
+                if (itaSheet != null)
                 {
-                    var r = worksheet.Row(row);
-                    if (r.IsEmpty()) continue;
-
-                    string cmd = r.Cell(3).GetString().Trim(); // Col C: [1.1.N.0.0]-ADD
-                    string licenseNo = r.Cell(5).GetString().Trim(); // Col E: AG_LICENSE
-                    string nationalIdRaw = r.Cell(6).GetString().Trim(); // Col F: AG_ID_CARD
-                    string nationalId = Regex.Replace(nationalIdRaw, @"\D", ""); // clean 13 digits
-
-                    // Skip empty rows without national ID or license
-                    if (string.IsNullOrEmpty(nationalId) && string.IsNullOrEmpty(licenseNo))
-                        continue;
-
-                    var item = new TrainingImportRowDto
-                    {
-                        RowIndex = row,
-                        OriginalLicenseNo = licenseNo,
-                        NationalId = nationalId,
-                        OriginalPrefix = r.Cell(7).GetString().Trim(),
-                        OriginalFirstName = r.Cell(8).GetString().Trim(),
-                        OriginalLastName = r.Cell(9).GetString().Trim(),
-                        DeductionPrivilege = r.Cell(10).GetString().Trim().ToUpper(), // Col J
-                        TrainingStatus = r.Cell(12).GetString().Trim(), // Col L
-                        DeductionDocStatus = r.Cell(13).GetString().Trim(), // Col M
-                        TrainingDateDisplay = r.Cell(17).GetString().Trim(), // Col Q
-                        TrainingCourseCode = r.Cell(18).GetString().Trim(), // Col R
-                        TrainingCourseName = r.Cell(19).GetString().Trim(), // Col S
-                        VerifiedTitleTh = r.Cell(20).GetString().Trim(), // Col T
-                        VerifiedFirstNameTh = r.Cell(21).GetString().Trim(), // Col U
-                        VerifiedLastNameTh = r.Cell(22).GetString().Trim(), // Col V
-                        VerifiedLicenseNo = r.Cell(23).GetString().Trim(), // Col W
-                        VerifiedLicenseIssueDate = r.Cell(24).GetString().Trim(), // Col X
-                        VerifiedLicenseExpiryDate = r.Cell(25).GetString().Trim(), // Col Y
-                        VerifiedApplicantType = r.Cell(26).GetString().Trim(), // Col Z
-                        VerifiedLicenseType = r.Cell(27).GetString().Trim(), // Col AA
-                        VerifiedInsuranceType = r.Cell(28).GetString().Trim(), // Col AB
-                        ProgressPercent = r.Cell(29).GetString().Trim(), // Col AC
-                        ScorePercent = r.Cell(30).GetString().Trim(), // Col AD
-                        EnrollmentUrl = r.Cell(31).GetString().Trim() // Col AE
-                    };
-
-                    list.Add(item);
+                    return ParseItaPostFormat(workbook, itaSheet);
                 }
+
+                // 2. Fall back to standard/LMS format
+                return ParseLmsFormat(workbook);
+            }
+        }
+
+        private List<TrainingImportRowDto> ParseItaPostFormat(XLWorkbook workbook, IXLWorksheet ws8)
+        {
+            var list = new List<TrainingImportRowDto>();
+
+            // 1. Read course and subject metadata from "ข้อมูลหลักสูตรและวิชา" if present
+            var subjects = new Dictionary<string, (string CourseCode, string CourseName, string SubjectName, double Hours)>(StringComparer.OrdinalIgnoreCase);
+            string defaultCourseCode = "";
+            string defaultCourseName = "";
+
+            var ws4 = workbook.Worksheets.FirstOrDefault(w => w.Name == "ข้อมูลหลักสูตรและวิชา");
+            if (ws4 != null)
+            {
+                int maxR4 = ws4.LastRowUsed()?.RowNumber() ?? 0;
+                for (int r = 2; r <= maxR4; r++)
+                {
+                    string cCode = ws4.Cell(r, 3).GetString().Trim(); // Col C: รหัสหลักสูตร
+                    string cName = ws4.Cell(r, 4).GetString().Trim(); // Col D: ชื่อหลักสูตร
+                    string sCode = ws4.Cell(r, 5).GetString().Trim(); // Col E: รหัสวิชา
+                    string sName = ws4.Cell(r, 6).GetString().Trim(); // Col F: ชื่อวิชา
+                    string hrsStr = ws4.Cell(r, 9).GetString().Trim(); // Col I: ระยะเวลา (ชม.)
+                    double.TryParse(hrsStr, out double hrs);
+                    if (hrs <= 0) hrs = 3.0;
+
+                    if (!string.IsNullOrEmpty(sCode))
+                    {
+                        subjects[sCode] = (cCode, cName, sName, hrs);
+                        if (string.IsNullOrEmpty(defaultCourseCode) && !string.IsNullOrEmpty(cCode))
+                        {
+                            defaultCourseCode = cCode;
+                            defaultCourseName = cName;
+                        }
+                    }
+                }
+            }
+
+            // 2. Read batch info and training date
+            string batchName = ws8.Cell(3, 10).GetString().Trim();
+            if (string.IsNullOrEmpty(batchName)) batchName = ws8.Cell(3, 8).GetString().Trim();
+
+            string trainingDate = "";
+            var wsLect = workbook.Worksheets.FirstOrDefault(w => w.Name == "นำส่งข้อมูลวิทยากรให้การอบรม");
+            if (wsLect != null)
+            {
+                int maxRL = wsLect.LastRowUsed()?.RowNumber() ?? 0;
+                for (int r = 8; r <= maxRL; r++)
+                {
+                    string d = wsLect.Cell(r, 9).GetString().Trim(); // Col I: LECTURE_DATE
+                    if (!string.IsNullOrEmpty(d) && (d.Contains("/") || d.Contains("-")))
+                    {
+                        trainingDate = d;
+                        break;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(trainingDate) && !string.IsNullOrEmpty(batchName))
+            {
+                var match = Regex.Match(batchName, @"(\d{2})(\d{2})(\d{2})$");
+                if (match.Success)
+                {
+                    trainingDate = $"{match.Groups[1].Value}/{match.Groups[2].Value}/25{match.Groups[3].Value}";
+                }
+            }
+
+            // 3. Find subject columns in ws8 header row (Row 8)
+            // Col 1=1.H.0.0.0, 2=คำสั่ง, 3=ลำดับที่, 4=เลขที่ใบอนุญาต, 5=หมายเลขบัตรประชาชน, 6=คำนำหน้า, 7=ชื่อ, 8=นามสกุล, 9=สิทธิลดหย่อน, 10=หมายเหตุ
+            // Col 11.. are subject codes
+            var subjectCols = new Dictionary<int, (string Code, string Name, double Hours)>();
+            int maxCol = ws8.LastColumnUsed()?.ColumnNumber() ?? 0;
+            for (int c = 11; c <= maxCol; c++)
+            {
+                string headerVal = ws8.Cell(8, c).GetString().Trim();
+                if (string.IsNullOrEmpty(headerVal)) continue;
+
+                if (subjects.TryGetValue(headerVal, out var subMeta))
+                {
+                    subjectCols[c] = (headerVal, subMeta.SubjectName, subMeta.Hours);
+                }
+                else if (!headerVal.StartsWith("รหัสวิชา"))
+                {
+                    subjectCols[c] = (headerVal, headerVal, 3.0);
+                }
+            }
+
+            int totalSubjects = subjectCols.Count;
+
+            // 4. Read Trainee rows starting from Row 10
+            int maxRow = ws8.LastRowUsed()?.RowNumber() ?? 0;
+            for (int row = 10; row <= maxRow; row++)
+            {
+                var r = ws8.Row(row);
+                if (r.IsEmpty()) continue;
+
+                string idRaw = r.Cell(5).GetString().Trim(); // Col E: AG_ID_CARD
+                string nationalId = Regex.Replace(idRaw, @"\D", "");
+                string licenseNo = r.Cell(4).GetString().Trim(); // Col D: AG_LICENSE
+
+                if (string.IsNullOrEmpty(nationalId) && string.IsNullOrEmpty(licenseNo))
+                    continue;
+
+                string prefix = r.Cell(6).GetString().Trim(); // Col F: PREFIX_CODE
+                string fname = r.Cell(7).GetString().Trim();  // Col G: AG_FNAME_TH
+                string lname = r.Cell(8).GetString().Trim();  // Col H: AG_LNAME_TH
+                string deduction = r.Cell(9).GetString().Trim().ToUpper(); // Col I: F_DEDUCTION
+                if (deduction != "Y") deduction = "N";
+
+                // Check which subjects passed
+                var passedSubjects = new List<string>();
+                double passedHours = 0;
+                double totalHours = 0;
+
+                foreach (var kvp in subjectCols)
+                {
+                    totalHours += kvp.Value.Hours;
+                    var cell = r.Cell(kvp.Key);
+                    string val = cell.GetString().Trim();
+                    bool isPassed = false;
+
+                    if (double.TryParse(val, out double h) && h > 0)
+                    {
+                        isPassed = true;
+                        passedHours += h;
+                    }
+                    else if (val == "Y" || val == "ผ่าน" || val == "P")
+                    {
+                        isPassed = true;
+                        passedHours += kvp.Value.Hours;
+                    }
+
+                    if (isPassed)
+                    {
+                        passedSubjects.Add($"{kvp.Value.Name} ({kvp.Value.Code})");
+                    }
+                }
+
+                string trainingStatus;
+                if (totalSubjects == 0)
+                {
+                    trainingStatus = "อนุมัติ";
+                }
+                else if (passedSubjects.Count == totalSubjects)
+                {
+                    trainingStatus = "ผ่าน (ครบทุกวิชา)";
+                }
+                else if (passedSubjects.Count > 0)
+                {
+                    trainingStatus = $"ผ่าน ({passedSubjects.Count}/{totalSubjects} วิชา)";
+                }
+                else
+                {
+                    trainingStatus = "ไม่ผ่าน (0 วิชา)";
+                }
+
+                string progressPct = totalHours > 0 ? $"{Math.Round(passedHours / totalHours * 100)}%" : "100%";
+                string scorePct = totalSubjects > 0 ? $"{passedSubjects.Count}/{totalSubjects} วิชา" : "-";
+
+                string courseCode = !string.IsNullOrEmpty(defaultCourseCode) ? defaultCourseCode : "ตนว4642037";
+                string courseName = !string.IsNullOrEmpty(batchName) ? batchName : defaultCourseName;
+
+                var item = new TrainingImportRowDto
+                {
+                    RowIndex = row,
+                    NationalId = nationalId,
+                    OriginalLicenseNo = licenseNo,
+                    OriginalPrefix = prefix,
+                    OriginalFirstName = fname,
+                    OriginalLastName = lname,
+                    DeductionPrivilege = deduction,
+                    TrainingStatus = trainingStatus,
+                    TrainingDateDisplay = trainingDate,
+                    TrainingCourseCode = courseCode,
+                    TrainingCourseName = courseName,
+                    VerifiedTitleTh = prefix,
+                    VerifiedFirstNameTh = fname,
+                    VerifiedLastNameTh = lname,
+                    VerifiedLicenseNo = licenseNo,
+                    ProgressPercent = progressPct,
+                    ScorePercent = scorePct,
+                    PassedSubjectsDisplay = passedSubjects.Count > 0 ? string.Join(", ", passedSubjects) : "ไม่มีวิชาที่ผ่าน",
+                    PassedSubjectCount = passedSubjects.Count,
+                    TotalSubjectCount = totalSubjects
+                };
+
+                list.Add(item);
+            }
+
+            return list;
+        }
+
+        private List<TrainingImportRowDto> ParseLmsFormat(XLWorkbook workbook)
+        {
+            var list = new List<TrainingImportRowDto>();
+            var worksheet = workbook.Worksheets.FirstOrDefault();
+            if (worksheet == null) return list;
+
+            int startRow = 4;
+            int maxRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+
+            for (int row = startRow; row <= maxRow; row++)
+            {
+                var r = worksheet.Row(row);
+                if (r.IsEmpty()) continue;
+
+                string licenseNo = r.Cell(5).GetString().Trim(); // Col E: AG_LICENSE
+                string nationalIdRaw = r.Cell(6).GetString().Trim(); // Col F: AG_ID_CARD
+                string nationalId = Regex.Replace(nationalIdRaw, @"\D", "");
+
+                if (string.IsNullOrEmpty(nationalId) && string.IsNullOrEmpty(licenseNo))
+                    continue;
+
+                var item = new TrainingImportRowDto
+                {
+                    RowIndex = row,
+                    OriginalLicenseNo = licenseNo,
+                    NationalId = nationalId,
+                    OriginalPrefix = r.Cell(7).GetString().Trim(),
+                    OriginalFirstName = r.Cell(8).GetString().Trim(),
+                    OriginalLastName = r.Cell(9).GetString().Trim(),
+                    DeductionPrivilege = r.Cell(10).GetString().Trim().ToUpper(),
+                    TrainingStatus = r.Cell(12).GetString().Trim(),
+                    DeductionDocStatus = r.Cell(13).GetString().Trim(),
+                    TrainingDateDisplay = r.Cell(17).GetString().Trim(),
+                    TrainingCourseCode = r.Cell(18).GetString().Trim(),
+                    TrainingCourseName = r.Cell(19).GetString().Trim(),
+                    VerifiedTitleTh = r.Cell(20).GetString().Trim(),
+                    VerifiedFirstNameTh = r.Cell(21).GetString().Trim(),
+                    VerifiedLastNameTh = r.Cell(22).GetString().Trim(),
+                    VerifiedLicenseNo = r.Cell(23).GetString().Trim(),
+                    VerifiedLicenseIssueDate = r.Cell(24).GetString().Trim(),
+                    VerifiedLicenseExpiryDate = r.Cell(25).GetString().Trim(),
+                    VerifiedApplicantType = r.Cell(26).GetString().Trim(),
+                    VerifiedLicenseType = r.Cell(27).GetString().Trim(),
+                    VerifiedInsuranceType = r.Cell(28).GetString().Trim(),
+                    ProgressPercent = r.Cell(29).GetString().Trim(),
+                    ScorePercent = r.Cell(30).GetString().Trim(),
+                    EnrollmentUrl = r.Cell(31).GetString().Trim()
+                };
+
+                list.Add(item);
             }
 
             return list;
@@ -488,7 +704,7 @@ namespace backend.Services
                 .ToDictionaryAsync(p => p.NationId!, p => p);
 
             var curriculums = await _context.CourseCurriculums
-                .Where(c => courseCodes.Contains(c.TrainingCourseCode!))
+                .Where(c => courseCodes.Contains(c.TrainingCourseCode!) || courseCodes.Contains(c.CurriculumCode!))
                 .ToListAsync();
 
             var summary = new TrainingImportSummaryDto
@@ -500,7 +716,7 @@ namespace backend.Services
             foreach (var r in rows)
             {
                 // Status counts
-                if (r.TrainingStatus == "อนุมัติ" || r.TrainingStatus == "ผ่าน")
+                if (r.TrainingStatus != null && (r.TrainingStatus.StartsWith("ผ่าน") || r.TrainingStatus.StartsWith("อนุมัติ")))
                     summary.PassedCount++;
                 else
                     summary.FailedCount++;
@@ -543,7 +759,7 @@ namespace backend.Services
                 }
 
                 // Course matching
-                var foundCurriculum = curriculums.FirstOrDefault(c => c.TrainingCourseCode == r.TrainingCourseCode);
+                var foundCurriculum = curriculums.FirstOrDefault(c => c.TrainingCourseCode == r.TrainingCourseCode || c.CurriculumCode == r.TrainingCourseCode);
                 if (foundCurriculum != null)
                 {
                     r.IsCourseMatched = true;

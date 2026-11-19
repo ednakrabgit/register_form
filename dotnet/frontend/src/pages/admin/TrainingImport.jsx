@@ -273,31 +273,29 @@ export default function TrainingImport() {
               <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">
                 <div className="font-bold text-slate-800 mb-2 flex items-center gap-2">
                   <i className="fas fa-table text-blue-600"></i>
-                  โครงสร้างไฟล์ Excel ที่รองรับ (Sheet แรก, แถวที่ 1–3 เป็นหัวตาราง, ข้อมูลเริ่มแถวที่ 4 เป็นต้นไป)
+                  โครงสร้างไฟล์ Excel ที่รองรับ (รองรับทั้งไฟล์ทางการ คปภ./ITA และไฟล์ Viriyah Online Learning)
+                </div>
+                <div className="text-[11px] text-slate-600 mb-3 space-y-1">
+                  <div><strong>รูปแบบที่ 1: ไฟล์ทางการ คปภ. (Post ITA - ATHP00100)</strong> ระบบจะอ่าน Sheet <code>นำส่งข้อมูลผู้ผ่านการอบรม</code> (หัวตารางแถว 8, ข้อมูลเริ่มแถว 10) และดึงรหัสวิชา/ชั่วโมงจาก Col K เป็นต้นไป พร้อมเชื่อมโยงกับ Sheet <code>ข้อมูลหลักสูตรและวิชา</code> อัตโนมัติ</div>
+                  <div><strong>รูปแบบที่ 2: ไฟล์ระบบอบรม (LMS)</strong> ข้อมูลอยู่ใน Sheet แรก (หัวตารางแถว 1-3, ข้อมูลเริ่มแถว 4)</div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse bg-white rounded border border-slate-200">
                     <thead className="bg-slate-100 text-slate-700">
                       <tr>
-                        <th className="p-2 border-b w-20">คอลัมน์</th>
-                        <th className="p-2 border-b">ชื่อหัวคอลัมน์ (แถว 3)</th>
+                        <th className="p-2 border-b w-24">คอลัมน์ (คปภ.)</th>
+                        <th className="p-2 border-b">ชื่อหัวคอลัมน์</th>
                         <th className="p-2 border-b w-24">ความจำเป็น</th>
-                        <th className="p-2 border-b">ตัวอย่าง / ค่าที่รองรับ</th>
+                        <th className="p-2 border-b">ตัวอย่าง / คำอธิบาย</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      <tr><td className="p-2 font-mono font-bold">Col E</td><td className="p-2">เลขที่ใบอนุญาต</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2 font-mono">6504000001 (Text 10 หลัก)</td></tr>
-                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col F</td><td className="p-2 font-semibold">หมายเลขบัตรประชาชน</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2 font-mono">1100100000001 (Text 13 หลัก ใช้จับคู่ Person)</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col G–I</td><td className="p-2">คำนำหน้า / ชื่อ / นามสกุล</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2">นาย / สมชาย / ใจดี</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col J</td><td className="p-2">สิทธิลดหย่อนเฉพาะต่อ 4 ขึ้นไป</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">Y หรือ N</td></tr>
-                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col L</td><td className="p-2 font-semibold">สถานะการลงทะเบียน</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2">อนุมัติ / ผ่าน / ไม่ผ่าน (อนุมัติหรือผ่านจะ Stamp confirmed)</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col M</td><td className="p-2">สถานะเอกสารลดหย่อน</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2">ผ่านการตรวจสอบ</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col Q</td><td className="p-2">รอบการเรียน</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2 font-mono">19/08/2569</td></tr>
-                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col R–S</td><td className="p-2 font-semibold">รหัสหลักสูตร / ชื่อหลักสูตร</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2 font-mono">A4P1_04 / การวางแผนเพื่อวัยเกษียณ</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col T–V</td><td className="p-2">คำนำหน้า / ชื่อ / นามสกุล (จากระบบ)</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2">ข้อมูลตรวจสอบแล้ว (ใช้ตรวจ Mismatch และซิงค์เข้า Person)</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col W–Y</td><td className="p-2">เลขที่ใบอนุญาต / วันออก / วันหมดอายุ</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">6504000001 / 2024-01-15 / 2029-01-14</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col Z–AB</td><td className="p-2">ประเภทผู้สมัคร / ใบอนุญาต / การประกัน</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2">ตัวแทน / ต่ออายุครั้งที่ 4 เป็นต้นไป / ประกันวินาศภัย</td></tr>
-                      <tr><td className="p-2 font-mono font-bold">Col AC–AE</td><td className="p-2">% ความคืบหน้า / % คะแนน / ลิงก์</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">100% / 85% / https://vonlinelearning.viriyah.co.th/</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col D</td><td className="p-2">เลขที่ใบอนุญาต</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2 font-mono">5404014550 (Text 10 หลัก)</td></tr>
+                      <tr className="bg-blue-50/40"><td className="p-2 font-mono font-bold text-blue-800">Col E</td><td className="p-2 font-semibold">หมายเลขบัตรประชาชน</td><td className="p-2 font-bold text-red-600">จำเป็น *</td><td className="p-2 font-mono">3100100435258 (Text 13 หลัก ใช้จับคู่ Person)</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col F–H</td><td className="p-2">คำนำหน้า / ชื่อ / นามสกุล</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2">นาย / วรพจน์ / ฉันทแดนสุวรรณ</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Col I</td><td className="p-2">สิทธิลดหย่อนเฉพาะต่อ 4 ขึ้นไป</td><td className="p-2 text-slate-500">ไม่บังคับ</td><td className="p-2 font-mono">Y หรือ N (หากเป็น Y จะบันทึกสิทธิลดหย่อน)</td></tr>
+                      <tr className="bg-emerald-50/40"><td className="p-2 font-mono font-bold text-emerald-800">Col K..</td><td className="p-2 font-semibold">รหัสวิชา (เช่น ตนว4164203716, ตนว4364203704)</td><td className="p-2 font-bold text-emerald-700">ชั่วโมงอบรม</td><td className="p-2">กรอกจำนวนชั่วโมงที่ผ่าน เช่น <code>3</code> หรือ <code>3.00</code> (หากไม่ผ่านให้เว้นว่าง)</td></tr>
+                      <tr><td className="p-2 font-mono font-bold">Sheet 4</td><td className="p-2">ข้อมูลหลักสูตรและวิชา</td><td className="p-2 text-slate-500">แนะนำ</td><td className="p-2">ระบุรหัสหลักสูตรและชื่อวิชาที่เกี่ยวข้อง</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -394,20 +392,20 @@ export default function TrainingImport() {
                     <thead className="bg-gray-100 text-gray-700 sticky top-0 shadow-xs z-10">
                       <tr>
                         <th className="p-2.5 border-b w-10 text-center">#</th>
-                        <th className="p-2.5 border-b min-w-[130px]">เลขบัตร ปชช. (Col F)</th>
-                        <th className="p-2.5 border-b min-w-[180px]">ชื่อ-สกุล (ตรวจสอบแล้ว Col T-V)</th>
-                        <th className="p-2.5 border-b min-w-[130px]">เลขใบอนุญาต (Col W)</th>
-                        <th className="p-2.5 border-b min-w-[120px]">รหัสวิชา (Col R)</th>
-                        <th className="p-2.5 border-b min-w-[100px]">รอบเรียน (Col Q)</th>
-                        <th className="p-2.5 border-b w-24 text-center">ผลอบรม (Col L)</th>
-                        <th className="p-2.5 border-b w-20 text-center">ลดหย่อน (Col J)</th>
-                        <th className="p-2.5 border-b min-w-[100px] text-center">คะแนน/ความคืบหน้า</th>
+                        <th className="p-2.5 border-b min-w-[130px]">เลขบัตร ปชช.</th>
+                        <th className="p-2.5 border-b min-w-[180px]">ชื่อ-สกุล</th>
+                        <th className="p-2.5 border-b min-w-[120px]">เลขใบอนุญาต</th>
+                        <th className="p-2.5 border-b min-w-[180px]">หลักสูตร / วิชาที่ผ่าน</th>
+                        <th className="p-2.5 border-b min-w-[100px]">รอบเรียน / วันที่</th>
+                        <th className="p-2.5 border-b w-32 text-center">ผลอบรม</th>
+                        <th className="p-2.5 border-b w-20 text-center">ลดหย่อน</th>
+                        <th className="p-2.5 border-b min-w-[110px] text-center">วิชาที่ผ่าน / ชม.</th>
                         <th className="p-2.5 border-b min-w-[140px]">สถานะในระบบ</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {previewData.rows.map((row, idx) => (
-                        <tr key={idx} className={`hover:bg-gray-50 ${row.IsDataMismatch ? 'bg-amber-50/40' : ''}`}>
+                        <tr key={idx} className={`hover:bg-gray-50 ${row.isDataMismatch ? 'bg-amber-50/40' : ''}`}>
                           <td className="p-2.5 text-center text-gray-400 font-mono">{idx + 1}</td>
                           <td className="p-2.5 font-mono font-medium text-gray-900">{row.nationalId}</td>
                           <td className="p-2.5">
@@ -424,17 +422,17 @@ export default function TrainingImport() {
                             <span className="font-mono font-semibold text-blue-800">{row.verifiedLicenseNo || row.originalLicenseNo || '-'}</span>
                           </td>
                           <td className="p-2.5">
-                            <span className="font-mono bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold">
+                            <span className="font-mono bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold text-[11px]">
                               {row.trainingCourseCode}
                             </span>
-                            <div className="text-[10px] text-gray-500 truncate max-w-[150px]" title={row.trainingCourseName}>
-                              {row.trainingCourseName}
+                            <div className="text-[10px] text-gray-700 font-medium mt-1 leading-snug" title={row.passedSubjectsDisplay || row.trainingCourseName}>
+                              {row.passedSubjectsDisplay || row.trainingCourseName}
                             </div>
                           </td>
-                          <td className="p-2.5 font-mono text-gray-700">{row.trainingDateDisplay}</td>
+                          <td className="p-2.5 font-mono text-gray-700">{row.trainingDateDisplay || '-'}</td>
                           <td className="p-2.5 text-center">
                             <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                              row.trainingStatus === 'อนุมัติ' || row.trainingStatus === 'ผ่าน'
+                              row.trainingStatus && (row.trainingStatus.startsWith('อนุมัติ') || row.trainingStatus.startsWith('ผ่าน'))
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
@@ -451,7 +449,8 @@ export default function TrainingImport() {
                             )}
                           </td>
                           <td className="p-2.5 text-center text-[11px]">
-                            <span className="font-mono text-teal-700 font-semibold">{row.progressPercent || '-'}</span> / <span className="font-mono text-indigo-700 font-semibold">{row.scorePercent || '-'}</span>
+                            <span className="font-mono text-teal-700 font-semibold">{row.progressPercent || '-'}</span>
+                            <div className="text-[10px] text-gray-500 font-mono">{row.scorePercent || '-'}</div>
                           </td>
                           <td className="p-2.5">
                             {row.isPersonMatched ? (

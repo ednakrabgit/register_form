@@ -1,6 +1,8 @@
 # .NET
 bin/
 obj/
+out/
+out_linux/
 *.user
 *.suo
 *.userosscache
