@@ -121,7 +121,7 @@ namespace backend.Controllers
                     && m.CourseDate >= cutoffDate);
             }
             
-            return Ok(await query.OrderBy(m => m.DisplayOrder).ToListAsync());
+            return Ok(await query.OrderBy(m => m.CourseDate).ThenBy(m => m.PillarId).ThenBy(m => m.DisplayOrder).ToListAsync());
         }
 
         [HttpPost("mappings")]

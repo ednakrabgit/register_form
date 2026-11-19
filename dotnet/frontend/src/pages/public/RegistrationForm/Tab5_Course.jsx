@@ -126,7 +126,12 @@ export default function Tab5Course() {
         const res = await fetch(`${API_BASE_URL}/masterdata/renew-other-courses`);
         if (res.ok) {
           const data = await res.json();
-          setRenewOtherOptions(data.map(item => ({ id: item.id.toString(), name: item.displayName })));
+          setRenewOtherOptions(data.map(item => ({ 
+            id: item.id.toString(), 
+            name: item.displayName,
+            courseDate: item.courseDate,
+            pillarId: item.pillarId
+          })));
         }
       } catch (err) {
         console.error("Failed to load renew other courses", err);
@@ -260,7 +265,12 @@ export default function Tab5Course() {
               <span className="text-error text-sm block mb-1">* เลือกได้มากกว่า 1 วิชา *</span>
               <span className="text-error text-sm block mb-2">* หากเลือกวิชาที่เคยอบรม จะไม่นับรวมรอบปัจจุบัน (5 ปี) *</span>
               <div className="flex flex-col gap-3">
-                {renewOtherOptions.map((otherCourse, idx) => {
+                {renewOtherOptions.slice().sort((a, b) => {
+                  const dateA = a.courseDate ? new Date(a.courseDate).getTime() : 0;
+                  const dateB = b.courseDate ? new Date(b.courseDate).getTime() : 0;
+                  if (dateA !== dateB) return dateA - dateB;
+                  return (a.pillarId || 0) - (b.pillarId || 0);
+                }).map((otherCourse, idx) => {
                   // Replicate the previous string-based includes check to disable options
                   const prevCourseNames = (formData.previousCourses || []).map(pId => renewCourseCheckboxes.find(c => c.id === pId)?.name || '');
                   const isDisabled = prevCourseNames.some(prevName => prevName && otherCourse.name.includes(prevName));

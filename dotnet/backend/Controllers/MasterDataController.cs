@@ -183,7 +183,7 @@ namespace backend.Controllers
                             && c.IsActiveFrontend && (c.StartActiveDatetime == null || now >= c.StartActiveDatetime) && (c.EndActiveDatetime == null || now <= c.EndActiveDatetime) && c.Status == "active"
                             && d.CourseDate >= cutoffDate
                         )
-                        orderby o.DisplayOrder ascending
+                        orderby d.CourseDate ascending, p.Id ascending, o.DisplayOrder ascending
                         select new {
                             id = o.Id,
                             subjectId = c.Id,

@@ -1788,7 +1788,12 @@ export default function UserProfile() {
                   </span>
 
                   <div className="flex flex-col gap-2 pt-1">
-                    {masterData?.renewOtherOptions?.map((otherCourse, idx) => {
+                    {masterData?.renewOtherOptions?.slice().sort((a, b) => {
+                      const dateA = a.courseDate ? new Date(a.courseDate).getTime() : 0;
+                      const dateB = b.courseDate ? new Date(b.courseDate).getTime() : 0;
+                      if (dateA !== dateB) return dateA - dateB;
+                      return (a.pillarId || 0) - (b.pillarId || 0);
+                    }).map((otherCourse, idx) => {
                       const isChecked = personData.courses?.some(c => c.renewOtherId === otherCourse.id);
                       return (
                         <label key={idx} className="flex items-start gap-2.5 p-2.5 border rounded-lg bg-white hover:bg-blue-50/20 cursor-pointer">
