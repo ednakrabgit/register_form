@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Lock, Mail, User, ArrowRight, ShieldCheck, UserCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Lock, User, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -46,10 +46,6 @@ export default function Login() {
     }
   };
 
-  const handleQuickLogin = (u, p) => {
-    setUsername(u);
-    setPassword(p);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -151,60 +147,6 @@ export default function Login() {
               </Link>
             </p>
           </div>
-
-          {/* Quick Mock Roles Selector for Easy Testing */}
-          <div className="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-200/70">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              บัญชีทดสอบทุก Role (Quick Test Switcher):
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('1100200314511', '14511')}
-                className="p-2 bg-white border border-blue-200 rounded-lg text-left hover:border-blue-500 hover:bg-blue-50/50 transition-colors shadow-sm"
-              >
-                <div className="font-bold text-blue-700 flex items-center gap-1">
-                  👤 ผู้สมัคร (Applicant)
-                </div>
-                <div className="text-[11px] text-slate-500 truncate">1100200314511 / 14511</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin', 'password123')}
-                className="p-2 bg-white border border-amber-200 rounded-lg text-left hover:border-amber-500 hover:bg-amber-50/50 transition-colors shadow-sm"
-              >
-                <div className="font-bold text-amber-700 flex items-center gap-1">
-                  🛡️ แอดมิน (Admin)
-                </div>
-                <div className="text-[11px] text-slate-500">admin / password123</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('superadmin', 'password123')}
-                className="p-2 bg-white border border-purple-200 rounded-lg text-left hover:border-purple-500 hover:bg-purple-50/50 transition-colors shadow-sm"
-              >
-                <div className="font-bold text-purple-700 flex items-center gap-1">
-                  👑 ซูเปอร์แอดมิน
-                </div>
-                <div className="text-[11px] text-slate-500">superadmin / password123</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('viewer', 'password123')}
-                className="p-2 bg-white border border-emerald-200 rounded-lg text-left hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors shadow-sm"
-              >
-                <div className="font-bold text-emerald-700 flex items-center gap-1">
-                  👁️ สาขา (Viewer)
-                </div>
-                <div className="text-[11px] text-slate-500">viewer / password123</div>
-              </button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
