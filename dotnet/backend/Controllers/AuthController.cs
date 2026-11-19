@@ -1114,6 +1114,8 @@ namespace backend.Controllers
 
                     .Include(x => x.Trainings)
 
+                    .Include(x => x.TrainingResults)
+
                     .Include(x => x.Others).ThenInclude(o => o.SalesAreas)
 
                     .Include(x => x.Others).ThenInclude(o => o.OtherCompanies)
@@ -1143,6 +1145,8 @@ namespace backend.Controllers
                     .Include(x => x.Courses)
 
                     .Include(x => x.Trainings)
+
+                    .Include(x => x.TrainingResults)
 
                     .Include(x => x.Others).ThenInclude(o => o.SalesAreas)
 
@@ -1255,6 +1259,8 @@ namespace backend.Controllers
                     .Include(x => x.Courses)
 
                     .Include(x => x.Trainings)
+
+                    .Include(x => x.TrainingResults)
 
                     .Include(x => x.Others).ThenInclude(o => o.SalesAreas)
 

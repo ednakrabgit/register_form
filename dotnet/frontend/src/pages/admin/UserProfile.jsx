@@ -810,6 +810,72 @@ export default function UserProfile() {
   const masterStatusVal = personData.registrations?.[0]?.MasterDegreeStatus || personData.registrations?.[0]?.masterDegreeStatus || '';
   const isMasterStatusSubmitted = masterStatusVal === 'เคยยื่นเอกสาร' || masterStatusVal === 'ปริญญาโท' || (isDeductionMaster && !masterStatusVal.includes('ไม่เคย'));
 
+  const isCoursePassed = (course, pData) => {
+    if (!course) return false;
+    const cName = course.courseName || '';
+
+    // Only apply to ขอรับ / ขอต่อ 1 / ขอต่อ 2 / ขอต่อ 3 (exclude 4 เป็นต้นไป)
+    if (cName.includes('4 เป็นต้นไป')) return false;
+
+    const isBasicCourse = 
+      cName.includes('ขอรับ') || 
+      (cName.includes('ขอต่อ') && (
+        cName.includes('1') || cName.includes('2') || cName.includes('3')
+      ));
+
+    if (!isBasicCourse) return false;
+
+    // 1. Check if person is registered for this course and confirmed === true
+    const isRegisteredForThis = pData?.courses?.some(c => Number(c.courseId) === Number(course.id));
+    const isConfirmed = pData?.registrations?.some(r => r.confirmed === true || r.confirmed === 1 || r.confirmed === 'true');
+    if (isRegisteredForThis && isConfirmed) {
+      return true;
+    }
+
+    // 2. Check trainingResults
+    const trainingResults = pData?.trainingResults || [];
+    const cid = Number(course.id);
+    const isBroker = cName.includes('นายหน้า');
+    const isAgent = cName.includes('ตัวแทน') && !isBroker;
+
+    return trainingResults.some(tr => {
+      const status = (tr.trainingStatus || '').trim();
+      if (!status.startsWith('ผ่าน') && !status.startsWith('อนุมัติ')) return false;
+
+      const code = (tr.trainingCourseCode || '').trim();
+      const name = (tr.trainingCourseName || '').trim();
+
+      if (cid === 1 || (isAgent && cName.includes('ขอรับ'))) {
+        if (code.includes('ตว0') || name.includes('ตว.0') || name.includes('ตว0')) return true;
+      }
+      if (cid === 2 || (isAgent && cName.includes('1'))) {
+        if (code.includes('ตว1') || name.includes('ตว.1') || name.includes('ตว1')) return true;
+      }
+      if (cid === 3 || (isAgent && cName.includes('2'))) {
+        if (code.includes('ตว2') || name.includes('ตว.2') || name.includes('ตว2')) return true;
+      }
+      if (cid === 4 || (isAgent && cName.includes('3'))) {
+        if (code.includes('ตว3') || name.includes('ตว.3') || name.includes('ตว3')) return true;
+      }
+      if (cid === 5 || (isBroker && cName.includes('ขอรับ'))) {
+        if (code.includes('นว0') || name.includes('นว.0') || name.includes('นว0')) return true;
+      }
+      if (cid === 6 || (isBroker && cName.includes('1'))) {
+        if (code.includes('นว1') || name.includes('นว.1') || name.includes('นว1')) return true;
+      }
+      if (cid === 7 || (isBroker && cName.includes('2'))) {
+        if (code.includes('นว2') || name.includes('นว.2') || name.includes('นว2')) return true;
+      }
+      if (cid === 8 || (isBroker && cName.includes('3'))) {
+        if (code.includes('นว3') || name.includes('นว.3') || name.includes('นว3')) return true;
+      }
+
+      if (name.includes(cName)) return true;
+
+      return false;
+    });
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Alert Banner */}
@@ -1637,21 +1703,32 @@ export default function UserProfile() {
                   const isBroker = (licType === 'broker' || licType === 'นายหน้า' || licType === 'นายหน้าประกันวินาศภัย');
                   const targetAgentType = isBroker ? 'broker' : 'agent';
                   return !course.agentType || course.agentType === targetAgentType || course.agentType === 'all';
-                }).map((course, idx) => (
-                  <label key={idx} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-                    currentCourseType === course.id ? 'border-primary bg-blue-50/40 text-primary font-bold' : 'hover:bg-gray-50 text-gray-700'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="profileCourseType"
-                      className="w-4 h-4 accent-primary"
-                      value={course.id}
-                      checked={currentCourseType === course.id}
-                      onChange={() => handleCourseTypeChange(course.id)}
-                    />
-                    <span className="text-sm">{course.courseName}</span>
-                  </label>
-                ))}
+                }).map((course, idx) => {
+                  const passed = isCoursePassed(course, personData);
+                  return (
+                    <label key={idx} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                      currentCourseType === course.id ? 'border-primary bg-blue-50/40 text-primary font-bold' : 'hover:bg-gray-50 text-gray-700'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="profileCourseType"
+                        className="w-4 h-4 accent-primary flex-shrink-0"
+                        value={course.id}
+                        checked={currentCourseType === course.id}
+                        onChange={() => handleCourseTypeChange(course.id)}
+                      />
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm">{course.courseName}</span>
+                        {passed && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs animate-in fade-in">
+                            <i className="fas fa-check-circle text-emerald-600 text-[11px]"></i>
+                            (ผ่านแล้ว)
+                          </span>
+                        )}
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 

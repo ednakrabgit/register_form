@@ -748,6 +748,7 @@ namespace backend.Controllers
                 .Include(x => x.Affiliations)
                 .Include(x => x.Courses)
                 .Include(x => x.Trainings)
+                .Include(x => x.TrainingResults)
                 .Include(x => x.Others).ThenInclude(o => o.SalesAreas)
                 .Include(x => x.Others).ThenInclude(o => o.OtherCompanies)
                 .Include(x => x.Others).ThenInclude(o => o.Specialties)
