@@ -805,6 +805,11 @@ export default function UserProfile() {
   const isComplexCourse = selectedCourseObj && selectedCourseObj.dateId === null;
   const showDeductionPrivilege = currentCourseType === 9 || currentCourseType === 10 || currentCourseType === '9' || currentCourseType === '10';
 
+  const deductionVal = personData.registrations?.[0]?.DeductionPrivilege || personData.registrations?.[0]?.deductionPrivilege || '';
+  const isDeductionMaster = deductionVal === 'Y' || deductionVal.includes('MasterDegree') || deductionVal.includes('ปริญญาโท') || deductionVal.includes('สำเร็จการศึกษา');
+  const masterStatusVal = personData.registrations?.[0]?.MasterDegreeStatus || personData.registrations?.[0]?.masterDegreeStatus || '';
+  const isMasterStatusSubmitted = masterStatusVal === 'เคยยื่นเอกสาร' || masterStatusVal === 'ปริญญาโท' || (isDeductionMaster && !masterStatusVal.includes('ไม่เคย'));
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Alert Banner */}
@@ -1737,10 +1742,13 @@ export default function UserProfile() {
                           name="profileDeductionPrivilege"
                           className="w-4 h-4 accent-primary"
                           value="MasterDegree"
-                          checked={(personData.registrations?.[0]?.DeductionPrivilege || personData.registrations?.[0]?.deductionPrivilege || '').includes('MasterDegree')}
+                          checked={isDeductionMaster}
                           onChange={() => {
                             const synthetic = { target: { type: 'radio', value: 'MasterDegree' } };
                             handleRegistrationChange(synthetic, 'DeductionPrivilege');
+                            if (!masterStatusVal) {
+                              handleRegistrationChange({ target: { type: 'radio', value: 'เคยยื่นเอกสาร' } }, 'MasterDegreeStatus');
+                            }
                           }}
                         />
                         <span>ใช่ (ระดับปริญญาโทขึ้นไป)</span>
@@ -1752,7 +1760,7 @@ export default function UserProfile() {
                           name="profileDeductionPrivilege"
                           className="w-4 h-4 accent-primary"
                           value="None"
-                          checked={!(personData.registrations?.[0]?.DeductionPrivilege || personData.registrations?.[0]?.deductionPrivilege || '').includes('MasterDegree')}
+                          checked={!isDeductionMaster}
                           onChange={() => {
                             const synthetic = { target: { type: 'radio', value: null } };
                             handleRegistrationChange(synthetic, 'DeductionPrivilege');
@@ -1764,7 +1772,7 @@ export default function UserProfile() {
                       </label>
                     </div>
 
-                    {(personData.registrations?.[0]?.DeductionPrivilege || personData.registrations?.[0]?.deductionPrivilege || '').includes('MasterDegree') && (
+                    {isDeductionMaster && (
                       <div className="pt-3 border-t space-y-2">
                         <label className="block text-xs font-bold text-gray-600">สถานะการยื่นเอกสารลดหย่อน</label>
                         <div className="flex gap-4">
@@ -1774,7 +1782,7 @@ export default function UserProfile() {
                               name="profileMasterDegreeStatus"
                               className="w-4 h-4 accent-primary" 
                               value="เคยยื่นเอกสาร" 
-                              checked={(personData.registrations?.[0]?.MasterDegreeStatus || personData.registrations?.[0]?.masterDegreeStatus) === "เคยยื่นเอกสาร"} 
+                              checked={isMasterStatusSubmitted} 
                               onChange={(e) => handleRegistrationChange(e, 'MasterDegreeStatus')}
                             />
                             <span>เคยยื่นเอกสาร</span>
@@ -1786,7 +1794,7 @@ export default function UserProfile() {
                               name="profileMasterDegreeStatus"
                               className="w-4 h-4 accent-primary" 
                               value="ไม่เคยยื่นเอกสาร" 
-                              checked={(personData.registrations?.[0]?.MasterDegreeStatus || personData.registrations?.[0]?.masterDegreeStatus) === "ไม่เคยยื่นเอกสาร"} 
+                              checked={masterStatusVal === "ไม่เคยยื่นเอกสาร"} 
                               onChange={(e) => handleRegistrationChange(e, 'MasterDegreeStatus')}
                             />
                             <span>ไม่เคยยื่นเอกสาร</span>

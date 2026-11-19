@@ -40,6 +40,7 @@ namespace backend.Services
         public string? PassedSubjectsDisplay { get; set; } // รายการวิชาที่ผ่าน
         public int PassedSubjectCount { get; set; }
         public int TotalSubjectCount { get; set; }
+        public List<int> PassedRenewCourseIds { get; set; } = new List<int>();
 
         // Matching & Audit status
         public bool IsPersonMatched { get; set; }
@@ -71,6 +72,61 @@ namespace backend.Services
         public TrainingImportService(AppDbContext context)
         {
             _context = context;
+        }
+
+        public static int? MatchRenewCourseId(string? subjectCode, string? subjectName, List<MstRenewCourse> allCourses, List<MstCourseCurriculum> allCurriculums)
+        {
+            if (string.IsNullOrWhiteSpace(subjectCode) && string.IsNullOrWhiteSpace(subjectName))
+                return null;
+
+            var cleanSubName = subjectName?.Trim() ?? "";
+            var cleanCode = subjectCode?.Trim() ?? "";
+
+            // 1. Direct Name Match with MstRenewCourse
+            if (!string.IsNullOrEmpty(cleanSubName))
+            {
+                var exact = allCourses.FirstOrDefault(c => string.Equals(c.Name?.Trim(), cleanSubName, StringComparison.OrdinalIgnoreCase));
+                if (exact != null) return exact.Id;
+
+                // Normalized (remove whitespace, dashes, punctuation)
+                var normalizedSub = Regex.Replace(cleanSubName.ToLower(), @"[\s\-_.\(\)]", "");
+                var normMatch = allCourses.FirstOrDefault(c => {
+                    var nc = Regex.Replace(c.Name?.ToLower() ?? "", @"[\s\-_.\(\)]", "");
+                    return !string.IsNullOrEmpty(nc) && (normalizedSub.Contains(nc) || nc.Contains(normalizedSub));
+                });
+                if (normMatch != null) return normMatch.Id;
+            }
+
+            // 2. Direct Code Match with MstCourseCurriculum (renew course types)
+            if (!string.IsNullOrEmpty(cleanCode))
+            {
+                var curMatch = allCurriculums.FirstOrDefault(c => 
+                    string.Equals(c.TrainingCourseCode?.Trim(), cleanCode, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(c.CurriculumCode?.Trim(), cleanCode, StringComparison.OrdinalIgnoreCase));
+                if (curMatch != null && curMatch.CourseId > 0) return curMatch.CourseId;
+            }
+
+            // 3. Keyword / semantic matching
+            var searchTarget = $"{cleanSubName} {cleanCode}".ToLower();
+            if (searchTarget.Contains("non-motor") || searchTarget.Contains("nonmotor") || (searchTarget.Contains("สินไหม") && !searchTarget.Contains("ยานยนต์"))) return 2;
+            if (searchTarget.Contains("จรรยาบรรณ") || searchTarget.Contains("ศีลธรรม")) return 7;
+            if (searchTarget.Contains("คุ้มครองข้อมูลส่วนบุคคล") || searchTarget.Contains("pdpa")) return 9;
+            if (searchTarget.Contains("ฟอกเงิน") || searchTarget.Contains("amlo") || searchTarget.Contains("ปปง") || searchTarget.Contains("การก่อการร้าย")) return 11;
+            if (searchTarget.Contains("รถยนต์ไฟฟ้า") || searchTarget.Contains("ev") || searchTarget.Contains("ผู้ประสบภัยจากรถ")) return 12;
+            if (searchTarget.Contains("ทวงถามหนี้")) return 13;
+            if (searchTarget.Contains("จราจร")) return 8;
+            if (searchTarget.Contains("กำกับดูแล") || searchTarget.Contains("ระดับความเสี่ยง")) return 1;
+            if (searchTarget.Contains("ทรัพย์สิน")) return 3;
+            if (searchTarget.Contains("เกษียณ")) return 4;
+            if (searchTarget.Contains("ภาษี")) return 5;
+            if (searchTarget.Contains("ประกันภัยต่อ")) return 6;
+            if (searchTarget.Contains("เสนอขาย")) return 10;
+            if (searchTarget.Contains("ความรับผิด")) return 14;
+            if (searchTarget.Contains("การตลาด")) return 15;
+            if (searchTarget.Contains("สุขภาพ")) return 16;
+            if (searchTarget.Contains("รับประกันภัยรถยนต์")) return 17;
+
+            return null;
         }
 
         public byte[] GenerateTemplateExcel()
@@ -328,11 +384,12 @@ namespace backend.Services
             var rows = ParseExcelRows(fileStream);
             var summary = await EvaluateRowsAsync(rows, fileName);
 
-            // Pre-fetch persons and licenses
+            // Pre-fetch persons, registrations, licenses, and 5y trainings
             var nationIds = rows.Where(r => !string.IsNullOrEmpty(r.NationalId)).Select(r => r.NationalId!).Distinct().ToList();
             var persons = await _context.Persons
                 .Include(p => p.Registrations)
                 .Include(p => p.Licenses)
+                .Include(p => p.Trainings)
                 .Where(p => nationIds.Contains(p.NationId!))
                 .ToDictionaryAsync(p => p.NationId!, p => p);
 
@@ -381,9 +438,32 @@ namespace backend.Services
                             latestReg.completion_time = DateTime.Now;
                         }
 
+                        // 1. Update Deduction data if flagged as 'Y' in uploaded file
                         if (r.DeductionPrivilege == "Y")
                         {
-                            latestReg.DeductionPrivilege = "Y";
+                            latestReg.DeductionPrivilege = "MasterDegree";
+                            if (string.IsNullOrEmpty(latestReg.MasterDegreeStatus))
+                            {
+                                latestReg.MasterDegreeStatus = !string.IsNullOrEmpty(r.DeductionDocStatus) ? r.DeductionDocStatus : "เคยยื่นเอกสาร";
+                            }
+                        }
+                    }
+
+                    // 2. Record passed 5-year training courses into persontraining5y
+                    if (r.PassedRenewCourseIds != null && r.PassedRenewCourseIds.Count > 0)
+                    {
+                        foreach (var cId in r.PassedRenewCourseIds.Distinct())
+                        {
+                            if (!person.Trainings.Any(t => t.CourseId == cId))
+                            {
+                                var newTraining = new PersonTraining5y
+                                {
+                                    NationId = person.NationId,
+                                    CourseId = cId
+                                };
+                                person.Trainings.Add(newTraining);
+                                _context.PersonTrainings5y.Add(newTraining);
+                            }
                         }
                     }
 
@@ -516,21 +596,33 @@ namespace backend.Services
             // 3. Find subject columns in ws8 header row (Row 8)
             // Col 1=1.H.0.0.0, 2=คำสั่ง, 3=ลำดับที่, 4=เลขที่ใบอนุญาต, 5=หมายเลขบัตรประชาชน, 6=คำนำหน้า, 7=ชื่อ, 8=นามสกุล, 9=สิทธิลดหย่อน, 10=หมายเหตุ
             // Col 11.. are subject codes
-            var subjectCols = new Dictionary<int, (string Code, string Name, double Hours)>();
+            var allRenewCourses = _context.RenewCourses.ToList();
+            var allCurriculums = _context.CourseCurriculums.Where(c => c.CourseType == "renew").ToList();
+
+            var subjectCols = new Dictionary<int, (string Code, string Name, double Hours, int? RenewCourseId)>();
             int maxCol = ws8.LastColumnUsed()?.ColumnNumber() ?? 0;
             for (int c = 11; c <= maxCol; c++)
             {
                 string headerVal = ws8.Cell(8, c).GetString().Trim();
                 if (string.IsNullOrEmpty(headerVal)) continue;
 
+                string subCode = headerVal;
+                string subName = headerVal;
+                double subHrs = 3.0;
+
                 if (subjects.TryGetValue(headerVal, out var subMeta))
                 {
-                    subjectCols[c] = (headerVal, subMeta.SubjectName, subMeta.Hours);
+                    subCode = headerVal;
+                    subName = subMeta.SubjectName;
+                    subHrs = subMeta.Hours;
                 }
-                else if (!headerVal.StartsWith("รหัสวิชา"))
+                else if (headerVal.StartsWith("รหัสวิชา"))
                 {
-                    subjectCols[c] = (headerVal, headerVal, 3.0);
+                    continue;
                 }
+
+                var matchedRenewId = MatchRenewCourseId(subCode, subName, allRenewCourses, allCurriculums);
+                subjectCols[c] = (subCode, subName, subHrs, matchedRenewId);
             }
 
             int totalSubjects = subjectCols.Count;
@@ -557,6 +649,7 @@ namespace backend.Services
 
                 // Check which subjects passed
                 var passedSubjects = new List<string>();
+                var passedRenewCourseIds = new List<int>();
                 double passedHours = 0;
                 double totalHours = 0;
 
@@ -581,6 +674,10 @@ namespace backend.Services
                     if (isPassed)
                     {
                         passedSubjects.Add($"{kvp.Value.Name} ({kvp.Value.Code})");
+                        if (kvp.Value.RenewCourseId.HasValue)
+                        {
+                            passedRenewCourseIds.Add(kvp.Value.RenewCourseId.Value);
+                        }
                     }
                 }
 
@@ -629,7 +726,8 @@ namespace backend.Services
                     ScorePercent = scorePct,
                     PassedSubjectsDisplay = passedSubjects.Count > 0 ? string.Join(", ", passedSubjects) : "ไม่มีวิชาที่ผ่าน",
                     PassedSubjectCount = passedSubjects.Count,
-                    TotalSubjectCount = totalSubjects
+                    TotalSubjectCount = totalSubjects,
+                    PassedRenewCourseIds = passedRenewCourseIds.Distinct().ToList()
                 };
 
                 list.Add(item);
@@ -643,6 +741,9 @@ namespace backend.Services
             var list = new List<TrainingImportRowDto>();
             var worksheet = workbook.Worksheets.FirstOrDefault();
             if (worksheet == null) return list;
+
+            var allRenewCourses = _context.RenewCourses.ToList();
+            var allCurriculums = _context.CourseCurriculums.Where(c => c.CourseType == "renew").ToList();
 
             int startRow = 4;
             int maxRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
@@ -659,6 +760,21 @@ namespace backend.Services
                 if (string.IsNullOrEmpty(nationalId) && string.IsNullOrEmpty(licenseNo))
                     continue;
 
+                string status = r.Cell(12).GetString().Trim();
+                string courseCode = r.Cell(18).GetString().Trim();
+                string courseName = r.Cell(19).GetString().Trim();
+                var passedIds = new List<int>();
+
+                bool isPassedLms = status.StartsWith("อนุมัติ") || status.StartsWith("ผ่าน");
+                if (isPassedLms && (!string.IsNullOrEmpty(courseCode) || !string.IsNullOrEmpty(courseName)))
+                {
+                    var matchedId = MatchRenewCourseId(courseCode, courseName, allRenewCourses, allCurriculums);
+                    if (matchedId.HasValue)
+                    {
+                        passedIds.Add(matchedId.Value);
+                    }
+                }
+
                 var item = new TrainingImportRowDto
                 {
                     RowIndex = row,
@@ -668,11 +784,11 @@ namespace backend.Services
                     OriginalFirstName = r.Cell(8).GetString().Trim(),
                     OriginalLastName = r.Cell(9).GetString().Trim(),
                     DeductionPrivilege = r.Cell(10).GetString().Trim().ToUpper(),
-                    TrainingStatus = r.Cell(12).GetString().Trim(),
+                    TrainingStatus = status,
                     DeductionDocStatus = r.Cell(13).GetString().Trim(),
                     TrainingDateDisplay = r.Cell(17).GetString().Trim(),
-                    TrainingCourseCode = r.Cell(18).GetString().Trim(),
-                    TrainingCourseName = r.Cell(19).GetString().Trim(),
+                    TrainingCourseCode = courseCode,
+                    TrainingCourseName = courseName,
                     VerifiedTitleTh = r.Cell(20).GetString().Trim(),
                     VerifiedFirstNameTh = r.Cell(21).GetString().Trim(),
                     VerifiedLastNameTh = r.Cell(22).GetString().Trim(),
@@ -684,7 +800,11 @@ namespace backend.Services
                     VerifiedInsuranceType = r.Cell(28).GetString().Trim(),
                     ProgressPercent = r.Cell(29).GetString().Trim(),
                     ScorePercent = r.Cell(30).GetString().Trim(),
-                    EnrollmentUrl = r.Cell(31).GetString().Trim()
+                    EnrollmentUrl = r.Cell(31).GetString().Trim(),
+                    PassedRenewCourseIds = passedIds,
+                    PassedSubjectsDisplay = !string.IsNullOrEmpty(courseName) ? courseName : courseCode,
+                    PassedSubjectCount = isPassedLms ? 1 : 0,
+                    TotalSubjectCount = 1
                 };
 
                 list.Add(item);

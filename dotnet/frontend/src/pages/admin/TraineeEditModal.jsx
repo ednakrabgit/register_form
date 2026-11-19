@@ -638,6 +638,11 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
   const isComplexCourse = selectedCourseObj && selectedCourseObj.dateId === null;
   const showDeductionPrivilege = currentCourseType === 9 || currentCourseType === 10 || currentCourseType === '9' || currentCourseType === '10';
 
+  const deductionVal = formData.registrations?.[0]?.DeductionPrivilege || formData.registrations?.[0]?.deductionPrivilege || '';
+  const isDeductionMaster = deductionVal === 'Y' || deductionVal.includes('MasterDegree') || deductionVal.includes('ปริญญาโท') || deductionVal.includes('สำเร็จการศึกษา');
+  const masterStatusVal = formData.registrations?.[0]?.MasterDegreeStatus || formData.registrations?.[0]?.masterDegreeStatus || '';
+  const isMasterStatusSubmitted = masterStatusVal === 'เคยยื่นเอกสาร' || masterStatusVal === 'ปริญญาโท' || (isDeductionMaster && !masterStatusVal.includes('ไม่เคย'));
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[60] p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden relative animate-in fade-in duration-200">
@@ -1550,10 +1555,13 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                                 name="deductionPrivilege"
                                 className="w-4 h-4 accent-primary"
                                 value="MasterDegree"
-                                checked={(formData.registrations?.[0]?.DeductionPrivilege || formData.registrations?.[0]?.deductionPrivilege || '').includes('MasterDegree')}
+                                checked={isDeductionMaster}
                                 onChange={() => {
                                   const synthetic = { target: { type: 'radio', value: 'MasterDegree' } };
                                   handleRegistrationChange(synthetic, 'DeductionPrivilege');
+                                  if (!masterStatusVal) {
+                                    handleRegistrationChange({ target: { type: 'radio', value: 'เคยยื่นเอกสาร' } }, 'MasterDegreeStatus');
+                                  }
                                 }}
                               />
                               <span>ใช่ (ระดับปริญญาโทขึ้นไป)</span>
@@ -1565,7 +1573,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                                 name="deductionPrivilege"
                                 className="w-4 h-4 accent-primary"
                                 value="None"
-                                checked={!(formData.registrations?.[0]?.DeductionPrivilege || formData.registrations?.[0]?.deductionPrivilege || '').includes('MasterDegree')}
+                                checked={!isDeductionMaster}
                                 onChange={() => {
                                   const synthetic = { target: { type: 'radio', value: null } };
                                   handleRegistrationChange(synthetic, 'DeductionPrivilege');
@@ -1577,7 +1585,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                             </label>
                           </div>
 
-                          {(formData.registrations?.[0]?.DeductionPrivilege || formData.registrations?.[0]?.deductionPrivilege || '').includes('MasterDegree') && (
+                          {isDeductionMaster && (
                             <div className="pt-3 border-t space-y-2">
                               <label className="block text-xs font-bold text-gray-600">สถานะการยื่นเอกสารลดหย่อน</label>
                               <div className="flex gap-4">
@@ -1587,7 +1595,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                                     name="masterDegreeStatus"
                                     className="w-4 h-4 accent-primary" 
                                     value="เคยยื่นเอกสาร" 
-                                    checked={(formData.registrations?.[0]?.MasterDegreeStatus || formData.registrations?.[0]?.masterDegreeStatus) === "เคยยื่นเอกสาร"} 
+                                    checked={isMasterStatusSubmitted} 
                                     onChange={(e) => handleRegistrationChange(e, 'MasterDegreeStatus')}
                                   />
                                   <span>เคยยื่นเอกสาร</span>
@@ -1599,7 +1607,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                                     name="masterDegreeStatus"
                                     className="w-4 h-4 accent-primary" 
                                     value="ไม่เคยยื่นเอกสาร" 
-                                    checked={(formData.registrations?.[0]?.MasterDegreeStatus || formData.registrations?.[0]?.masterDegreeStatus) === "ไม่เคยยื่นเอกสาร"} 
+                                    checked={masterStatusVal === "ไม่เคยยื่นเอกสาร"} 
                                     onChange={(e) => handleRegistrationChange(e, 'MasterDegreeStatus')}
                                   />
                                   <span>ไม่เคยยื่นเอกสาร</span>
