@@ -630,6 +630,7 @@ namespace backend.Controllers
                     id = tr.Id,
                     courseCode = tr.TrainingCourseCode ?? "-",
                     courseName = tr.TrainingCourseName ?? "-",
+                    subjectNames = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : tr.TrainingCourseName,
                     trainingDate = tr.TrainingDateDisplay ?? "-",
                     status = tr.TrainingStatus ?? "-",
                     isPassed = IsTrainingPassed(tr.TrainingStatus),

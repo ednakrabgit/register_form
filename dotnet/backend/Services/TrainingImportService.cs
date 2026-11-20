@@ -403,6 +403,7 @@ namespace backend.Services
                     OriginalLicenseNo = r.OriginalLicenseNo,
                     TrainingCourseCode = r.TrainingCourseCode,
                     TrainingCourseName = r.TrainingCourseName,
+                    SubjectNames = !string.IsNullOrEmpty(r.PassedSubjectsDisplay) && r.PassedSubjectsDisplay != "ไม่มีวิชาที่ผ่าน" ? r.PassedSubjectsDisplay : r.TrainingCourseName,
                     TrainingDateDisplay = r.TrainingDateDisplay,
                     TrainingStatus = r.TrainingStatus,
                     DeductionPrivilege = r.DeductionPrivilege,

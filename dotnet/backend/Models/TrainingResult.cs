@@ -31,6 +31,10 @@ namespace backend.Models
         [MaxLength(500)]
         public string? TrainingCourseName { get; set; }
 
+        [Column("subject_names")]
+        [MaxLength(1000)]
+        public string? SubjectNames { get; set; }
+
         [Column("training_date_display")]
         [MaxLength(100)]
         public string? TrainingDateDisplay { get; set; }

@@ -1728,10 +1728,25 @@ export default function Dashboard() {
                                 : 'bg-rose-50/60 border-rose-200'
                             }`}>
                               <div>
-                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                                  <span className="font-mono text-primary">[{tr.courseCode}]</span>
-                                  <span>{tr.courseName}</span>
+                                <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-start gap-1.5 flex-wrap">
+                                  <span className="font-mono text-primary bg-blue-50 px-1 py-0.5 rounded border border-blue-200 text-xs shrink-0">
+                                    [{tr.courseCode}]
+                                  </span>
+                                  {tr.subjectNames ? (
+                                    <span className="text-emerald-950 font-bold leading-snug">
+                                      <span className="text-emerald-700 font-semibold mr-1">วิชา:</span>
+                                      {tr.subjectNames}
+                                    </span>
+                                  ) : (
+                                    <span>{tr.courseName}</span>
+                                  )}
                                 </div>
+                                {tr.subjectNames && tr.courseName && tr.courseName !== tr.subjectNames && (
+                                  <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-mono">
+                                    <span className="text-slate-400">รอบ/รุ่น:</span>
+                                    <span className="text-slate-700">{tr.courseName}</span>
+                                  </div>
+                                )}
                                 <div className="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
                                   <span>รอบวันที่: <b>{tr.trainingDate}</b></span>
                                   {tr.scorePercent && tr.scorePercent !== '-' && (
