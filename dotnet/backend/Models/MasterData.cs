@@ -171,6 +171,9 @@ namespace backend.Models
     {
         [Column("default_pillar_id")]
         public int? DefaultPillarId { get; set; }
+
+        [Column("note")]
+        public string? Note { get; set; }
     }
 
     [Table("mst_course_curriculum")]

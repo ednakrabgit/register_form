@@ -218,6 +218,7 @@ namespace backend.Controllers
             public DateTime? StartActiveDatetime { get; set; }
             public DateTime? EndActiveDatetime { get; set; }
             public int DisplayOrder { get; set; }
+            public string? Note { get; set; }
             public List<MstCourseCurriculum> Curriculums { get; set; } = new();
         }
 
@@ -335,6 +336,7 @@ namespace backend.Controllers
                             Id = c.Id, 
                             Name = c.Name, 
                             DefaultPillarId = c.DefaultPillarId,
+                            Note = c.Note,
                             Status = c.Status, 
                             IsActiveBackend = c.IsActiveBackend,
                             IsActiveFrontend = c.IsActiveFrontend,
@@ -441,6 +443,7 @@ namespace backend.Controllers
                     var c = new Models.MstRenewCourse { 
                         Name = dto.Name, 
                         DefaultPillarId = dto.DefaultPillarId,
+                        Note = dto.Note,
                         Status = dto.Status, 
                         DisplayOrder = dto.DisplayOrder,
                         IsActiveBackend = dto.IsActiveBackend, 
@@ -531,6 +534,7 @@ namespace backend.Controllers
                     if (c == null) return NotFound();
                     c.Name = dto.Name; 
                     c.DefaultPillarId = dto.DefaultPillarId;
+                    c.Note = dto.Note;
                     c.Status = dto.Status; 
                     c.DisplayOrder = dto.DisplayOrder;
                     c.IsActiveBackend = dto.IsActiveBackend; 
