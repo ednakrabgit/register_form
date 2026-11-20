@@ -4,8 +4,9 @@ import Select from 'react-select';
 import ThaiDatePicker from '../../components/ThaiDatePicker';
 import { useAuth } from '../../context/AuthContext';
 
-export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
-  const { user } = useAuth();
+export default function TraineeEditModal({ nationId, isReadOnly = false, onClose, onSuccess }) {
+  const { user, canEditMenu } = useAuth();
+  const effectiveReadOnly = isReadOnly || user?.role === 'Viewer' || !canEditMenu('trainees');
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'address' | 'license' | 'course' | 'other'
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -545,6 +546,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
   // Submit Handler (Keeps modal open on save without browser alert)
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    if (effectiveReadOnly) return;
     setSaveSuccessMsg('');
     setSaveErrorMsg('');
 
@@ -707,11 +709,17 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-shrink-0">
           <div>
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <i className="fas fa-user-edit text-primary"></i> แก้ไขข้อมูลผู้สมัคร: {formData?.firstNameTh} {formData?.lastNameTh}
+              <i className={`fas ${effectiveReadOnly ? 'fa-id-card text-blue-600' : 'fa-user-edit text-primary'}`}></i> 
+              {effectiveReadOnly ? 'รายละเอียดข้อมูลผู้สมัคร:' : 'แก้ไขข้อมูลผู้สมัคร:'} {formData?.firstNameTh} {formData?.lastNameTh}
+              {effectiveReadOnly && (
+                <span className="ml-2 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1">
+                  <i className="fas fa-lock text-[10px]"></i> ดูข้อมูลเท่านั้น (Read-Only)
+                </span>
+              )}
             </h3>
             <p className="text-xs text-gray-500 font-mono">Nation ID: {formData?.nationId || nationId}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded-lg hover:bg-gray-200">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded-lg hover:bg-gray-200" title="ปิดหน้าต่าง">
             <i className="fas fa-times text-xl"></i>
           </button>
         </div>
@@ -815,6 +823,10 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-1 bg-gray-50">
           <form id="editPersonForm" onSubmit={handleSubmit}>
+            <fieldset 
+              disabled={effectiveReadOnly} 
+              className="border-0 p-0 m-0 min-w-0 space-y-4 disabled:opacity-100 [&_input:disabled]:bg-gray-100 [&_input:disabled]:text-gray-800 [&_input:disabled]:cursor-not-allowed [&_select:disabled]:bg-gray-100 [&_select:disabled]:text-gray-800 [&_select:disabled]:cursor-not-allowed [&_textarea:disabled]:bg-gray-100 [&_textarea:disabled]:text-gray-800 [&_textarea:disabled]:cursor-not-allowed"
+            >
             
             {/* TAB 1: PERSONAL INFO */}
             {activeTab === 'personal' && (
@@ -869,6 +881,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                         name="birthDate"
                         value={formData?.birthDate ? formData.birthDate.split('T')[0] : ''}
                         onChange={handleChange}
+                        disabled={effectiveReadOnly}
                         inputClassName="!py-2 !text-sm !rounded-lg"
                       />
                     </div>
@@ -880,6 +893,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                         name="idCardExpiry"
                         value={formData?.idCardExpiry ? formData.idCardExpiry.split('T')[0] : ''}
                         onChange={handleChange}
+                        disabled={effectiveReadOnly}
                         inputClassName="!py-2 !text-sm !rounded-lg"
                       />
                     </div>
@@ -1122,6 +1136,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                           value={masterData.provinces.filter(p => p.provinceId === addrA.provinceId).map(p => ({ value: p.provinceId, label: p.provinceThai }))[0] || null}
                           onChange={(sel) => handleReactSelectChange(sel, null, 'addresses', actualIdxA, 'provinceId')}
                           placeholder="เลือกจังหวัด..."
+                          isDisabled={effectiveReadOnly}
                           isClearable
                         />
                       </div>
@@ -1133,7 +1148,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                           value={districtsA.filter(d => d.districtId === addrA.districtId).map(d => ({ value: d.districtId, label: d.districtThai }))[0] || null}
                           onChange={(sel) => handleReactSelectChange(sel, null, 'addresses', actualIdxA, 'districtId')}
                           placeholder={addrA.provinceId ? "เลือกอำเภอ/เขต..." : "กรุณาเลือกจังหวัดก่อน"}
-                          isDisabled={!addrA.provinceId}
+                          isDisabled={effectiveReadOnly || !addrA.provinceId}
                           isClearable
                         />
                       </div>
@@ -1145,7 +1160,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                           value={subDistrictsA.filter(s => s.subDistrictId === addrA.subDistrictId).map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode }))[0] || null}
                           onChange={(sel) => handleReactSelectChange(sel, null, 'addresses', actualIdxA, 'subDistrictId')}
                           placeholder={addrA.districtId ? "เลือกตำบล/แขวง..." : "กรุณาเลือกอำเภอก่อน"}
-                          isDisabled={!addrA.districtId}
+                          isDisabled={effectiveReadOnly || !addrA.districtId}
                           isClearable
                         />
                       </div>
@@ -1208,15 +1223,17 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                       </div>
                     ) : (
                       <div className="space-y-4 pt-2">
-                        <div className="flex justify-end">
-                          <button 
-                            type="button" 
-                            onClick={handleCopyAddress} 
-                            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition-all"
-                          >
-                            📋 คัดลอกจากที่อยู่ตามทะเบียนบ้าน
-                          </button>
-                        </div>
+                        {!effectiveReadOnly && (
+                          <div className="flex justify-end">
+                            <button 
+                              type="button" 
+                              onClick={handleCopyAddress} 
+                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              📋 คัดลอกจากที่อยู่ตามทะเบียนบ้าน
+                            </button>
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                           <div>
@@ -1281,6 +1298,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                               value={masterData.provinces.filter(p => p.provinceId === addrC.provinceId).map(p => ({ value: p.provinceId, label: p.provinceThai }))[0] || null}
                               onChange={(sel) => handleReactSelectChange(sel, null, 'addresses', actualIdxC, 'provinceId')}
                               placeholder="เลือกจังหวัด..."
+                              isDisabled={effectiveReadOnly}
                               isClearable
                             />
                           </div>
@@ -1292,7 +1310,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                               value={districtsC.filter(d => d.districtId === addrC.districtId).map(d => ({ value: d.districtId, label: d.districtThai }))[0] || null}
                               onChange={(sel) => handleReactSelectChange(sel, null, 'addresses', actualIdxC, 'districtId')}
                               placeholder={addrC.provinceId ? "เลือกอำเภอ/เขต..." : "กรุณาเลือกจังหวัดก่อน"}
-                              isDisabled={!addrC.provinceId}
+                              isDisabled={effectiveReadOnly || !addrC.provinceId}
                               isClearable
                             />
                           </div>
@@ -1304,7 +1322,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                               value={subDistrictsC.filter(s => s.subDistrictId === addrC.subDistrictId).map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode }))[0] || null}
                               onChange={(sel) => handleReactSelectChange(sel, null, 'addresses', actualIdxC, 'subDistrictId')}
                               placeholder={addrC.districtId ? "เลือกตำบล/แขวง..." : "กรุณาเลือกอำเภอก่อน"}
-                              isDisabled={!addrC.districtId}
+                              isDisabled={effectiveReadOnly || !addrC.districtId}
                               isClearable
                             />
                           </div>
@@ -1369,6 +1387,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                           name="licenseIssueDate"
                           value={license.licenseIssueDate ? license.licenseIssueDate.split('T')[0] : ''}
                           onChange={(e) => handleArrayChange(e, 'licenses', index)}
+                          disabled={effectiveReadOnly}
                           inputClassName="!py-2 !text-sm !rounded-lg"
                         />
                       </div>
@@ -1380,6 +1399,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                           name="licenseExpiryDate"
                           value={license.licenseExpiryDate ? license.licenseExpiryDate.split('T')[0] : ''}
                           onChange={(e) => handleArrayChange(e, 'licenses', index)}
+                          disabled={effectiveReadOnly}
                           inputClassName="!py-2 !text-sm !rounded-lg"
                         />
                       </div>
@@ -1403,6 +1423,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                               options={masterData.agentBranches.map(b => ({ value: b.branchId, label: b.branchName, regionId: b.regionId, regionName: b.regionName }))}
                               value={masterData.agentBranches.filter(b => b.branchId === affil.branchId).map(b => ({ value: b.branchId, label: b.branchName }))[0] || null}
                               onChange={(sel) => {
+                                if (effectiveReadOnly) return;
                                 if (sel) {
                                   handleReactSelectChange(sel, null, 'affiliations', index, 'branchId');
                                   const eRegion = { target: { name: 'regionId', value: sel.regionId } };
@@ -1414,6 +1435,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                                 }
                               }}
                               placeholder="ค้นหาสาขา..."
+                              isDisabled={effectiveReadOnly}
                               isClearable
                             />
                           </div>
@@ -1592,7 +1614,7 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
                               * เลือกได้มากกว่า 1 วิชา (วิชาที่เคยอบรมจะไม่สามารถเลือกซ้ำได้ หรือสามารถเคลียร์ออกทั้งหมดได้หากผ่านการอบรมแล้ว)
                             </span>
                           </div>
-                          {formData.courses?.some(c => c.renewOtherId) && (
+                          {!effectiveReadOnly && formData.courses?.some(c => c.renewOtherId) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -1821,40 +1843,55 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
               </div>
             )}
 
+            </fieldset>
           </form>
         </div>
 
         {/* Footer Actions */}
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-2">
-            {saveSuccessMsg && (
-              <span className="text-emerald-700 font-semibold text-xs flex items-center gap-1.5 bg-emerald-100/70 border border-emerald-300 px-3 py-1.5 rounded-lg animate-in fade-in">
-                <i className="fas fa-check-circle text-emerald-600"></i> บันทึกข้อมูลสำเร็จ (หน้าต่างยังคงเปิดอยู่)
+            {effectiveReadOnly ? (
+              <span className="text-gray-600 font-medium text-xs flex items-center gap-1.5 bg-gray-200/80 border border-gray-300 px-3 py-1.5 rounded-lg">
+                <i className="fas fa-lock text-gray-500"></i> โหมดแสดงผล (Viewer): ดูข้อมูลรายละเอียดทั้งหมดเท่านั้น ไม่สามารถแก้ไขได้
               </span>
-            )}
-            {saveErrorMsg && (
-              <span className="text-red-700 font-semibold text-xs flex items-center gap-1.5 bg-red-100/70 border border-red-300 px-3 py-1.5 rounded-lg animate-in fade-in">
-                <i className="fas fa-exclamation-circle text-red-600"></i> บันทึกไม่สำเร็จ
-              </span>
+            ) : (
+              <>
+                {saveSuccessMsg && (
+                  <span className="text-emerald-700 font-semibold text-xs flex items-center gap-1.5 bg-emerald-100/70 border border-emerald-300 px-3 py-1.5 rounded-lg animate-in fade-in">
+                    <i className="fas fa-check-circle text-emerald-600"></i> บันทึกข้อมูลสำเร็จ (หน้าต่างยังคงเปิดอยู่)
+                  </span>
+                )}
+                {saveErrorMsg && (
+                  <span className="text-red-700 font-semibold text-xs flex items-center gap-1.5 bg-red-100/70 border border-red-300 px-3 py-1.5 rounded-lg animate-in fade-in">
+                    <i className="fas fa-exclamation-circle text-red-600"></i> บันทึกไม่สำเร็จ
+                  </span>
+                )}
+              </>
             )}
           </div>
           <div className="flex items-center gap-3">
             <button 
               type="button" 
               onClick={onClose} 
-              className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 font-semibold text-sm hover:bg-gray-100 transition-all flex items-center gap-1.5"
+              className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-1.5 ${
+                effectiveReadOnly
+                  ? 'bg-primary hover:bg-[#002882] text-white shadow-md'
+                  : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
             >
               <i className="fas fa-times text-xs"></i> ปิดหน้าต่าง
             </button>
-            <button 
-              type="submit" 
-              form="editPersonForm" 
-              disabled={saving} 
-              className="px-6 py-2.5 bg-primary hover:bg-[#002882] text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              {saving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
-              {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล (Update Current)'}
-            </button>
+            {!effectiveReadOnly && (
+              <button 
+                type="submit" 
+                form="editPersonForm" 
+                disabled={saving} 
+                className="px-6 py-2.5 bg-primary hover:bg-[#002882] text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {saving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
+                {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล (Update Current)'}
+              </button>
+            )}
           </div>
         </div>
 

@@ -29,6 +29,7 @@ export default function ThaiDatePicker({
   error, 
   value, 
   onChange, 
+  disabled = false,
   className = "", 
   inputClassName = "", 
   ...props 
@@ -45,6 +46,7 @@ export default function ThaiDatePicker({
   }
 
   const handleDateChange = (date) => {
+    if (disabled) return;
     const targetName = name || id;
     if (!date) {
       onChange({ target: { id, name: targetName, value: '' } });
@@ -59,7 +61,7 @@ export default function ThaiDatePicker({
   };
 
   // Custom Input component to inject styles
-  const CustomInput = React.forwardRef(({ value, onClick, onChange: onInputChange, placeholder }, ref) => {
+  const CustomInput = React.forwardRef(({ value, onClick, onChange: onInputChange, placeholder, disabled: customDisabled }, ref) => {
     // Modify display value to +543
     let displayValue = value;
     if (value && value.length === 10) { // Assuming DD/MM/YYYY
@@ -72,16 +74,19 @@ export default function ThaiDatePicker({
       }
     }
 
+    const isInputDisabled = disabled || customDisabled;
+
     return (
       <input
         ref={ref}
         id={id}
-        onClick={onClick}
+        onClick={isInputDisabled ? undefined : onClick}
         onChange={onInputChange}
         value={displayValue}
         placeholder="วว/ดด/ปปปป"
+        disabled={isInputDisabled}
         className={`w-full px-4 py-3 border rounded-md font-sarabun text-[15px] transition-colors focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 ${
-          error ? "border-error bg-red-50" : "border-border bg-white"
+          error ? "border-error bg-red-50" : isInputDisabled ? "border-gray-200 bg-gray-100 text-gray-800 cursor-not-allowed" : "border-border bg-white"
         } ${inputClassName}`}
         readOnly // Prevent typing manually to avoid format parsing issues
       />
@@ -101,6 +106,7 @@ export default function ThaiDatePicker({
           onChange={handleDateChange}
           locale="th"
           dateFormat="dd/MM/yyyy"
+          disabled={disabled}
           customInput={<CustomInput />}
           renderCustomHeader={({
             date,

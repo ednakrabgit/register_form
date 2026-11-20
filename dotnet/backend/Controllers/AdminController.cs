@@ -1008,6 +1008,11 @@ namespace backend.Controllers
         {
             var caller = GetCallerInfo(context);
 
+            if (caller.Role?.ToLower() == "viewer")
+            {
+                return StatusCode(403, new { message = "ผู้ใช้งานในบทบาท Viewer ไม่มีสิทธิ์แก้ไขข้อมูล" });
+            }
+
             // If caller is Applicant, ensure they can ONLY edit their own nationId
             if (caller.Role?.ToLower() == "applicant")
             {
@@ -1201,8 +1206,14 @@ namespace backend.Controllers
 
         // [Authorize(Roles = "Admin")] // Only full admins can delete
         [HttpDelete("trainees/{id}")]
-        public async Task<IActionResult> DeleteTrainee(int id)
+        public async Task<IActionResult> DeleteTrainee(int id, [FromServices] AppDbContext context)
         {
+            var caller = GetCallerInfo(context);
+            if (caller.Role?.ToLower() == "viewer")
+            {
+                return StatusCode(403, new { message = "ผู้ใช้งานในบทบาท Viewer ไม่มีสิทธิ์ลบข้อมูล" });
+            }
+
             await _repository.DeleteAsync(id);
             return NoContent();
         }

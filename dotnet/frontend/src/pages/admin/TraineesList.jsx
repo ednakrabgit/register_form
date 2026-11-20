@@ -24,6 +24,7 @@ export default function TraineesList() {
   const [isExporting, setIsExporting] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [editingTraineeId, setEditingTraineeId] = useState(null);
+  const [viewingTraineeId, setViewingTraineeId] = useState(null);
   
   const [masterMap, setMasterMap] = useState({});
 
@@ -460,6 +461,13 @@ export default function TraineesList() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button 
+                        onClick={() => setViewingTraineeId(t.nationId)} 
+                        className="text-blue-600 hover:text-blue-900 mr-3 inline-flex items-center gap-1 font-semibold" 
+                        title="ดูรายละเอียดข้อมูลทั้งหมด"
+                      >
+                        <i className="fas fa-file-alt"></i> ดูข้อมูล
+                      </button>
                       <button onClick={() => handleViewTrainee(t)} className="text-primary hover:text-primary-light mr-3" title="ดูรูปภาพเอกสาร">
                         <i className="fas fa-image"></i> ดูรูปภาพ
                       </button>
@@ -868,9 +876,18 @@ export default function TraineesList() {
         </div>
       )}
 
+      {viewingTraineeId && (
+        <TraineeEditModal 
+          nationId={viewingTraineeId} 
+          isReadOnly={true}
+          onClose={() => setViewingTraineeId(null)} 
+        />
+      )}
+
       {editingTraineeId && (
         <TraineeEditModal 
           nationId={editingTraineeId} 
+          isReadOnly={false}
           onClose={() => setEditingTraineeId(null)} 
           onSuccess={(closeModal = false) => {
             if (closeModal) {
