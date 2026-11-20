@@ -526,20 +526,10 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
     }
 
     // 4. หลักสูตรที่อบรม
-    if (!courseId) {
-      errors.push({ tab: 'course', msg: 'กรุณาเลือกระดับคอร์สที่ต้องการอบรม' });
-    } else {
+    // ในโหมด Admin: อนุญาตให้บันทึกได้แม้ว่าจะเคลียร์วิชาลงทะเบียนออกทั้งหมดก็ตาม เพื่อรองรับกรณีที่อบรมผ่านแล้วและต้องการเคลียร์วิชาที่ค้างออก
+    if (courseId) {
       const isComplex = selectedCourse && selectedCourse.dateId === null;
-      if (!isComplex && !data.courses?.[0]?.courseDateId) {
-        errors.push({ tab: 'course', msg: 'กรุณาเลือกรอบวันอบรม' });
-      }
-
       if (isComplex) {
-        const subjects = data.courses?.filter(c => c.renewOtherId) || [];
-        if (subjects.length === 0) {
-          errors.push({ tab: 'course', msg: 'กรุณาเลือกวิชาที่ประสงค์จะเข้าอบรมอย่างน้อย 1 วิชา' });
-        }
-
         const deduction = data.registrations?.[0]?.DeductionPrivilege;
         const degStatus = data.registrations?.[0]?.MasterDegreeStatus;
         if (deduction?.includes('MasterDegree') && !degStatus) {
@@ -1593,12 +1583,38 @@ export default function TraineeEditModal({ nationId, onClose, onSuccess }) {
 
                       {/* Desired Subjects Selection */}
                       <div className="p-4 border rounded-xl bg-blue-50/30 space-y-3">
-                        <label className="block text-sm font-bold text-primary">
-                          {selectedCourseObj.courseName} (เลือกวิชาที่ต้องการเข้าอบรม)
-                        </label>
-                        <span className="text-xs text-red-500 block">
-                          * เลือกได้มากกว่า 1 วิชา (วิชาที่เคยอบรมจะไม่สามารถเลือกซ้ำได้)
-                        </span>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <label className="block text-sm font-bold text-primary">
+                              {selectedCourseObj.courseName} (เลือกวิชาที่ต้องการเข้าอบรม)
+                            </label>
+                            <span className="text-xs text-slate-500 block">
+                              * เลือกได้มากกว่า 1 วิชา (วิชาที่เคยอบรมจะไม่สามารถเลือกซ้ำได้ หรือสามารถเคลียร์ออกทั้งหมดได้หากผ่านการอบรมแล้ว)
+                            </span>
+                          </div>
+                          {formData.courses?.some(c => c.renewOtherId) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentCourseId = formData.courses?.[0]?.courseId || null;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  courses: [{
+                                    courseId: currentCourseId,
+                                    courseDateId: null,
+                                    renewOtherId: null,
+                                    nationId: nationId
+                                  }]
+                                }));
+                              }}
+                              className="self-start sm:self-auto text-xs text-rose-600 hover:text-rose-700 font-semibold px-2.5 py-1.5 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg cursor-pointer transition shadow-2xs flex items-center gap-1.5"
+                              title="คลิกเพื่อยกเลิกการเลือกวิชาลงทะเบียนทั้งหมด"
+                            >
+                              <i className="fas fa-trash-alt text-[11px]"></i>
+                              <span>เคลียร์วิชาที่เลือกลงทะเบียนออกทั้งหมด</span>
+                            </button>
+                          )}
+                        </div>
 
                         <div className="flex flex-col gap-2 pt-1">
                           {masterData?.renewOtherOptions?.slice().sort((a, b) => {

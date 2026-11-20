@@ -296,7 +296,12 @@ namespace backend.Controllers
                 }).ToList();
 
             // Training Results Analytics from trn_training_result
-            var trainingResults = await context.TrainingResults.ToListAsync();
+            var rawTrainingResults = await context.TrainingResults.ToListAsync();
+            // Deduplicate per trainee per file/course to guarantee no duplicate counting
+            var trainingResults = rawTrainingResults
+                .GroupBy(r => new { r.NationId, r.ImportFileName })
+                .Select(g => g.OrderByDescending(r => r.Id).First())
+                .ToList();
             var totalTrainingRecords = trainingResults.Count;
             var passedResults = trainingResults.Where(r => IsTrainingPassed(r.TrainingStatus)).ToList();
             var failedResults = trainingResults.Where(r => !IsTrainingPassed(r.TrainingStatus)).ToList();
@@ -398,10 +403,21 @@ namespace backend.Controllers
                         .OrderBy(r => r.roundDate)
                         .ToList();
 
+                    var distinctDates = rounds
+                        .Select(r => r.roundDate)
+                        .Where(d => !string.IsNullOrEmpty(d) && d != "-")
+                        .Distinct()
+                        .ToList();
+                    var trainingDateDisplay = distinctDates.Count > 0 
+                        ? string.Join(", ", distinctDates) 
+                        : (cg.Select(r => r.TrainingDateDisplay).FirstOrDefault(d => !string.IsNullOrEmpty(d)) ?? "-");
+
                     return new {
                         courseName,
                         courseCode = courseCodeDisplay,
                         courseCodes,
+                        trainingDateDisplay,
+                        trainingDates = distinctDates,
                         totalRounds = rounds.Count,
                         totalEnrolled,
                         totalPassed,
@@ -467,6 +483,7 @@ namespace backend.Controllers
                 .Include(p => p.Registrations)
                 .Include(p => p.Licenses)
                 .Include(p => p.Courses)
+                .Include(p => p.Trainings)
                 .Include(p => p.TrainingResults)
                 .AsQueryable();
 
@@ -490,38 +507,6 @@ namespace backend.Controllers
             var result = persons.Select(p => {
                 var reg = p.Registrations.OrderByDescending(r => r.Id).FirstOrDefault();
                 var lic = p.Licenses.FirstOrDefault();
-                
-                var coursesList = p.Courses.Select(pc => {
-                    string? cName = null;
-                    string? cDate = null;
-                    if (pc.CourseDateId.HasValue)
-                    {
-                        cDate = renewDates.FirstOrDefault(d => d.Id == pc.CourseDateId.Value)?.CourseDateDisplay;
-                    }
-
-                    if (pc.RenewOtherId.HasValue)
-                    {
-                        var ro = renewOthers.FirstOrDefault(x => x.Id == pc.RenewOtherId.Value);
-                        if (ro != null)
-                        {
-                            var sObj = renewCourses.FirstOrDefault(c => c.Id == ro.SubjectId);
-                            var pObj = renewPillars.FirstOrDefault(pl => pl.Id == ro.PillarId);
-                            cName = !string.IsNullOrEmpty(pObj?.Name) ? $"[{pObj.Name}] {sObj?.Name ?? $"วิชา {ro.SubjectId}"}" : (sObj?.Name ?? $"วิชา {ro.SubjectId}");
-                        }
-                    }
-                    else if (pc.CourseId.HasValue && basicDict.ContainsKey(pc.CourseId.Value))
-                    {
-                        cName = basicDict[pc.CourseId.Value];
-                    }
-
-                    return new {
-                        courseId = pc.CourseId,
-                        renewOtherId = pc.RenewOtherId,
-                        courseDateId = pc.CourseDateId,
-                        courseName = cName ?? "วิชาที่ลงทะเบียน",
-                        courseDateDisplay = cDate ?? "-"
-                    };
-                }).ToList();
 
                 var trainingResultsList = p.TrainingResults.Select(tr => new {
                     id = tr.Id,
@@ -536,6 +521,78 @@ namespace backend.Controllers
                     verifiedName = $"{tr.VerifiedTitleTh}{tr.VerifiedFirstNameTh} {tr.VerifiedLastNameTh}".Trim(),
                     verifiedLicenseNo = tr.VerifiedLicenseNo
                 }).OrderByDescending(tr => tr.id).ToList();
+                
+                var coursesList = p.Courses.Select(pc => {
+                    string? cName = null;
+                    string? cDate = null;
+                    int? subjectId = null;
+                    if (pc.CourseDateId.HasValue)
+                    {
+                        cDate = renewDates.FirstOrDefault(d => d.Id == pc.CourseDateId.Value)?.CourseDateDisplay;
+                    }
+
+                    if (pc.RenewOtherId.HasValue)
+                    {
+                        var ro = renewOthers.FirstOrDefault(x => x.Id == pc.RenewOtherId.Value);
+                        if (ro != null)
+                        {
+                            subjectId = ro.SubjectId;
+                            var sObj = renewCourses.FirstOrDefault(c => c.Id == ro.SubjectId);
+                            var pObj = renewPillars.FirstOrDefault(pl => pl.Id == ro.PillarId);
+                            cName = !string.IsNullOrEmpty(pObj?.Name) ? $"[{pObj.Name}] {sObj?.Name ?? $"วิชา {ro.SubjectId}"}" : (sObj?.Name ?? $"วิชา {ro.SubjectId}");
+                        }
+                    }
+                    else if (pc.CourseId.HasValue)
+                    {
+                        subjectId = pc.CourseId.Value;
+                        if (basicDict.ContainsKey(pc.CourseId.Value))
+                        {
+                            cName = basicDict[pc.CourseId.Value];
+                        }
+                    }
+
+                    // Check if this specific registered course has been passed:
+                    // 1. For Renew 4+ courses: check if subjectId exists in persontraining5y (p.Trainings)
+                    // 2. For basic courses (ขอรับ, ขอต่อ 1-3): check if training result is passed or registration is confirmed
+                    bool isPassed = false;
+                    if (subjectId.HasValue && p.Trainings.Any(t => t.CourseId == subjectId.Value))
+                    {
+                        isPassed = true;
+                    }
+                    else if (!pc.RenewOtherId.HasValue && pc.CourseId.HasValue && (trainingResultsList.Any(tr => tr.isPassed) || (reg?.confirmed == true)))
+                    {
+                        isPassed = true;
+                    }
+
+                    return new {
+                        courseId = pc.CourseId,
+                        renewOtherId = pc.RenewOtherId,
+                        courseDateId = pc.CourseDateId,
+                        subjectId = subjectId,
+                        courseName = cName ?? "วิชาที่ลงทะเบียน",
+                        courseDateDisplay = cDate ?? "-",
+                        isPassed = isPassed
+                    };
+                }).ToList();
+
+                var passedCoursesCount = coursesList.Count(c => c.isPassed);
+                var registeredCoursesCount = coursesList.Count;
+                var passedRoundsCount = trainingResultsList.Count(tr => tr.isPassed);
+                var totalRoundsCount = trainingResultsList.Count;
+
+                int totalPassed;
+                int totalResults;
+
+                if (registeredCoursesCount > 0)
+                {
+                    totalPassed = passedCoursesCount;
+                    totalResults = registeredCoursesCount;
+                }
+                else
+                {
+                    totalPassed = passedRoundsCount;
+                    totalResults = totalRoundsCount;
+                }
 
                 return new {
                     nationId = p.NationId,
@@ -546,8 +603,12 @@ namespace backend.Controllers
                     confirmed = reg?.confirmed ?? false,
                     registeredCourses = coursesList,
                     trainingResults = trainingResultsList,
-                    totalPassed = trainingResultsList.Count(tr => tr.isPassed),
-                    totalResults = trainingResultsList.Count
+                    totalPassed = totalPassed,
+                    totalResults = totalResults,
+                    passedCoursesCount = passedCoursesCount,
+                    registeredCoursesCount = registeredCoursesCount,
+                    passedRoundsCount = passedRoundsCount,
+                    totalRoundsCount = totalRoundsCount
                 };
             }).ToList();
 
@@ -860,9 +921,11 @@ namespace backend.Controllers
             context.PersonCourses.RemoveRange(p.Courses);
             if (updatedPerson.Courses != null) {
                 foreach(var c in updatedPerson.Courses) {
-                    c.PersonCourseId = 0; // Ensure EF treats as new
-                    c.NationId = nationId;
-                    p.Courses.Add(c);
+                    if (c.CourseId.HasValue || c.CourseDateId.HasValue || c.RenewOtherId.HasValue) {
+                        c.PersonCourseId = 0; // Ensure EF treats as new
+                        c.NationId = nationId;
+                        p.Courses.Add(c);
+                    }
                 }
             }
 
@@ -1105,7 +1168,8 @@ namespace backend.Controllers
         {
             if (string.IsNullOrWhiteSpace(status)) return false;
             var s = status.Trim().ToLowerInvariant();
-            return s == "อนุมัติ" || s == "ผ่าน" || s == "passed" || s == "pass" || s == "approved" || s == "สำเร็จ";
+            if (s.StartsWith("ไม่ผ่าน") || s.StartsWith("ไม่สำเร็จ") || s == "failed" || s == "fail") return false;
+            return s.StartsWith("ผ่าน") || s.StartsWith("อนุมัติ") || s == "passed" || s == "pass" || s == "approved" || s == "สำเร็จ";
         }
     }
 }

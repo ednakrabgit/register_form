@@ -507,6 +507,13 @@ namespace backend.Services
                 resultsToInsert.Add(result);
             }
 
+            // Prevent duplicate records: remove any previous stamp records for this ImportFileName before inserting
+            var existingResultsForFile = await _context.TrainingResults.Where(t => t.ImportFileName == fileName).ToListAsync();
+            if (existingResultsForFile.Count > 0)
+            {
+                _context.TrainingResults.RemoveRange(existingResultsForFile);
+            }
+
             await _context.TrainingResults.AddRangeAsync(resultsToInsert);
             await _context.SaveChangesAsync();
 

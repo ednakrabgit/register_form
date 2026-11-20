@@ -1,8 +1,15 @@
-php_value display_errors 1
-php_value display_startup_errors 1
+php_value display_errors 0
+php_value display_startup_errors 0
 php_value max_execution_time 30
 php_value max_input_vars 1000
 php_value post_max_size 20M
+
+Options -Indexes
+
+<FilesMatch "(?i)\.(sql|docx|py|env|json|log|sh|bat)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On

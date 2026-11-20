@@ -656,20 +656,10 @@ export default function UserProfile() {
     }
 
     // 4. หลักสูตรที่อบรม
-    if (!courseId) {
-      errors.push({ tab: 'courses', msg: 'กรุณาเลือกระดับคอร์สที่ต้องการอบรม' });
-    } else {
+    // อนุญาตให้บันทึกได้แม้ว่าจะเคลียร์วิชาลงทะเบียนออกทั้งหมดก็ตาม เพื่อรองรับกรณีที่อบรมผ่านแล้ว
+    if (courseId) {
       const isComplex = selectedCourse && selectedCourse.dateId === null;
-      if (!isComplex && !data.courses?.[0]?.courseDateId) {
-        errors.push({ tab: 'courses', msg: 'กรุณาเลือกรอบวันอบรม' });
-      }
-
       if (isComplex) {
-        const subjects = data.courses?.filter(c => c.renewOtherId) || [];
-        if (subjects.length === 0) {
-          errors.push({ tab: 'courses', msg: 'กรุณาเลือกวิชาที่ประสงค์จะเข้าอบรมอย่างน้อย 1 วิชา' });
-        }
-
         const deduction = data.registrations?.[0]?.DeductionPrivilege;
         const degStatus = data.registrations?.[0]?.MasterDegreeStatus;
         if (deduction?.includes('MasterDegree') && !degStatus) {
