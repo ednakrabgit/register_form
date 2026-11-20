@@ -566,7 +566,21 @@ namespace backend.Controllers
                     verifiedLicenseNo = tr.VerifiedLicenseNo
                 }).OrderByDescending(tr => tr.id).ToList();
                 
-                var coursesList = p.Courses.Select(pc => {
+                // Determine if this is a Renew 4+ registration (complex course with multiple subjects)
+                var hasRenewOther = p.Courses.Any(pc => pc.RenewOtherId.HasValue);
+                var isRenew4Plus = hasRenewOther || p.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10);
+
+                // Filter out the parent course category header row (e.g. CourseId 9 or 10 with RenewOtherId == null)
+                // because it is NOT an individual course subject.
+                var targetCourses = p.Courses.Where(pc => {
+                    if (isRenew4Plus)
+                    {
+                        return pc.RenewOtherId.HasValue;
+                    }
+                    return true;
+                }).ToList();
+
+                var coursesList = targetCourses.Select(pc => {
                     string? cName = null;
                     string? cDate = null;
                     int? subjectId = null;
@@ -603,7 +617,7 @@ namespace backend.Controllers
                     {
                         isPassed = true;
                     }
-                    else if (!pc.RenewOtherId.HasValue && pc.CourseId.HasValue && (trainingResultsList.Any(tr => tr.isPassed) || (reg?.confirmed == true)))
+                    else if (!isRenew4Plus && !pc.RenewOtherId.HasValue && pc.CourseId.HasValue && (trainingResultsList.Any(tr => tr.isPassed) || (reg?.confirmed == true)))
                     {
                         isPassed = true;
                     }
@@ -620,7 +634,7 @@ namespace backend.Controllers
                 }).ToList();
 
                 var passedCoursesCount = coursesList.Count(c => c.isPassed);
-                var registeredCoursesCount = coursesList.Count;
+                var registeredCoursesCount = isRenew4Plus ? Math.Max(6, coursesList.Count) : coursesList.Count;
                 var passedRoundsCount = trainingResultsList.Count(tr => tr.isPassed);
                 var totalRoundsCount = trainingResultsList.Count;
 
