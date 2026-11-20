@@ -474,8 +474,73 @@ namespace backend.Controllers
                 .ThenByDescending(c => c.totalPassed)
                 .ToList();
 
+            // Registration & System Matching Analytics (วิชาและผู้สมัครที่ยังไม่ประทับ / ยังไม่ผ่าน)
+            var rawPersonCourses = await context.PersonCourses.ToListAsync();
+            var allTrainings5y = await context.PersonTrainings5y.ToListAsync();
+            var allRegs = await context.PersonRegistrations.Select(r => new { r.NationId, r.confirmed }).ToListAsync();
+            var regByNation = allRegs.Where(r => r.confirmed == true && !string.IsNullOrEmpty(r.NationId)).Select(r => r.NationId!).ToHashSet();
+            
+            var roSubjectDict = renewOthers.ToDictionary(ro => ro.Id, ro => ro.SubjectId);
+            var train5yByNation = allTrainings5y
+                .Where(t => !string.IsNullOrEmpty(t.NationId) && t.CourseId.HasValue)
+                .GroupBy(t => t.NationId!)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.CourseId!.Value).ToHashSet());
+
+            var stampsByNation = trainingResults
+                .Where(tr => !string.IsNullOrEmpty(tr.NationId))
+                .GroupBy(tr => tr.NationId!)
+                .ToDictionary(g => g.Key, g => g.Any(r => IsTrainingPassed(r.TrainingStatus)));
+
+            int totalRegisteredCourses = 0;
+            int passedRegisteredCourses = 0;
+            int unstampedRegisteredCourses = 0;
+
+            var traineeCourseStatus = new Dictionary<string, (int total, int passed)>();
+
+            foreach (var pc in rawPersonCourses)
+            {
+                if (string.IsNullOrEmpty(pc.NationId)) continue;
+                bool isRenew4 = (pc.CourseId == 9 || pc.CourseId == 10) || pc.RenewOtherId.HasValue;
+                if (isRenew4 && !pc.RenewOtherId.HasValue)
+                {
+                    // Skip parent category header
+                    continue;
+                }
+
+                totalRegisteredCourses++;
+                bool isPassed = false;
+                if (isRenew4 && pc.RenewOtherId.HasValue && roSubjectDict.TryGetValue(pc.RenewOtherId.Value, out var sid))
+                {
+                    if (train5yByNation.TryGetValue(pc.NationId, out var passedSubIds) && passedSubIds.Contains(sid))
+                    {
+                        isPassed = true;
+                    }
+                }
+                else
+                {
+                    if ((stampsByNation.TryGetValue(pc.NationId, out var hasPassedStamp) && hasPassedStamp) || regByNation.Contains(pc.NationId))
+                    {
+                        isPassed = true;
+                    }
+                }
+
+                if (isPassed) passedRegisteredCourses++;
+                else unstampedRegisteredCourses++;
+
+                if (!traineeCourseStatus.TryGetValue(pc.NationId, out var cur))
+                {
+                    cur = (0, 0);
+                }
+                traineeCourseStatus[pc.NationId] = (cur.total + 1, cur.passed + (isPassed ? 1 : 0));
+            }
+
+            int fullyPassedApplicants = traineeCourseStatus.Values.Count(v => v.passed >= v.total && v.total > 0);
+            int incompleteApplicants = traineeCourseStatus.Values.Count(v => v.passed < v.total) + Math.Max(0, totalApplicants - traineeCourseStatus.Count);
+            double coursePassRate = totalRegisteredCourses > 0 ? Math.Round((double)passedRegisteredCourses * 100 / totalRegisteredCourses, 1) : 0;
+
             var trainingOverview = new
             {
+                // Stamp-level metrics (ผลจากการนำเข้า Excel)
                 totalTrainingRecords,
                 totalPassedCount,
                 totalFailedCount,
@@ -484,7 +549,16 @@ namespace backend.Controllers
                 totalUniqueTrainingTrainees,
                 mismatchCount,
                 totalCourseDateRounds = courseDateCompletion.Count,
-                totalCoursesCount = courseHierarchyAnalytics.Count
+                totalCoursesCount = courseHierarchyAnalytics.Count,
+
+                // Course & Registration Level Metrics (วิชาที่ลงทะเบียนในระบบ & รายการที่ยังไม่ประทับ)
+                totalRegisteredCourses,
+                passedRegisteredCourses,
+                unstampedRegisteredCourses,
+                coursePassRate,
+                totalApplicants,
+                fullyPassedApplicants,
+                incompleteApplicants
             };
 
                 return Ok(new
@@ -1227,7 +1301,8 @@ namespace backend.Controllers
             if (string.IsNullOrWhiteSpace(status)) return false;
             var s = status.Trim().ToLowerInvariant();
             if (s.StartsWith("ไม่ผ่าน") || s.StartsWith("ไม่สำเร็จ") || s == "failed" || s == "fail") return false;
-            return s.StartsWith("ผ่าน") || s.StartsWith("อนุมัติ") || s == "passed" || s == "pass" || s == "approved" || s == "สำเร็จ";
+            if (s.Contains("1/2") || s.Contains("0 วิชา")) return false;
+            return s.Contains("ครบทุกวิชา") || s == "ผ่าน" || s.StartsWith("อนุมัติ") || s == "passed" || s == "pass" || s == "approved" || s == "สำเร็จ";
         }
     }
 }

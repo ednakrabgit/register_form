@@ -54,6 +54,9 @@ export default function Dashboard() {
   const [courseStartDate, setCourseStartDate] = useState('');
   const [courseEndDate, setCourseEndDate] = useState('');
 
+  // Training KPI View Toggle ('courses' = วิชาที่ลงทะเบียนในระบบ, 'stamps' = ผลประทับจากไฟล์ Excel)
+  const [trainingKpiView, setTrainingKpiView] = useState('courses');
+
   const trendScrollRef = useRef(null);
 
   const fetchStats = async () => {
@@ -440,7 +443,7 @@ export default function Dashboard() {
 
       {/* Training Results Performance KPI Row */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-md border border-indigo-900/50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-amber-400/20 text-amber-400 rounded-xl border border-amber-400/30">
               <Award className="w-5 h-5" />
@@ -453,60 +456,127 @@ export default function Dashboard() {
                 </span>
               </h2>
               <p className="text-xs text-indigo-200/80">
-                ข้อมูลสถานะการผ่านอบรมจริงจากไฟล์ Excel และการจับคู่กับผู้สมัครในระบบ
+                ข้อมูลสถานะการผ่านอบรมจริงจากไฟล์ Excel และการจับคู่กับผู้สมัครและวิชาในระบบ
               </p>
             </div>
           </div>
-          <Link
-            to="/admin/training-import"
-            className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-semibold rounded-lg shadow-sm transition cursor-pointer"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>นำเข้าผลอบรม Excel เพิ่มเติม</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* View Mode Toggle: Registered Courses vs Excel Stamp Results */}
+            <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setTrainingKpiView('courses')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  trainingKpiView === 'courses'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-indigo-200 hover:text-white hover:bg-white/5'
+                }`}
+                title="วิเคราะห์จากวิชาที่ผู้สมัครเลือกลงทะเบียนในระบบ (รวมวิชาที่ยังไม่ประทับ)"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-blue-300" />
+                <span>วิชาที่ลงทะเบียน ({stats?.trainingOverview?.totalRegisteredCourses?.toLocaleString() ?? 0})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTrainingKpiView('stamps')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  trainingKpiView === 'stamps'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-indigo-200 hover:text-white hover:bg-white/5'
+                }`}
+                title="วิเคราะห์จากผลประทับที่นำเข้าจากไฟล์ Excel"
+              >
+                <FileCheck2 className="w-3.5 h-3.5 text-teal-300" />
+                <span>ผลประทับ Excel ({stats?.trainingOverview?.totalTrainingRecords?.toLocaleString() ?? 0})</span>
+              </button>
+            </div>
+
+            <Link
+              to="/admin/training-import"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>นำเข้าผล Excel</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Passed */}
+          {/* Card 1: Passed */}
           <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-xl p-4 border border-emerald-500/30 transition">
             <div className="flex justify-between items-start">
-              <span className="text-emerald-300 text-xs font-semibold">ผ่านการอบรมแล้ว (Passed)</span>
+              <span className="text-emerald-300 text-xs font-semibold">
+                {trainingKpiView === 'courses' ? 'วิชาที่ผ่านการอบรมแล้ว (Passed)' : 'ผลประทับผ่านแล้ว (Passed)'}
+              </span>
               <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3">
               <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                {stats?.trainingOverview?.totalPassedCount?.toLocaleString() ?? 0}
-                <span className="text-xs font-normal text-emerald-200 ml-1.5">รายการ</span>
+                {trainingKpiView === 'courses'
+                  ? (stats?.trainingOverview?.passedRegisteredCourses?.toLocaleString() ?? 0)
+                  : (stats?.trainingOverview?.totalPassedCount?.toLocaleString() ?? 0)
+                }
+                <span className="text-xs font-normal text-emerald-200 ml-1.5">
+                  {trainingKpiView === 'courses' ? 'วิชา' : 'รายการ'}
+                </span>
               </div>
-              <div className="mt-1.5 text-[11px] text-emerald-200/90 flex items-center gap-1">
-                <span>ผู้เรียนที่ผ่าน: <b>{stats?.trainingOverview?.totalUniquePassedTrainees ?? 0}</b> คน</span>
+              <div className="mt-1.5 text-[11px] text-emerald-200/90 flex flex-col gap-0.5">
+                {trainingKpiView === 'courses' ? (
+                  <>
+                    <span>ผู้เรียนที่ผ่านครบทุกวิชา: <b>{stats?.trainingOverview?.fullyPassedApplicants?.toLocaleString() ?? 0}</b> คน</span>
+                    <span className="text-[10px] text-emerald-300/80">ผู้เรียนที่มีผลผ่าน: {stats?.trainingOverview?.totalUniquePassedTrainees?.toLocaleString() ?? 0} คน</span>
+                  </>
+                ) : (
+                  <>
+                    <span>ผู้เรียนที่มีผลผ่าน: <b>{stats?.trainingOverview?.totalUniquePassedTrainees?.toLocaleString() ?? 0}</b> คน</span>
+                    <span className="text-[10px] text-emerald-300/80">วิชาในระบบที่ประทับผ่าน: {stats?.trainingOverview?.passedRegisteredCourses?.toLocaleString() ?? 0} วิชา</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Failed / Pending */}
+          {/* Card 2: Failed / Unstamped */}
           <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-xl p-4 border border-rose-500/30 transition">
             <div className="flex justify-between items-start">
-              <span className="text-rose-300 text-xs font-semibold">ไม่ผ่านการอบรม (Failed)</span>
+              <span className="text-rose-300 text-xs font-semibold">
+                {trainingKpiView === 'courses' ? 'ยังไม่ผ่าน / ยังไม่ประทับ (Pending/Failed)' : 'ผลสอบไม่ผ่าน (Failed)'}
+              </span>
               <div className="p-1.5 bg-rose-500/20 text-rose-400 rounded-lg">
                 <XCircle className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3">
               <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                {stats?.trainingOverview?.totalFailedCount?.toLocaleString() ?? 0}
-                <span className="text-xs font-normal text-rose-200 ml-1.5">รายการ</span>
+                {trainingKpiView === 'courses'
+                  ? (stats?.trainingOverview?.unstampedRegisteredCourses?.toLocaleString() ?? 0)
+                  : (stats?.trainingOverview?.totalFailedCount?.toLocaleString() ?? 0)
+                }
+                <span className="text-xs font-normal text-rose-200 ml-1.5">
+                  {trainingKpiView === 'courses' ? 'วิชา' : 'รายการ'}
+                </span>
               </div>
-              <div className="mt-1.5 text-[11px] text-rose-200/90">
-                <span>ต้องลงทะเบียนสอบซ่อม/อบรมใหม่</span>
+              <div className="mt-1.5 text-[11px] text-rose-200/90 flex flex-col gap-0.5">
+                {trainingKpiView === 'courses' ? (
+                  <>
+                    <span>ผู้เรียนที่ยังไม่ครบ/รอประทับ: <b>{stats?.trainingOverview?.incompleteApplicants?.toLocaleString() ?? 0}</b> คน</span>
+                    <span className="text-[10px] text-rose-300/80">ผลสอบไม่ผ่าน (1/2 วิชา): {stats?.trainingOverview?.totalFailedCount?.toLocaleString() ?? 0} รายการ</span>
+                  </>
+                ) : (
+                  <>
+                    <span>ต้องลงทะเบียนสอบซ่อม/อบรมใหม่: <b>{stats?.trainingOverview?.totalFailedCount?.toLocaleString() ?? 0}</b> รายการ</span>
+                    <span className="text-[10px] text-rose-300/80">วิชาที่ยังไม่ประทับในระบบ: {stats?.trainingOverview?.unstampedRegisteredCourses?.toLocaleString() ?? 0} วิชา</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Pass Rate % */}
+          {/* Card 3: Pass Rate % */}
           <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-xl p-4 border border-blue-500/30 transition">
             <div className="flex justify-between items-start">
               <span className="text-blue-300 text-xs font-semibold">อัตราผ่านการอบรม (Pass Rate)</span>
@@ -516,15 +586,22 @@ export default function Dashboard() {
             </div>
             <div className="mt-3">
               <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                {stats?.trainingOverview?.overallPassRate ?? 0}%
+                {trainingKpiView === 'courses'
+                  ? (stats?.trainingOverview?.coursePassRate ?? 0)
+                  : (stats?.trainingOverview?.overallPassRate ?? 0)
+                }%
               </div>
               <div className="mt-1.5 text-[11px] text-blue-200/90">
-                <span>จากผลนำเข้าทั้งหมด {stats?.trainingOverview?.totalTrainingRecords ?? 0} รายการ</span>
+                {trainingKpiView === 'courses' ? (
+                  <span>จากวิชาที่ลงทะเบียน {stats?.trainingOverview?.totalRegisteredCourses?.toLocaleString() ?? 0} วิชา</span>
+                ) : (
+                  <span>จากผลประทับนำเข้าทั้งหมด {stats?.trainingOverview?.totalTrainingRecords?.toLocaleString() ?? 0} รายการ</span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Course Rounds & Mismatches */}
+          {/* Card 4: Course Rounds & Mismatches */}
           <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-xl p-4 border border-amber-500/30 transition">
             <div className="flex justify-between items-start">
               <span className="text-amber-300 text-xs font-semibold">รอบอบรมที่ประทับผล</span>
