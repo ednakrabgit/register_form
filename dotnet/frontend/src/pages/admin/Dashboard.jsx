@@ -1713,69 +1713,108 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    {/* Right: Actual Training Results (trn_training_result) */}
+                    {/* Right: Actual Training Results (trn_training_result + persontraining5y) */}
                     <div className="bg-white rounded-lg p-3.5 border border-slate-200 space-y-2">
-                      <div className="font-bold text-slate-700 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                        <Award className="w-4 h-4 text-emerald-600" />
-                        <span>ผลการอบรมจริงที่ประทับผลแล้ว (Training Results)</span>
+                      <div className="font-bold text-slate-700 flex items-center justify-between pb-2 border-b border-slate-100">
+                        <div className="flex items-center gap-1.5">
+                          <Award className="w-4 h-4 text-emerald-600" />
+                          <span>ผลการอบรมจริงที่ประทับผลแล้ว (Training Results)</span>
+                        </div>
+                        {trainee.trainingResults && trainee.trainingResults.length > 0 && (
+                          <span className="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                            {trainee.trainingResults.length} รายการ
+                          </span>
+                        )}
                       </div>
                       {trainee.trainingResults && trainee.trainingResults.length > 0 ? (
                         <div className="space-y-2">
-                          {trainee.trainingResults.map((tr, tIdx) => (
-                            <div key={tIdx} className={`p-2.5 rounded border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
-                              tr.isPassed 
-                                ? 'bg-emerald-50/60 border-emerald-200' 
-                                : 'bg-rose-50/60 border-rose-200'
-                            }`}>
-                              <div>
-                                <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-start gap-1.5 flex-wrap">
-                                  <span className="font-mono text-primary bg-blue-50 px-1 py-0.5 rounded border border-blue-200 text-xs shrink-0">
-                                    [{tr.courseCode}]
-                                  </span>
-                                  {tr.subjectNames ? (
-                                    <span className="text-emerald-950 font-bold leading-snug">
-                                      <span className="text-emerald-700 font-semibold mr-1">วิชา:</span>
-                                      {tr.subjectNames}
+                          {trainee.trainingResults.map((tr, tIdx) => {
+                            const is5Year = tr.source === '5year' || tr.is5YearHistory;
+                            return (
+                              <div key={tIdx} className={`p-2.5 rounded border flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all ${
+                                is5Year
+                                  ? 'bg-blue-50/70 border-blue-200'
+                                  : tr.isPassed 
+                                    ? 'bg-emerald-50/60 border-emerald-200' 
+                                    : 'bg-rose-50/60 border-rose-200'
+                              }`}>
+                                <div>
+                                  <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-start gap-1.5 flex-wrap">
+                                    <span className={`font-mono px-1 py-0.5 rounded border text-xs shrink-0 font-bold ${
+                                      is5Year
+                                        ? 'text-blue-700 bg-blue-100/80 border-blue-300'
+                                        : 'text-primary bg-blue-50 border-blue-200'
+                                    }`}>
+                                      [{tr.courseCode}]
+                                    </span>
+                                    {tr.subjectNames ? (
+                                      <span className={`font-bold leading-snug ${
+                                        is5Year ? 'text-blue-950' : 'text-emerald-950'
+                                      }`}>
+                                        <span className={`font-semibold mr-1 ${
+                                          is5Year ? 'text-blue-800' : 'text-emerald-700'
+                                        }`}>วิชา:</span>
+                                        {tr.subjectNames}
+                                      </span>
+                                    ) : (
+                                      <span>{tr.courseName}</span>
+                                    )}
+                                  </div>
+                                  {tr.subjectNames && tr.courseName && tr.courseName !== tr.subjectNames && (
+                                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-mono">
+                                      <span className="text-slate-400">
+                                        {is5Year ? 'ประเภท:' : 'รอบ/รุ่น:'}
+                                      </span>
+                                      <span className="text-slate-700">{tr.courseName}</span>
+                                    </div>
+                                  )}
+                                  <div className="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
+                                    {is5Year ? (
+                                      <>
+                                        <span>แหล่งข้อมูล: <b>ประวัติสะสม 5 ปี (คปภ.)</b></span>
+                                        <span>•</span>
+                                        <span className="text-blue-700 font-bold bg-blue-100/60 px-1.5 py-0.2 rounded border border-blue-200">
+                                          ผ่านเกณฑ์สะสม
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>รอบวันที่: <b>{tr.trainingDate}</b></span>
+                                        {tr.scorePercent && tr.scorePercent !== '-' && (
+                                          <>
+                                            <span>•</span>
+                                            <span className="text-emerald-700 font-bold bg-emerald-100/60 px-1.5 py-0.2 rounded border border-emerald-200">
+                                              ผลสอบ: {tr.scorePercent}
+                                            </span>
+                                          </>
+                                        )}
+                                        <span>•</span>
+                                        <span>บันทึกเมื่อ: {tr.stampDate}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="self-start sm:self-auto shrink-0">
+                                  {is5Year ? (
+                                    <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-blue-600 text-white flex items-center gap-1 shadow-xs">
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      ผ่านแล้ว (สะสม 5 ปี)
+                                    </span>
+                                  ) : tr.isPassed ? (
+                                    <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-emerald-600 text-white flex items-center gap-1 shadow-xs">
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      ผ่านการอบรม ({tr.status})
                                     </span>
                                   ) : (
-                                    <span>{tr.courseName}</span>
+                                    <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-rose-600 text-white flex items-center gap-1 shadow-xs">
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      {tr.status || 'ไม่ผ่าน'}
+                                    </span>
                                   )}
                                 </div>
-                                {tr.subjectNames && tr.courseName && tr.courseName !== tr.subjectNames && (
-                                  <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-mono">
-                                    <span className="text-slate-400">รอบ/รุ่น:</span>
-                                    <span className="text-slate-700">{tr.courseName}</span>
-                                  </div>
-                                )}
-                                <div className="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
-                                  <span>รอบวันที่: <b>{tr.trainingDate}</b></span>
-                                  {tr.scorePercent && tr.scorePercent !== '-' && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="text-emerald-700 font-bold bg-emerald-100/60 px-1.5 py-0.2 rounded border border-emerald-200">
-                                        ผลสอบ: {tr.scorePercent}
-                                      </span>
-                                    </>
-                                  )}
-                                  <span>•</span>
-                                  <span>บันทึกเมื่อ: {tr.stampDate}</span>
-                                </div>
                               </div>
-                              <div className="self-start sm:self-auto shrink-0">
-                                {tr.isPassed ? (
-                                  <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-emerald-600 text-white flex items-center gap-1 shadow-xs">
-                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                    ผ่านการอบรม ({tr.status})
-                                  </span>
-                                ) : (
-                                  <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-rose-600 text-white flex items-center gap-1 shadow-xs">
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    {tr.status || 'ไม่ผ่าน'}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-amber-600 bg-amber-50 p-3 rounded border border-amber-200 text-xs flex items-center gap-2">

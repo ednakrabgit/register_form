@@ -626,8 +626,10 @@ namespace backend.Controllers
                 var reg = p.Registrations.OrderByDescending(r => r.Id).FirstOrDefault();
                 var lic = p.Licenses.FirstOrDefault();
 
-                var trainingResultsList = p.TrainingResults.Select(tr => new {
+                var stampedList = p.TrainingResults.Select(tr => new {
                     id = tr.Id,
+                    source = "stamp",
+                    is5YearHistory = false,
                     courseCode = tr.TrainingCourseCode ?? "-",
                     courseName = tr.TrainingCourseName ?? "-",
                     subjectNames = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : tr.TrainingCourseName,
@@ -643,7 +645,54 @@ namespace backend.Controllers
                 
                 // Determine if this is a Renew 4+ registration (complex course with multiple subjects)
                 var hasRenewOther = p.Courses.Any(pc => pc.RenewOtherId.HasValue);
-                var isRenew4Plus = hasRenewOther || p.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10);
+                var isRenew4Plus = hasRenewOther || 
+                                   p.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10) || 
+                                   p.Trainings.Count > 0 ||
+                                   p.TrainingResults.Any(tr => tr.TrainingCourseCode == "ตนว4642037" || (tr.TrainingCourseName != null && (tr.TrainingCourseName.Contains("นว.4") || tr.TrainingCourseName.Contains("ตว.4"))));
+
+                // Deduplicate and combine 5-year accumulated training courses from persontraining5y (p.Trainings)
+                // Rule: "ถ้าเป็นวิชาเดียวกันกับที่ประทับ ให้แสดงวิชาที่ประทับแค่รายการเดียว"
+                var used5YearCourseIds = new HashSet<int>();
+                foreach (var st in stampedList)
+                {
+                    var matchingTraining = p.Trainings.FirstOrDefault(t => {
+                        if (!t.CourseId.HasValue || used5YearCourseIds.Contains(t.CourseId.Value)) return false;
+                        var rc = renewCourses.FirstOrDefault(c => c.Id == t.CourseId.Value);
+                        if (rc == null) return false;
+                        return st.subjectNames != null && st.subjectNames.Contains(rc.Name);
+                    });
+
+                    if (matchingTraining != null && matchingTraining.CourseId.HasValue)
+                    {
+                        used5YearCourseIds.Add(matchingTraining.CourseId.Value);
+                    }
+                }
+
+                var additional5YearList = p.Trainings
+                    .Where(t => t.CourseId.HasValue && !used5YearCourseIds.Contains(t.CourseId.Value))
+                    .Select(t => {
+                        var rc = renewCourses.FirstOrDefault(c => c.Id == t.CourseId!.Value);
+                        var pl = rc != null ? renewPillars.FirstOrDefault(plItem => plItem.Id == rc.DefaultPillarId) : null;
+                        var sName = rc != null ? (!string.IsNullOrEmpty(pl?.Name) ? $"[{pl.Name}] {rc.Name}" : rc.Name) : $"วิชา {t.CourseId}";
+                        return new {
+                            id = -(t.CourseId!.Value),
+                            source = "5year",
+                            is5YearHistory = true,
+                            courseCode = "สะสม 5 ปี",
+                            courseName = "วิชาที่เคยเข้าอบรมในรอบการสะสมชั่วโมงอบรมปัจจุบัน (5 ปี)",
+                            subjectNames = sName,
+                            trainingDate = "รอบสะสม 5 ปี",
+                            status = "ผ่านแล้ว (สะสม 5 ปี)",
+                            isPassed = true,
+                            progressPercent = "100%",
+                            scorePercent = "1/1 วิชา",
+                            stampDate = "-",
+                            verifiedName = $"{p.TitleTh}{p.FirstNameTh} {p.LastNameTh}".Trim(),
+                            verifiedLicenseNo = lic?.LicenseNo ?? "-"
+                        };
+                    }).ToList();
+
+                var trainingResultsList = stampedList.Concat(additional5YearList).ToList();
 
                 // Filter out the parent course category header row (e.g. CourseId 9 or 10 with RenewOtherId == null)
                 // because it is NOT an individual course subject.
@@ -709,22 +758,23 @@ namespace backend.Controllers
                 }).ToList();
 
                 var passedCoursesCount = coursesList.Count(c => c.isPassed);
-                var registeredCoursesCount = isRenew4Plus ? Math.Max(6, coursesList.Count) : coursesList.Count;
+                var registeredCoursesCount = isRenew4Plus ? (coursesList.Count > 0 ? Math.Max(6, coursesList.Count) : 0) : coursesList.Count;
                 var passedRoundsCount = trainingResultsList.Count(tr => tr.isPassed);
                 var totalRoundsCount = trainingResultsList.Count;
 
                 int totalPassed;
                 int totalResults;
 
-                if (registeredCoursesCount > 0)
+                if (coursesList.Count > 0)
                 {
                     totalPassed = passedCoursesCount;
                     totalResults = registeredCoursesCount;
                 }
                 else
                 {
-                    totalPassed = passedRoundsCount;
-                    totalResults = totalRoundsCount;
+                    var targetTotal = isRenew4Plus ? 6 : Math.Max(1, totalRoundsCount);
+                    totalPassed = Math.Min(targetTotal, passedRoundsCount);
+                    totalResults = targetTotal;
                 }
 
                 return new {
