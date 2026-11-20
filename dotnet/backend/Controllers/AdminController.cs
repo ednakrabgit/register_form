@@ -312,6 +312,11 @@ namespace backend.Controllers
             var totalUniqueTrainingTrainees = trainingResults.Select(r => r.NationId).Where(n => !string.IsNullOrEmpty(n)).Distinct().Count();
             var mismatchCount = trainingResults.Count(r => r.IsDataMismatch == "Y");
 
+            var thaiMonthNames = new[] {
+                "", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+                "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+            };
+
             // Group by Course Code + Course Name + Training Date Display (วิชาไหนที่ลงวันไหนผ่าน)
             var courseDateCompletion = trainingResults
                 .GroupBy(r => new {
@@ -324,10 +329,49 @@ namespace backend.Controllers
                     var passed = g.Count(r => IsTrainingPassed(r.TrainingStatus));
                     var failed = g.Count(r => !IsTrainingPassed(r.TrainingStatus));
                     var rate = total > 0 ? Math.Round((double)passed * 100 / total, 1) : 0;
+
+                    int yearNum = 0;
+                    int monthNum = 0;
+                    int dayNum = 0;
+                    string yearDisplay = "ไม่ระบุปี";
+                    string monthDisplay = "ไม่ระบุเดือน";
+                    string dStr = (g.Key.DateDisplay ?? "").Trim();
+                    if (!string.IsNullOrEmpty(dStr) && dStr.Contains('/'))
+                    {
+                        var parts = dStr.Split('/');
+                        if (parts.Length == 3)
+                        {
+                            int.TryParse(parts[0], out dayNum);
+                            int.TryParse(parts[1], out monthNum);
+                            int.TryParse(parts[2], out yearNum);
+                            if (yearNum > 0) yearDisplay = yearNum > 2400 ? $"พ.ศ. {yearNum}" : $"ค.ศ. {yearNum}";
+                            if (monthNum >= 1 && monthNum <= 12) monthDisplay = thaiMonthNames[monthNum];
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(dStr) && dStr.Contains('-'))
+                    {
+                        var parts = dStr.Split('-');
+                        if (parts.Length == 3)
+                        {
+                            int.TryParse(parts[0], out yearNum);
+                            int.TryParse(parts[1], out monthNum);
+                            int.TryParse(parts[2], out dayNum);
+                            if (yearNum > 0) yearDisplay = yearNum > 2400 ? $"พ.ศ. {yearNum}" : $"ค.ศ. {yearNum}";
+                            if (monthNum >= 1 && monthNum <= 12) monthDisplay = thaiMonthNames[monthNum];
+                        }
+                    }
+                    int dateSortKey = yearNum * 10000 + monthNum * 100 + dayNum;
+
                     return new {
                         courseCode = g.Key.CourseCode,
                         courseName = g.Key.CourseName,
                         trainingDate = g.Key.DateDisplay,
+                        yearNum = yearNum,
+                        monthNum = monthNum,
+                        dayNum = dayNum,
+                        yearDisplay = yearDisplay,
+                        monthDisplay = monthDisplay,
+                        dateSortKey = dateSortKey,
                         totalEnrolled = total,
                         passedCount = passed,
                         failedCount = failed,
@@ -336,7 +380,7 @@ namespace backend.Controllers
                         lastStampDate = g.Max(r => r.StampDate).ToString("yyyy-MM-dd HH:mm")
                     };
                 })
-                .OrderByDescending(x => x.trainingDate)
+                .OrderByDescending(x => x.dateSortKey)
                 .ThenBy(x => x.courseCode)
                 .ToList();
 
