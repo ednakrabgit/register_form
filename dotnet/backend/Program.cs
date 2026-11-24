@@ -220,11 +220,130 @@ try
                 FROM oic_agent_profile_store p
                 INNER JOIN LatestProfiles l ON p.profile_id = l.profile_id;
             ");
+
+            context.Database.ExecuteSqlRaw(@"
+                IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL
+                BEGIN
+                    UPDATE mst_renew_course 
+                    SET name = N'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' 
+                    WHERE id = 1 AND (name LIKE '%?%' OR name IS NULL OR name = '');
+                END
+
+                IF OBJECT_ID('mst_course_sub_detail', 'U') IS NOT NULL
+                BEGIN
+                    UPDATE mst_course_sub_detail 
+                    SET sub_course_name = REPLACE(sub_course_name, N'นาที่', N'นาที') 
+                    WHERE sub_course_name LIKE N'%นาที่%';
+
+                    UPDATE mst_course_sub_detail 
+                    SET sub_course_name = REPLACE(sub_course_name, N'ชั่วโมง)', N'ชั่วโมง') 
+                    WHERE id = 72;
+                END
+            ");
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to update is_latest column in oic_raw_api_store or oic_agent_profile_store");
         }
+        }
+
+        // Auto-seed and synchronize admin_menus & admin_role_permissions across all environments
+        try
+        {
+            var defaultMenus = new (string Key, string Name, string Cat, string Icon, string Path, int Sort)[]
+            {
+                ("dashboard", "หน้าแรก (Dashboard)", "Admin", "fas fa-home", "/admin", 1),
+                ("profile", "ข้อมูลส่วนตัว (My Profile)", "Admin", "fas fa-id-card", "/admin/profile", 2),
+                ("trainees", "ข้อมูลผู้สมัคร/ผู้อบรม", "Admin", "fas fa-users", "/admin/trainees", 3),
+                ("training_import", "นำเข้าผลการอบรม (Stamp ผล)", "Admin", "fas fa-file-import", "/admin/training-import", 4),
+                ("reports", "รายงาน (Reports)", "Admin", "fas fa-file-excel", "/admin/reports", 5),
+                ("users", "จัดการผู้ใช้งาน & กำหนดสิทธิ์", "Admin", "fas fa-user-cog", "/admin/users", 6),
+                ("config", "ตั้งค่าระบบ (System Config)", "Admin", "fas fa-cogs", "/admin/config", 7),
+                ("master_data", "จัดการข้อมูล (Master Data)", "Admin", "fas fa-database", "/admin/master-data", 8),
+                ("audit_logs", "ประวัติการแก้ไข (Audit Logs)", "Admin", "fas fa-history", "/admin/audit-logs", 9),
+                ("system_logs", "บันทึกระบบ (System Logs)", "Admin", "fas fa-terminal", "/admin/system-logs", 10),
+                ("registration_form", "แบบฟอร์มลงทะเบียน", "Applicant", "fas fa-edit", "/", 11),
+                ("my_registrations", "ประวัติการสมัครของผู้เข้าอบรม", "Applicant", "fas fa-id-card", "/my-registrations", 12)
+            };
+
+            foreach (var m in defaultMenus)
+            {
+                var existing = context.Menus.FirstOrDefault(x => x.MenuKey == m.Key);
+                if (existing == null)
+                {
+                    context.Menus.Add(new backend.Models.Menu
+                    {
+                        MenuKey = m.Key,
+                        MenuName = m.Name,
+                        Category = m.Cat,
+                        Icon = m.Icon,
+                        Path = m.Path,
+                        SortOrder = m.Sort
+                    });
+                }
+                else
+                {
+                    existing.MenuName = m.Name;
+                    existing.Category = m.Cat;
+                    existing.Icon = m.Icon;
+                    existing.Path = m.Path;
+                    existing.SortOrder = m.Sort;
+                }
+            }
+            context.SaveChanges();
+
+            var roles = context.Roles.ToList();
+            var menus = context.Menus.ToList();
+            foreach (var role in roles)
+            {
+                foreach (var menu in menus)
+                {
+                    var hasPerm = context.RolePermissions.Any(p => p.RoleId == role.Id && p.MenuKey == menu.MenuKey);
+                    if (!hasPerm)
+                    {
+                        bool canView = false;
+                        bool canEdit = false;
+                        if (role.RoleCode.Equals("Superadmin", StringComparison.OrdinalIgnoreCase))
+                        {
+                            canView = true;
+                            canEdit = true;
+                        }
+                        else if (role.RoleCode.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                        {
+                            canView = menu.Category == "Admin" || menu.MenuKey == "profile";
+                            canEdit = menu.Category == "Admin" || menu.MenuKey == "profile";
+                        }
+                        else if (role.RoleCode.Equals("Viewer", StringComparison.OrdinalIgnoreCase))
+                        {
+                            canView = new[] { "dashboard", "trainees", "reports", "profile" }.Contains(menu.MenuKey);
+                            canEdit = menu.MenuKey == "profile";
+                        }
+                        else if (role.RoleCode.Equals("Applicant", StringComparison.OrdinalIgnoreCase))
+                        {
+                            canView = new[] { "registration_form", "my_registrations", "profile" }.Contains(menu.MenuKey);
+                            canEdit = new[] { "registration_form", "my_registrations", "profile" }.Contains(menu.MenuKey);
+                        }
+                        else
+                        {
+                            canView = menu.Category == "Admin";
+                            canEdit = menu.Category == "Admin";
+                        }
+
+                        context.RolePermissions.Add(new backend.Models.RolePermission
+                        {
+                            RoleId = role.Id,
+                            MenuKey = menu.MenuKey,
+                            CanView = canView,
+                            CanEdit = canEdit
+                        });
+                    }
+                }
+            }
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Failed to seed default admin menus and permissions: {Message}", ex.Message);
         }
     }
 }

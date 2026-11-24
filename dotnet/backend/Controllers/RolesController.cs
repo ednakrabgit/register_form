@@ -38,6 +38,25 @@ namespace backend.Controllers
             public List<RolePermissionDto>? Permissions { get; set; }
         }
 
+        public class CreateMenuDto
+        {
+            public string MenuKey { get; set; } = null!;
+            public string MenuName { get; set; } = null!;
+            public string Category { get; set; } = "Admin";
+            public string? Icon { get; set; }
+            public string? Path { get; set; }
+            public int SortOrder { get; set; } = 0;
+        }
+
+        public class UpdateMenuDto
+        {
+            public string MenuName { get; set; } = null!;
+            public string Category { get; set; } = "Admin";
+            public string? Icon { get; set; }
+            public string? Path { get; set; }
+            public int SortOrder { get; set; } = 0;
+        }
+
         /// <summary>
         /// ดึงรายการเมนูทั้งหมดที่สามารถกำหนดสิทธิ์ได้
         /// </summary>
@@ -48,6 +67,123 @@ namespace backend.Controllers
                 .OrderBy(m => m.SortOrder)
                 .ToListAsync();
             return Ok(menus);
+        }
+
+        /// <summary>
+        /// สร้างเมนูระบบใหม่ เพื่อให้สามารถกำหนดสิทธิ์และแสดงผลใน Sidebar ได้ทันที
+        /// </summary>
+        [HttpPost("menus")]
+        public async Task<IActionResult> CreateMenu([FromBody] CreateMenuDto dto)
+        {
+            var callerRole = backend.Common.RoleHierarchy.GetCallerRole(HttpContext);
+            if (!string.Equals(callerRole, "Superadmin", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(callerRole, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "เฉพาะผู้ดูแลระบบ (Superadmin / Admin) เท่านั้นที่สามารถเพิ่มเมนูระบบได้" });
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.MenuKey) || string.IsNullOrWhiteSpace(dto.MenuName))
+            {
+                return BadRequest(new { message = "กรุณาระบุ Menu Key และชื่อเมนู" });
+            }
+
+            var cleanKey = dto.MenuKey.Trim().ToLower().Replace(" ", "_");
+            var exists = await _context.Menus.AnyAsync(m => m.MenuKey.ToLower() == cleanKey);
+            if (exists)
+            {
+                return BadRequest(new { message = $"Menu Key '{cleanKey}' มีอยู่ในระบบแล้ว" });
+            }
+
+            int nextSort = dto.SortOrder > 0 ? dto.SortOrder : (await _context.Menus.MaxAsync(m => (int?)m.SortOrder) ?? 0) + 1;
+
+            var menu = new Menu
+            {
+                MenuKey = cleanKey,
+                MenuName = dto.MenuName.Trim(),
+                Category = string.IsNullOrWhiteSpace(dto.Category) ? "Admin" : dto.Category.Trim(),
+                Icon = string.IsNullOrWhiteSpace(dto.Icon) ? "fas fa-circle" : dto.Icon.Trim(),
+                Path = string.IsNullOrWhiteSpace(dto.Path) ? $"/admin/{cleanKey}" : dto.Path.Trim(),
+                SortOrder = nextSort
+            };
+
+            _context.Menus.Add(menu);
+            await _context.SaveChangesAsync();
+
+            // Auto-grant full access to Superadmin for newly created menu
+            var superadmin = await _context.Roles.FirstOrDefaultAsync(r => r.RoleCode.ToLower() == "superadmin");
+            if (superadmin != null)
+            {
+                var existingSuperPerm = await _context.RolePermissions.FirstOrDefaultAsync(p => p.RoleId == superadmin.Id && p.MenuKey == menu.MenuKey);
+                if (existingSuperPerm == null)
+                {
+                    _context.RolePermissions.Add(new RolePermission
+                    {
+                        RoleId = superadmin.Id,
+                        MenuKey = menu.MenuKey,
+                        CanView = true,
+                        CanEdit = true
+                    });
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return Ok(new { message = "เพิ่มเมนูระบบสำเร็จ", menu });
+        }
+
+        /// <summary>
+        /// อัปเดตข้อมูลเมนูระบบ
+        /// </summary>
+        [HttpPut("menus/{id}")]
+        public async Task<IActionResult> UpdateMenu(int id, [FromBody] UpdateMenuDto dto)
+        {
+            var callerRole = backend.Common.RoleHierarchy.GetCallerRole(HttpContext);
+            if (!string.Equals(callerRole, "Superadmin", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(callerRole, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "เฉพาะผู้ดูแลระบบ (Superadmin / Admin) เท่านั้นที่สามารถแก้ไขเมนูระบบได้" });
+            }
+
+            var menu = await _context.Menus.FindAsync(id);
+            if (menu == null) return NotFound(new { message = "ไม่พบเมนูนี้ในระบบ" });
+
+            menu.MenuName = dto.MenuName.Trim();
+            menu.Category = string.IsNullOrWhiteSpace(dto.Category) ? "Admin" : dto.Category.Trim();
+            menu.Icon = string.IsNullOrWhiteSpace(dto.Icon) ? "fas fa-circle" : dto.Icon.Trim();
+            if (!string.IsNullOrWhiteSpace(dto.Path)) menu.Path = dto.Path.Trim();
+            if (dto.SortOrder > 0) menu.SortOrder = dto.SortOrder;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "อัปเดตข้อมูลเมนูสำเร็จ", menu });
+        }
+
+        /// <summary>
+        /// ลบเมนูระบบ (เฉพาะเมนูที่สร้างขึ้นเอง ไม่อนุญาตให้ลบ Core Menus)
+        /// </summary>
+        [HttpDelete("menus/{id}")]
+        public async Task<IActionResult> DeleteMenu(int id)
+        {
+            var callerRole = backend.Common.RoleHierarchy.GetCallerRole(HttpContext);
+            if (!string.Equals(callerRole, "Superadmin", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(403, new { message = "เฉพาะ Superadmin เท่านั้นที่สามารถลบเมนูระบบได้" });
+            }
+
+            var menu = await _context.Menus.FindAsync(id);
+            if (menu == null) return NotFound(new { message = "ไม่พบเมนูนี้ในระบบ" });
+
+            var coreKeys = new[] { "dashboard", "profile", "trainees", "training_import", "reports", "users", "config", "master_data", "audit_logs", "system_logs", "registration_form", "my_registrations" };
+            if (coreKeys.Contains(menu.MenuKey.ToLower()))
+            {
+                return BadRequest(new { message = "ไม่อนุญาตให้ลบเมนูหลักของระบบ (Core System Menu)" });
+            }
+
+            var perms = await _context.RolePermissions.Where(p => p.MenuKey == menu.MenuKey).ToListAsync();
+            _context.RolePermissions.RemoveRange(perms);
+
+            _context.Menus.Remove(menu);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "ลบเมนูระบบสำเร็จ" });
         }
 
         /// <summary>

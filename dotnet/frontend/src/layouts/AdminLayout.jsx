@@ -1,10 +1,43 @@
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 
+const DEFAULT_ADMIN_MENUS = [
+  { menuKey: 'dashboard', menuName: 'หน้าแรก (Dashboard)', path: '/admin', icon: 'fas fa-home', sortOrder: 1, category: 'Admin' },
+  { menuKey: 'profile', menuName: 'ข้อมูลส่วนตัว (My Profile)', path: '/admin/profile', icon: 'fas fa-id-card', sortOrder: 2, category: 'Admin' },
+  { menuKey: 'trainees', menuName: 'ข้อมูลผู้สมัคร/ผู้อบรม', path: '/admin/trainees', icon: 'fas fa-users', sortOrder: 3, category: 'Admin' },
+  { menuKey: 'training_import', menuName: 'นำเข้าผลการอบรม (Stamp ผล)', path: '/admin/training-import', icon: 'fas fa-file-import', sortOrder: 4, category: 'Admin' },
+  { menuKey: 'reports', menuName: 'รายงาน (Reports)', path: '/admin/reports', icon: 'fas fa-file-excel', sortOrder: 5, category: 'Admin' },
+  { menuKey: 'users', menuName: 'จัดการผู้ใช้งาน & กำหนดสิทธิ์', path: '/admin/users', icon: 'fas fa-user-cog', sortOrder: 6, category: 'Admin' },
+  { menuKey: 'config', menuName: 'ตั้งค่าระบบ (System Config)', path: '/admin/config', icon: 'fas fa-cogs', sortOrder: 7, category: 'Admin' },
+  { menuKey: 'master_data', menuName: 'จัดการข้อมูล (Master Data)', path: '/admin/master-data', icon: 'fas fa-database', sortOrder: 8, category: 'Admin' },
+  { menuKey: 'audit_logs', menuName: 'ประวัติการแก้ไข (Audit Logs)', path: '/admin/audit-logs', icon: 'fas fa-history', sortOrder: 9, category: 'Admin' },
+  { menuKey: 'system_logs', menuName: 'บันทึกระบบ (System Logs)', path: '/admin/system-logs', icon: 'fas fa-terminal', sortOrder: 10, category: 'Admin' }
+];
+
 export default function AdminLayout() {
   const { user, canViewMenu, logout } = useAuth();
   const navigate = useNavigate();
+  const [menus, setMenus] = useState(DEFAULT_ADMIN_MENUS);
+
+  useEffect(() => {
+    fetch('/api/roles/menus')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const adminMenus = data
+            .filter(m => m.category === 'Admin')
+            .sort((a, b) => a.sortOrder - b.sortOrder);
+          if (adminMenus.length > 0) {
+            setMenus(adminMenus);
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback gracefully to DEFAULT_ADMIN_MENUS
+      });
+  }, []);
 
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 border-l-4 transition-colors ${
@@ -46,63 +79,19 @@ export default function AdminLayout() {
               </NavLink>
             </>
           ) : (
-            <>
-              {canViewMenu('dashboard') && (
-                <NavLink to="/admin" end className={navLinkClass}>
-                  <i className="fas fa-home w-5 text-center"></i> หน้าแรก (Dashboard)
+            menus
+              .filter(menu => canViewMenu(menu.menuKey))
+              .map(menu => (
+                <NavLink
+                  key={menu.menuKey}
+                  to={menu.path}
+                  end={menu.path === '/admin'}
+                  className={navLinkClass}
+                >
+                  <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center ${menu.menuKey === 'training_import' ? 'text-[#ffc107]' : ''}`}></i>
+                  <span>{menu.menuName}</span>
                 </NavLink>
-              )}
-
-              <NavLink to="/admin/profile" className={navLinkClass}>
-                <i className="fas fa-id-card w-5 text-center"></i> ข้อมูลส่วนตัว (My Profile)
-              </NavLink>
-
-              {canViewMenu('trainees') && (
-                <NavLink to="/admin/trainees" className={navLinkClass}>
-                  <i className="fas fa-users w-5 text-center"></i> ข้อมูลผู้สมัคร/ผู้อบรม
-                </NavLink>
-              )}
-
-              <NavLink to="/admin/training-import" className={navLinkClass}>
-                <i className="fas fa-file-import w-5 text-center text-[#ffc107]"></i> นำเข้าผลการอบรม (Stamp ผล)
-              </NavLink>
-
-              {canViewMenu('reports') && (
-                <NavLink to="/admin/reports" className={navLinkClass}>
-                  <i className="fas fa-file-excel w-5 text-center"></i> รายงาน (Reports)
-                </NavLink>
-              )}
-
-              {canViewMenu('users') && (
-                <NavLink to="/admin/users" className={navLinkClass}>
-                  <i className="fas fa-user-cog w-5 text-center"></i> จัดการผู้ใช้งาน & สิทธิ์
-                </NavLink>
-              )}
-
-              {canViewMenu('config') && (
-                <NavLink to="/admin/config" className={navLinkClass}>
-                  <i className="fas fa-cogs w-5 text-center"></i> ตั้งค่าระบบ (System Config)
-                </NavLink>
-              )}
-
-              {canViewMenu('master_data') && (
-                <NavLink to="/admin/master-data" className={navLinkClass}>
-                  <i className="fas fa-database w-5 text-center"></i> จัดการข้อมูล (Master Data)
-                </NavLink>
-              )}
-
-              {canViewMenu('audit_logs') && (
-                <NavLink to="/admin/audit-logs" className={navLinkClass}>
-                  <i className="fas fa-history w-5 text-center"></i> ประวัติการแก้ไข (Audit Logs)
-                </NavLink>
-              )}
-
-              {canViewMenu('system_logs') && (
-                <NavLink to="/admin/system-logs" className={navLinkClass}>
-                  <i className="fas fa-terminal w-5 text-center"></i> บันทึกระบบ (System Logs)
-                </NavLink>
-              )}
-            </>
+              ))
           )}
         </nav>
 

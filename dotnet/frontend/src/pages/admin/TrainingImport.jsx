@@ -1,10 +1,10 @@
 import { API_BASE_URL, API_ORIGIN } from '../../config/api';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-
+import { useAuth } from '../../context/AuthContext';
 
 export default function TrainingImport() {
+  const { canViewMenu, canEditMenu, user } = useAuth();
   const [activeTab, setActiveTab] = useState('import'); // 'import' | 'history'
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
