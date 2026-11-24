@@ -662,8 +662,7 @@ namespace backend.Controllers
                 var hasRenewOther = p.Courses.Any(pc => pc.RenewOtherId.HasValue);
                 var isRenew4Plus = hasRenewOther || 
                                    p.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10) || 
-                                   p.Trainings.Count > 0 ||
-                                   p.TrainingResults.Any(tr => tr.TrainingCourseCode == "ตนว4642037" || (tr.TrainingCourseName != null && (tr.TrainingCourseName.Contains("นว.4") || tr.TrainingCourseName.Contains("ตว.4"))));
+                                   (p.Courses.Count == 0 && p.TrainingResults.Any(tr => tr.TrainingCourseCode == "ตนว4642037" || (tr.TrainingCourseName != null && (tr.TrainingCourseName.Contains("นว.4") || tr.TrainingCourseName.Contains("ตว.4")))));
 
                 // Deduplicate and combine 5-year accumulated training courses from persontraining5y (p.Trainings)
                 // Rule: "ถ้าเป็นวิชาเดียวกันกับที่ประทับ ให้แสดงวิชาที่ประทับแค่รายการเดียว"
@@ -683,31 +682,35 @@ namespace backend.Controllers
                     }
                 }
 
-                var additional5YearList = p.Trainings
-                    .Where(t => t.CourseId.HasValue && !used5YearCourseIds.Contains(t.CourseId.Value))
-                    .Select(t => {
-                        var rc = renewCourses.FirstOrDefault(c => c.Id == t.CourseId!.Value);
-                        var pl = rc != null ? renewPillars.FirstOrDefault(plItem => plItem.Id == rc.DefaultPillarId) : null;
-                        var sName = rc != null ? (!string.IsNullOrEmpty(pl?.Name) ? $"[{pl.Name}] {rc.Name}" : rc.Name) : $"วิชา {t.CourseId}";
-                        return new {
-                            id = -(t.CourseId!.Value),
-                            source = "5year",
-                            is5YearHistory = true,
-                            courseCode = "สะสม 5 ปี",
-                            courseName = "วิชาที่เคยเข้าอบรมในรอบการสะสมชั่วโมงอบรมปัจจุบัน (5 ปี)",
-                            subjectNames = sName,
-                            trainingDate = "รอบสะสม 5 ปี",
-                            status = "ผ่านแล้ว (สะสม 5 ปี)",
-                            isPassed = true,
-                            progressPercent = "100%",
-                            scorePercent = "1/1 วิชา",
-                            stampDate = "-",
-                            verifiedName = $"{p.TitleTh}{p.FirstNameTh} {p.LastNameTh}".Trim(),
-                            verifiedLicenseNo = lic?.LicenseNo ?? "-"
-                        };
-                    }).ToList();
+                var additional5YearList = new List<dynamic>();
+                if (isRenew4Plus)
+                {
+                    additional5YearList = p.Trainings
+                        .Where(t => t.CourseId.HasValue && !used5YearCourseIds.Contains(t.CourseId.Value))
+                        .Select(t => {
+                            var rc = renewCourses.FirstOrDefault(c => c.Id == t.CourseId!.Value);
+                            var pl = rc != null ? renewPillars.FirstOrDefault(plItem => plItem.Id == rc.DefaultPillarId) : null;
+                            var sName = rc != null ? (!string.IsNullOrEmpty(pl?.Name) ? $"[{pl.Name}] {rc.Name}" : rc.Name) : $"วิชา {t.CourseId}";
+                            return (dynamic)new {
+                                id = -(t.CourseId!.Value),
+                                source = "5year",
+                                is5YearHistory = true,
+                                courseCode = "สะสม 5 ปี",
+                                courseName = "วิชาที่เคยเข้าอบรมในรอบการสะสมชั่วโมงอบรมปัจจุบัน (5 ปี)",
+                                subjectNames = sName,
+                                trainingDate = "รอบสะสม 5 ปี",
+                                status = "ผ่านแล้ว (สะสม 5 ปี)",
+                                isPassed = true,
+                                progressPercent = "100%",
+                                scorePercent = "1/1 วิชา",
+                                stampDate = "-",
+                                verifiedName = $"{p.TitleTh}{p.FirstNameTh} {p.LastNameTh}".Trim(),
+                                verifiedLicenseNo = lic?.LicenseNo ?? "-"
+                            };
+                        }).ToList();
+                }
 
-                var trainingResultsList = stampedList.Concat(additional5YearList).ToList();
+                var trainingResultsList = stampedList.Cast<dynamic>().Concat(additional5YearList).ToList();
 
                 // Filter out the parent course category header row (e.g. CourseId 9 or 10 with RenewOtherId == null)
                 // because it is NOT an individual course subject.
@@ -752,13 +755,19 @@ namespace backend.Controllers
                     // 1. For Renew 4+ courses: check if subjectId exists in persontraining5y (p.Trainings)
                     // 2. For basic courses (ขอรับ, ขอต่อ 1-3): check if training result is passed or registration is confirmed
                     bool isPassed = false;
-                    if (subjectId.HasValue && p.Trainings.Any(t => t.CourseId == subjectId.Value))
+                    if (isRenew4Plus)
                     {
-                        isPassed = true;
+                        if (subjectId.HasValue && p.Trainings.Any(t => t.CourseId == subjectId.Value))
+                        {
+                            isPassed = true;
+                        }
                     }
-                    else if (!isRenew4Plus && !pc.RenewOtherId.HasValue && pc.CourseId.HasValue && (trainingResultsList.Any(tr => tr.isPassed) || (reg?.confirmed == true)))
+                    else
                     {
-                        isPassed = true;
+                        if (stampedList.Any(tr => tr.isPassed) || (reg?.confirmed == true))
+                        {
+                            isPassed = true;
+                        }
                     }
 
                     return new {

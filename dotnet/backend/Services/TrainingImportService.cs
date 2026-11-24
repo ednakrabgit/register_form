@@ -450,20 +450,24 @@ namespace backend.Services
                         }
                     }
 
-                    // 2. Record passed 5-year training courses into persontraining5y
+                    // 2. Record passed 5-year training courses into persontraining5y (ONLY for Renew 4+ trainees!)
                     if (r.PassedRenewCourseIds != null && r.PassedRenewCourseIds.Count > 0)
                     {
-                        foreach (var cId in r.PassedRenewCourseIds.Distinct())
+                        bool isPersonRenew4 = person.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10 || pc.RenewOtherId.HasValue);
+                        if (isPersonRenew4)
                         {
-                            if (!person.Trainings.Any(t => t.CourseId == cId))
+                            foreach (var cId in r.PassedRenewCourseIds.Distinct())
                             {
-                                var newTraining = new PersonTraining5y
+                                if (!person.Trainings.Any(t => t.CourseId == cId))
                                 {
-                                    NationId = person.NationId,
-                                    CourseId = cId
-                                };
-                                person.Trainings.Add(newTraining);
-                                _context.PersonTrainings5y.Add(newTraining);
+                                    var newTraining = new PersonTraining5y
+                                    {
+                                        NationId = person.NationId,
+                                        CourseId = cId
+                                    };
+                                    person.Trainings.Add(newTraining);
+                                    _context.PersonTrainings5y.Add(newTraining);
+                                }
                             }
                         }
                     }
@@ -774,7 +778,11 @@ namespace backend.Services
                 var passedIds = new List<int>();
 
                 bool isPassedLms = status.StartsWith("อนุมัติ") || status.StartsWith("ผ่าน");
-                if (isPassedLms && (!string.IsNullOrEmpty(courseCode) || !string.IsNullOrEmpty(courseName)))
+                bool isRenew4Course = !string.IsNullOrEmpty(courseCode) && 
+                    (courseCode.Contains("464") || courseCode.StartsWith("ตนว4") || courseCode.StartsWith("ตว4") || courseCode.StartsWith("นว4") ||
+                     (courseName != null && (courseName.Contains("นว.4") || courseName.Contains("ตว.4") || courseName.Contains("ต่อ 4"))));
+
+                if (isRenew4Course && isPassedLms && (!string.IsNullOrEmpty(courseCode) || !string.IsNullOrEmpty(courseName)))
                 {
                     var matchedId = MatchRenewCourseId(courseCode, courseName, allRenewCourses, allCurriculums);
                     if (matchedId.HasValue)
