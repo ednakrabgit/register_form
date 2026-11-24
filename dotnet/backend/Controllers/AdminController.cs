@@ -361,10 +361,15 @@ namespace backend.Controllers
                         }
                     }
                     int dateSortKey = yearNum * 10000 + monthNum * 100 + dayNum;
+                    var realSubjectName = g
+                        .Select(r => r.SubjectNames)
+                        .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s) && s != "-") 
+                        ?? g.Key.CourseName;
 
                     return new {
                         courseCode = g.Key.CourseCode,
                         courseName = g.Key.CourseName,
+                        realSubjectName = realSubjectName,
                         trainingDate = g.Key.DateDisplay,
                         yearNum = yearNum,
                         monthNum = monthNum,
@@ -415,6 +420,10 @@ namespace backend.Controllers
                 })
                 .Select(cg => {
                     var courseName = cg.Key;
+                    var realSubjectName = cg
+                        .Select(r => r.SubjectNames)
+                        .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s) && s != "-") 
+                        ?? courseName;
                     var courseCodes = cg.Select(r => r.TrainingCourseCode).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList();
                     var courseCodeDisplay = string.Join(", ", courseCodes);
                     
@@ -432,10 +441,15 @@ namespace backend.Controllers
                             var rFailed = rg.Count(r => !IsTrainingPassed(r.TrainingStatus));
                             var rPassRate = rEnrolled > 0 ? Math.Round((double)rPassed * 100 / rEnrolled, 1) : 0;
                             var rCodes = string.Join(", ", rg.Select(r => r.TrainingCourseCode).Where(c => !string.IsNullOrEmpty(c)).Distinct());
+                            var rRealSubjectName = rg
+                                .Select(r => r.SubjectNames)
+                                .FirstOrDefault(s => !string.IsNullOrWhiteSpace(s) && s != "-") 
+                                ?? realSubjectName;
 
                             return new {
                                 roundDate = rg.Key,
                                 courseCodes = rCodes,
+                                realSubjectName = rRealSubjectName,
                                 enrolledCount = rEnrolled,
                                 passedCount = rPassed,
                                 failedCount = rFailed,
@@ -458,6 +472,7 @@ namespace backend.Controllers
 
                     return new {
                         courseName,
+                        realSubjectName,
                         courseCode = courseCodeDisplay,
                         courseCodes,
                         trainingDateDisplay,
