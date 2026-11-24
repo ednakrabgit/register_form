@@ -18,14 +18,22 @@ sudo mkdir -p /opt/register_form/dotnet/backend/out_linux
 sudo cp -rf /tmp/vm_deploy/out_linux/* /opt/register_form/dotnet/backend/out_linux/
 sudo cp -f /tmp/vm_deploy/out_linux/app.db /opt/register_form/dotnet/backend/app.db
 
-# Deploy frontend
-echo "Deploying frontend to /var/www/html..."
+# Deploy frontend to Nginx web root: /opt/register_form/dotnet/frontend/dist
+echo "Deploying frontend to /opt/register_form/dotnet/frontend/dist..."
+sudo mkdir -p /opt/register_form/dotnet/frontend/dist
+sudo rm -rf /opt/register_form/dotnet/frontend/dist/*
+sudo cp -rf /tmp/vm_deploy/dist/* /opt/register_form/dotnet/frontend/dist/
+
+# Also sync /var/www/html as secondary
+echo "Syncing /var/www/html..."
+sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -rf /tmp/vm_deploy/dist/* /var/www/html/
 
 # Permissions
 echo "Setting permissions..."
 sudo chown -R www-data:www-data /opt/register_form/dotnet/backend
+sudo chown -R www-data:www-data /opt/register_form/dotnet/frontend
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod 666 /opt/register_form/dotnet/backend/app.db || true
 

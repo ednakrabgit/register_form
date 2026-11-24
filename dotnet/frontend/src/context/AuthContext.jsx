@@ -109,22 +109,28 @@ export function AuthProvider({ children }) {
     if (!user) return false;
     if (user.role === 'Superadmin') return true; // Superadmin has all permissions
 
+    const targetKey = String(menuKey || '').toLowerCase();
+
     if (!user.permissions || !Array.isArray(user.permissions) || user.permissions.length === 0) {
       // Fallback defaults for standard roles if permissions not loaded
-      if (user.role === 'Admin') return !['registration_form', 'my_registrations'].includes(menuKey);
-      if (user.role === 'Viewer') return action === 'view' && ['dashboard', 'trainees', 'reports'].includes(menuKey);
-      if (user.role === 'Applicant') return ['registration_form', 'my_registrations', 'trainees'].includes(menuKey);
+      if (user.role === 'Admin') return !['registration_form', 'my_registrations'].includes(targetKey);
+      if (user.role === 'Viewer') return action === 'view' && ['dashboard', 'trainees', 'reports', 'profile'].includes(targetKey);
+      if (user.role === 'Applicant') return ['registration_form', 'my_registrations', 'trainees', 'profile'].includes(targetKey);
       return false;
     }
 
-    const perm = user.permissions.find(p => p.menuKey === menuKey);
+    const perm = user.permissions.find(p => 
+      String(p.menuKey || p.MenuKey || '').toLowerCase() === targetKey
+    );
     if (!perm) {
-      if (user.role === 'Admin') return !['registration_form', 'my_registrations'].includes(menuKey);
-      if (user.role === 'Applicant' && menuKey === 'trainees') return true;
+      if (user.role === 'Admin') return !['registration_form', 'my_registrations'].includes(targetKey);
+      if (user.role === 'Applicant' && targetKey === 'trainees') return true;
       return false;
     }
 
-    return action === 'edit' ? !!perm.canEdit : !!perm.canView;
+    return action === 'edit' 
+      ? !!(perm.canEdit ?? perm.CanEdit) 
+      : !!(perm.canView ?? perm.CanView);
   };
 
   const canViewMenu = (menuKey) => hasPermission(menuKey, 'view');
