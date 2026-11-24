@@ -54,9 +54,6 @@ export default function Dashboard() {
   const [courseStartDate, setCourseStartDate] = useState('');
   const [courseEndDate, setCourseEndDate] = useState('');
 
-  // Training KPI View Toggle ('courses' = วิชาที่ลงทะเบียนในระบบ, 'stamps' = ผลประทับจากไฟล์ Excel)
-  const [trainingKpiView, setTrainingKpiView] = useState('courses');
-
   const trendScrollRef = useRef(null);
 
   const fetchStats = async () => {

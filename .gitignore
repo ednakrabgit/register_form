@@ -25,6 +25,8 @@ venv/
 *.sql
 *.exe
 *.zip
+*.tar.gz
+*.xlsx
 *.dll
 *.mp4
 restart_apache.bat

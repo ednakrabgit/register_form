@@ -224,9 +224,34 @@ try
             context.Database.ExecuteSqlRaw(@"
                 IF OBJECT_ID('mst_renew_course', 'U') IS NOT NULL
                 BEGIN
-                    UPDATE mst_renew_course 
-                    SET name = N'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' 
-                    WHERE id = 1 AND (name LIKE '%?%' OR name IS NULL OR name = '');
+                    UPDATE mst_renew_course SET name = N'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' WHERE id = 1;
+                    UPDATE mst_renew_course SET name = N'การจัดการสินไหมทดแทน Non-Motor' WHERE id = 2;
+                    UPDATE mst_renew_course SET name = N'การประกันความเสี่ยงภัยทรัพย์สิน' WHERE id = 3;
+                    UPDATE mst_renew_course SET name = N'การวางแผนเพื่อวัยเกษียณ' WHERE id = 4;
+                    UPDATE mst_renew_course SET name = N'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' WHERE id = 5;
+                    UPDATE mst_renew_course SET name = N'การประกันภัยต่อ' WHERE id = 6;
+                    UPDATE mst_renew_course SET name = N'จรรยาบรรณและศีลธรรมของตัวแทน/นายหน้าประกันภัย' WHERE id = 7;
+                    UPDATE mst_renew_course SET name = N'พ.ร.บ. จราจรทางบก พ.ศ.2522 (แก้ไขเพิ่มเติม2562) และการพิจารณาคดีแพ่ง/อาญาเมื่อเกิดอุบัติเหตุจราจร' WHERE id = 8;
+                    UPDATE mst_renew_course SET name = N'พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล' WHERE id = 9;
+                    UPDATE mst_renew_course SET name = N'เสนอขายถูกหลักประกันภัยเติบโต' WHERE id = 10;
+                    UPDATE mst_renew_course SET name = N'กฎหมายว่าด้วยการป้องกันและปราบปรามการฟอกเงินและต่อต้านการสนับสนุนทางการเงินแก่การก่อการร้าย' WHERE id = 11;
+                    UPDATE mst_renew_course SET name = N'กรมธรรม์ประกันภัยรถยนต์ไฟฟ้ารวมการคุ้มครองผู้ประสบภัยจากรถ' WHERE id = 12;
+                    UPDATE mst_renew_course SET name = N'พ.ร.บ.การทวงถามหนี้' WHERE id = 13;
+                    UPDATE mst_renew_course SET name = N'ความเสี่ยงต่อความรับผิดในฐานะตัวแทน/นายหน้าประกันภัย' WHERE id = 14;
+                    UPDATE mst_renew_course SET name = N'การตลาดยุคใหม่' WHERE id = 15;
+                    UPDATE mst_renew_course SET name = N'รู้จักประกันภัยสุขภาพ' WHERE id = 16;
+                    UPDATE mst_renew_course SET name = N'การพิจารณารับประกันภัยรถยนต์' WHERE id = 17;
+                END
+
+                IF OBJECT_ID('mst_agent_branches', 'U') IS NOT NULL
+                BEGIN
+                    UPDATE mst_agent_branches SET name = N'กิจกรรมพิเศษ1' WHERE id = 35;
+                    UPDATE mst_agent_branches SET name = N'กิจกรรมพิเศษ2' WHERE id = 36;
+                END
+
+                IF OBJECT_ID('mst_course_curriculum', 'U') IS NOT NULL
+                BEGIN
+                    UPDATE mst_course_curriculum SET course_short_name = LTRIM(RTRIM(course_short_name)) WHERE course_short_name LIKE '%ตนว4%';
                 END
 
                 IF OBJECT_ID('mst_course_sub_detail', 'U') IS NOT NULL
@@ -238,6 +263,11 @@ try
                     UPDATE mst_course_sub_detail 
                     SET sub_course_name = REPLACE(sub_course_name, N'ชั่วโมง)', N'ชั่วโมง') 
                     WHERE id = 72;
+                END
+
+                IF OBJECT_ID('mst_renew_basic', 'U') IS NOT NULL
+                BEGIN
+                    UPDATE mst_renew_basic SET course_name = N'ขอรับใบอนุญาตเป็นตัวแทนประกันวินาศภัย' WHERE id = 1;
                 END
             ");
         }
