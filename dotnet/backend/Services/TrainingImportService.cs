@@ -74,59 +74,61 @@ namespace backend.Services
             _context = context;
         }
 
-        public static int? MatchRenewCourseId(string? subjectCode, string? subjectName, List<MstRenewCourse> allCourses, List<MstCourseCurriculum> allCurriculums)
+        public static HashSet<int> MatchRenewCourseIds(string? subjectCode, string? subjectName, string? courseName, List<MstRenewCourse> allCourses, List<MstCourseCurriculum> allCurriculums)
         {
-            if (string.IsNullOrWhiteSpace(subjectCode) && string.IsNullOrWhiteSpace(subjectName))
-                return null;
-
-            var cleanSubName = subjectName?.Trim() ?? "";
-            var cleanCode = subjectCode?.Trim() ?? "";
+            var matched = new HashSet<int>();
+            var sText = $"{subjectName} {courseName} {subjectCode}".Trim();
+            if (string.IsNullOrWhiteSpace(sText)) return matched;
 
             // 1. Direct Name Match with MstRenewCourse
-            if (!string.IsNullOrEmpty(cleanSubName))
+            foreach (var c in allCourses)
             {
-                var exact = allCourses.FirstOrDefault(c => string.Equals(c.Name?.Trim(), cleanSubName, StringComparison.OrdinalIgnoreCase));
-                if (exact != null) return exact.Id;
-
-                // Normalized (remove whitespace, dashes, punctuation)
-                var normalizedSub = Regex.Replace(cleanSubName.ToLower(), @"[\s\-_.\(\)]", "");
-                var normMatch = allCourses.FirstOrDefault(c => {
-                    var nc = Regex.Replace(c.Name?.ToLower() ?? "", @"[\s\-_.\(\)]", "");
-                    return !string.IsNullOrEmpty(nc) && (normalizedSub.Contains(nc) || nc.Contains(normalizedSub));
-                });
-                if (normMatch != null) return normMatch.Id;
+                if (!string.IsNullOrEmpty(c.Name) && sText.Contains(c.Name))
+                {
+                    matched.Add(c.Id);
+                }
             }
 
-            // 2. Direct Code Match with MstCourseCurriculum (renew course types)
-            if (!string.IsNullOrEmpty(cleanCode))
+            // 2. High-accuracy Thai keyword & variation matching for Renew 4 subjects
+            var lowerText = sText.ToLower();
+            if (sText.Contains("การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง") || sText.Contains("ระดับความเสี่ยง")) matched.Add(1);
+            if (sText.Contains("Non-Motor") || lowerText.Contains("non-motor") || lowerText.Contains("nonmotor") || (sText.Contains("สินไหม") && !sText.Contains("ยานยนต์") && !sText.Contains("รถยนต์"))) matched.Add(2);
+            if (sText.Contains("การประกันความเสี่ยงภัยทรัพย์สิน") || sText.Contains("การประกันภัยความเสี่ยงภัยทรัพย์สิน") || sText.Contains("ความเสี่ยงภัยทรัพย์สิน")) matched.Add(3);
+            if (sText.Contains("การวางแผนเพื่อวัยเกษียณ") || sText.Contains("วัยเกษียณ")) matched.Add(4);
+            if (sText.Contains("การวางแผนภาษีสำหรับตัวแทนและนายหน้า") || sText.Contains("การวางแผนภาษี") || (sText.Contains("ภาษีสำหรับตัวแทน") && !sText.Contains("พื้นฐาน"))) matched.Add(5);
+            if ((sText.Contains("ตนว4642037") || sText.Contains("_4_") || sText.Contains(".4_") || sText.Contains("นว.4") || sText.Contains("ตว.4")) && sText.Contains("การประกันภัยต่อ")) matched.Add(6);
+            if (sText.Contains("จรรยาบรรณและศีลธรรมของตัวแทน/นายหน้า") || sText.Contains("จรรยาบรรณและศีลธรรม")) matched.Add(7);
+            if (sText.Contains("จราจรทางบก") || sText.Contains("จราจร")) matched.Add(8);
+            if (sText.Contains("คุ้มครองข้อมูลส่วนบุคคล") || lowerText.Contains("pdpa")) matched.Add(9);
+            if (sText.Contains("เสนอขายถูกหลักประกันภัยเติบโต") || sText.Contains("เสนอขายถูกหลัก")) matched.Add(10);
+            if (sText.Contains("ฟอกเงิน") || lowerText.Contains("amlo") || sText.Contains("ปปง") || sText.Contains("ต่อต้านการสนับสนุนทางการเงินแก่การก่อการร้าย")) matched.Add(11);
+            if (sText.Contains("รถยนต์ไฟฟ้า") || lowerText.Contains("ev") || sText.Contains("ผู้ประสบภัยจากรถ")) matched.Add(12);
+            if (sText.Contains("ทวงถามหนี้")) matched.Add(13);
+            if (sText.Contains("ความเสี่ยงต่อความรับผิดในฐานะตัวแทน/นายหน้า") || sText.Contains("ความรับผิดในฐานะตัวแทน")) matched.Add(14);
+            if (sText.Contains("การตลาดยุคใหม่")) matched.Add(15);
+            if (sText.Contains("รู้จักประกันภัยสุขภาพ") || (sText.Contains("ประกันภัยสุขภาพ") && (sText.Contains("ตนว4642037") || sText.Contains("_4_")))) matched.Add(16);
+            if (sText.Contains("การพิจารณารับประกันภัยรถยนต์") || (sText.Contains("รับประกันภัยรถยนต์") && (sText.Contains("ตนว4642037") || sText.Contains("_4_")))) matched.Add(17);
+
+            // 3. Direct Code Match with MstCourseCurriculum using TrainingCourseCode (announcement code e.g. A4P1_02, B4P1_03)
+            // NOTE: Do NOT match against CurriculumCode because CurriculumCode ("ตนว4642037") covers all 17 subjects!
+            if (!string.IsNullOrEmpty(subjectCode))
             {
                 var curMatch = allCurriculums.FirstOrDefault(c => 
-                    string.Equals(c.TrainingCourseCode?.Trim(), cleanCode, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(c.CurriculumCode?.Trim(), cleanCode, StringComparison.OrdinalIgnoreCase));
-                if (curMatch != null && curMatch.CourseId > 0) return curMatch.CourseId;
+                    !string.IsNullOrEmpty(c.TrainingCourseCode) && 
+                    string.Equals(c.TrainingCourseCode.Trim(), subjectCode.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (curMatch != null && curMatch.CourseId > 0)
+                {
+                    matched.Add(curMatch.CourseId);
+                }
             }
 
-            // 3. Keyword / semantic matching
-            var searchTarget = $"{cleanSubName} {cleanCode}".ToLower();
-            if (searchTarget.Contains("non-motor") || searchTarget.Contains("nonmotor") || (searchTarget.Contains("สินไหม") && !searchTarget.Contains("ยานยนต์"))) return 2;
-            if (searchTarget.Contains("จรรยาบรรณ") || searchTarget.Contains("ศีลธรรม")) return 7;
-            if (searchTarget.Contains("คุ้มครองข้อมูลส่วนบุคคล") || searchTarget.Contains("pdpa")) return 9;
-            if (searchTarget.Contains("ฟอกเงิน") || searchTarget.Contains("amlo") || searchTarget.Contains("ปปง") || searchTarget.Contains("การก่อการร้าย")) return 11;
-            if (searchTarget.Contains("รถยนต์ไฟฟ้า") || searchTarget.Contains("ev") || searchTarget.Contains("ผู้ประสบภัยจากรถ")) return 12;
-            if (searchTarget.Contains("ทวงถามหนี้")) return 13;
-            if (searchTarget.Contains("จราจร")) return 8;
-            if (searchTarget.Contains("กำกับดูแล") || searchTarget.Contains("ระดับความเสี่ยง")) return 1;
-            if (searchTarget.Contains("ทรัพย์สิน")) return 3;
-            if (searchTarget.Contains("เกษียณ")) return 4;
-            if (searchTarget.Contains("ภาษี")) return 5;
-            if (searchTarget.Contains("ประกันภัยต่อ")) return 6;
-            if (searchTarget.Contains("เสนอขาย")) return 10;
-            if (searchTarget.Contains("ความรับผิด")) return 14;
-            if (searchTarget.Contains("การตลาด")) return 15;
-            if (searchTarget.Contains("สุขภาพ")) return 16;
-            if (searchTarget.Contains("รับประกันภัยรถยนต์")) return 17;
+            return matched;
+        }
 
-            return null;
+        public static int? MatchRenewCourseId(string? subjectCode, string? subjectName, List<MstRenewCourse> allCourses, List<MstCourseCurriculum> allCurriculums)
+        {
+            var set = MatchRenewCourseIds(subjectCode, subjectName, null, allCourses, allCurriculums);
+            return set.Count > 0 ? set.First() : null;
         }
 
         public byte[] GenerateTemplateExcel()
@@ -450,27 +452,7 @@ namespace backend.Services
                         }
                     }
 
-                    // 2. Record passed 5-year training courses into persontraining5y (ONLY for Renew 4+ trainees!)
-                    if (r.PassedRenewCourseIds != null && r.PassedRenewCourseIds.Count > 0)
-                    {
-                        bool isPersonRenew4 = person.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10 || pc.RenewOtherId.HasValue);
-                        if (isPersonRenew4)
-                        {
-                            foreach (var cId in r.PassedRenewCourseIds.Distinct())
-                            {
-                                if (!person.Trainings.Any(t => t.CourseId == cId))
-                                {
-                                    var newTraining = new PersonTraining5y
-                                    {
-                                        NationId = person.NationId,
-                                        CourseId = cId
-                                    };
-                                    person.Trainings.Add(newTraining);
-                                    _context.PersonTrainings5y.Add(newTraining);
-                                }
-                            }
-                        }
-                    }
+
 
                     // Optional sync of verified data to person master & license
                     if (syncVerifiedDataToPerson)

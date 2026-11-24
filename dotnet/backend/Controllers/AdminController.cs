@@ -492,6 +492,7 @@ namespace backend.Controllers
             // Registration & System Matching Analytics (วิชาและผู้สมัครที่ยังไม่ประทับ / ยังไม่ผ่าน)
             var rawPersonCourses = await context.PersonCourses.ToListAsync();
             var allTrainings5y = await context.PersonTrainings5y.ToListAsync();
+            var allCurriculums = await context.CourseCurriculums.ToListAsync();
             var allRegs = await context.PersonRegistrations.Select(r => new { r.NationId, r.confirmed }).ToListAsync();
             var regByNation = allRegs.Where(r => r.confirmed == true && !string.IsNullOrEmpty(r.NationId)).Select(r => r.NationId!).ToHashSet();
             
@@ -505,6 +506,22 @@ namespace backend.Controllers
                 .Where(tr => !string.IsNullOrEmpty(tr.NationId))
                 .GroupBy(tr => tr.NationId!)
                 .ToDictionary(g => g.Key, g => g.Any(r => IsTrainingPassed(r.TrainingStatus)));
+
+            var stampedSubjectsByNation = new Dictionary<string, HashSet<int>>();
+            foreach (var tr in trainingResults.Where(r => IsTrainingPassed(r.TrainingStatus) && !string.IsNullOrEmpty(r.NationId)))
+            {
+                if (!stampedSubjectsByNation.TryGetValue(tr.NationId!, out var subSet))
+                {
+                    subSet = new HashSet<int>();
+                    stampedSubjectsByNation[tr.NationId!] = subSet;
+                }
+
+                var matchedIds = backend.Services.TrainingImportService.MatchRenewCourseIds(tr.TrainingCourseCode, tr.SubjectNames, tr.TrainingCourseName, renewCourses, allCurriculums);
+                foreach (var id in matchedIds)
+                {
+                    subSet.Add(id);
+                }
+            }
 
             int totalRegisteredCourses = 0;
             int passedRegisteredCourses = 0;
@@ -526,7 +543,9 @@ namespace backend.Controllers
                 bool isPassed = false;
                 if (isRenew4 && pc.RenewOtherId.HasValue && roSubjectDict.TryGetValue(pc.RenewOtherId.Value, out var sid))
                 {
-                    if (train5yByNation.TryGetValue(pc.NationId, out var passedSubIds) && passedSubIds.Contains(sid))
+                    bool passedFromStamps = stampedSubjectsByNation.TryGetValue(pc.NationId, out var sSubIds) && sSubIds.Contains(sid);
+                    bool passedFrom5y = train5yByNation.TryGetValue(pc.NationId, out var passedSubIds) && passedSubIds.Contains(sid);
+                    if (passedFromStamps || passedFrom5y)
                     {
                         isPassed = true;
                     }
@@ -634,6 +653,7 @@ namespace backend.Controllers
             var renewOthers = await context.RenewOthers.ToListAsync();
             var renewPillars = await context.RenewPillars.ToListAsync();
             var renewDates = await context.RenewDates.ToListAsync();
+            var allCurriculums = await context.CourseCurriculums.ToListAsync();
 
             var persons = await query.Take(20).ToListAsync();
 
@@ -664,21 +684,26 @@ namespace backend.Controllers
                                    p.Courses.Any(pc => pc.CourseId == 9 || pc.CourseId == 10) || 
                                    (p.Courses.Count == 0 && p.TrainingResults.Any(tr => tr.TrainingCourseCode == "ตนว4642037" || (tr.TrainingCourseName != null && (tr.TrainingCourseName.Contains("นว.4") || tr.TrainingCourseName.Contains("ตว.4")))));
 
-                // Deduplicate and combine 5-year accumulated training courses from persontraining5y (p.Trainings)
-                // Rule: "ถ้าเป็นวิชาเดียวกันกับที่ประทับ ให้แสดงวิชาที่ประทับแค่รายการเดียว"
-                var used5YearCourseIds = new HashSet<int>();
+                // Identify all passed RenewCourse IDs from stamped results this year
+                var passedRenewCourseIdsFromStamps = new HashSet<int>();
+                foreach (var st in stampedList.Where(s => s.isPassed))
+                {
+                    var matchedIds = backend.Services.TrainingImportService.MatchRenewCourseIds(st.courseCode, st.subjectNames, st.courseName, renewCourses, allCurriculums);
+                    foreach (var id in matchedIds)
+                    {
+                        passedRenewCourseIdsFromStamps.Add(id);
+                    }
+                }
+
+                // Deduplicate and combine genuine 5-year accumulated training courses from persontraining5y (p.Trainings)
+                // Rule: If a subject was already taken and passed this year in stamped results, do NOT show it as 5-year history
+                var used5YearCourseIds = new HashSet<int>(passedRenewCourseIdsFromStamps);
                 foreach (var st in stampedList)
                 {
-                    var matchingTraining = p.Trainings.FirstOrDefault(t => {
-                        if (!t.CourseId.HasValue || used5YearCourseIds.Contains(t.CourseId.Value)) return false;
-                        var rc = renewCourses.FirstOrDefault(c => c.Id == t.CourseId.Value);
-                        if (rc == null) return false;
-                        return st.subjectNames != null && st.subjectNames.Contains(rc.Name);
-                    });
-
-                    if (matchingTraining != null && matchingTraining.CourseId.HasValue)
+                    var stMatchedIds = backend.Services.TrainingImportService.MatchRenewCourseIds(st.courseCode, st.subjectNames, st.courseName, renewCourses, allCurriculums);
+                    foreach (var id in stMatchedIds)
                     {
-                        used5YearCourseIds.Add(matchingTraining.CourseId.Value);
+                        used5YearCourseIds.Add(id);
                     }
                 }
 
@@ -752,12 +777,12 @@ namespace backend.Controllers
                     }
 
                     // Check if this specific registered course has been passed:
-                    // 1. For Renew 4+ courses: check if subjectId exists in persontraining5y (p.Trainings)
+                    // 1. For Renew 4+ courses: check if passed in stamped results OR exists in genuine 5-year past training (p.Trainings)
                     // 2. For basic courses (ขอรับ, ขอต่อ 1-3): check if training result is passed or registration is confirmed
                     bool isPassed = false;
                     if (isRenew4Plus)
                     {
-                        if (subjectId.HasValue && p.Trainings.Any(t => t.CourseId == subjectId.Value))
+                        if (subjectId.HasValue && (passedRenewCourseIdsFromStamps.Contains(subjectId.Value) || p.Trainings.Any(t => t.CourseId == subjectId.Value)))
                         {
                             isPassed = true;
                         }
@@ -782,7 +807,7 @@ namespace backend.Controllers
                 }).ToList();
 
                 var passedCoursesCount = coursesList.Count(c => c.isPassed);
-                var registeredCoursesCount = isRenew4Plus ? (coursesList.Count > 0 ? Math.Max(6, coursesList.Count) : 0) : coursesList.Count;
+                var registeredCoursesCount = isRenew4Plus ? (coursesList.Count >= 6 ? 6 : coursesList.Count) : coursesList.Count;
                 var passedRoundsCount = trainingResultsList.Count(tr => tr.isPassed);
                 var totalRoundsCount = trainingResultsList.Count;
 
