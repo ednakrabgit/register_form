@@ -494,11 +494,32 @@ namespace backend.Services
                 resultsToInsert.Add(result);
             }
 
-            // Prevent duplicate records: remove any previous stamp records for this ImportFileName before inserting
+            // Prevent duplicate records:
+            // 1. Remove previous records for this fileName
             var existingResultsForFile = await _context.TrainingResults.Where(t => t.ImportFileName == fileName).ToListAsync();
             if (existingResultsForFile.Count > 0)
             {
                 _context.TrainingResults.RemoveRange(existingResultsForFile);
+            }
+
+            // 2. Deduplicate resultsToInsert within the batch itself
+            resultsToInsert = resultsToInsert
+                .GroupBy(r => new { r.NationId, r.TrainingCourseName, r.SubjectNames, r.TrainingDateDisplay })
+                .Select(g => g.OrderByDescending(x => x.TrainingStatus != null && x.TrainingStatus.Contains("ผ่าน") ? 1 : 0).First())
+                .ToList();
+
+            // 3. Prevent duplicate records across different files for the same person, round, subject, and date
+            var insertKeys = resultsToInsert.Select(r => $"{r.NationId}_{r.TrainingCourseName}_{r.SubjectNames}_{r.TrainingDateDisplay}").ToHashSet();
+            var existingDuplicates = await _context.TrainingResults
+                .Where(t => nationIds.Contains(t.NationId!))
+                .ToListAsync();
+            
+            var existingToRemove = existingDuplicates
+                .Where(t => insertKeys.Contains($"{t.NationId}_{t.TrainingCourseName}_{t.SubjectNames}_{t.TrainingDateDisplay}"))
+                .ToList();
+            if (existingToRemove.Count > 0)
+            {
+                _context.TrainingResults.RemoveRange(existingToRemove);
             }
 
             await _context.TrainingResults.AddRangeAsync(resultsToInsert);

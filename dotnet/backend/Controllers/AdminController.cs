@@ -657,26 +657,55 @@ namespace backend.Controllers
 
             var persons = await query.Take(20).ToListAsync();
 
+            var personNationIds = persons.Select(p => p.NationId).ToList();
+            var rawRegisters = await context.Registers
+                .Where(r => personNationIds.Contains(r.NationalId!))
+                .Select(r => new {
+                    r.Id,
+                    r.NationalId,
+                    r.RenewOther,
+                    r.TrainingDate,
+                    r.CompletionTime,
+                    r.CreatedAt,
+                    r.CourseType
+                })
+                .ToListAsync();
+            var registerDict = rawRegisters
+                .GroupBy(r => r.NationalId!)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.Id).First());
+
             var result = persons.Select(p => {
                 var reg = p.Registrations.OrderByDescending(r => r.Id).FirstOrDefault();
                 var lic = p.Licenses.FirstOrDefault();
 
-                var stampedList = p.TrainingResults.Select(tr => new {
-                    id = tr.Id,
-                    source = "stamp",
-                    is5YearHistory = false,
-                    courseCode = tr.TrainingCourseCode ?? "-",
-                    courseName = tr.TrainingCourseName ?? "-",
-                    subjectNames = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : tr.TrainingCourseName,
-                    trainingDate = tr.TrainingDateDisplay ?? "-",
-                    status = tr.TrainingStatus ?? "-",
-                    isPassed = IsTrainingPassed(tr.TrainingStatus),
-                    progressPercent = tr.ProgressPercent,
-                    scorePercent = tr.ScorePercent,
-                    stampDate = tr.StampDate.ToString("yyyy-MM-dd HH:mm"),
-                    verifiedName = $"{tr.VerifiedTitleTh}{tr.VerifiedFirstNameTh} {tr.VerifiedLastNameTh}".Trim(),
-                    verifiedLicenseNo = tr.VerifiedLicenseNo
-                }).OrderByDescending(tr => tr.id).ToList();
+                // Deduplicate stamped results: group by (courseName, subjectNames, trainingDate)
+                var stampedList = p.TrainingResults
+                    .GroupBy(tr => new {
+                        CourseName = tr.TrainingCourseName ?? "-",
+                        Subject = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : (tr.TrainingCourseName ?? "-"),
+                        Date = tr.TrainingDateDisplay ?? "-"
+                    })
+                    .Select(g => {
+                        var tr = g.OrderByDescending(r => IsTrainingPassed(r.TrainingStatus) ? 1 : 0).ThenByDescending(r => r.Id).First();
+                        return new {
+                            id = tr.Id,
+                            source = "stamp",
+                            is5YearHistory = false,
+                            courseCode = tr.TrainingCourseCode ?? "-",
+                            courseName = tr.TrainingCourseName ?? "-",
+                            subjectNames = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : tr.TrainingCourseName,
+                            trainingDate = tr.TrainingDateDisplay ?? "-",
+                            status = tr.TrainingStatus ?? "-",
+                            isPassed = IsTrainingPassed(tr.TrainingStatus),
+                            progressPercent = tr.ProgressPercent,
+                            scorePercent = tr.ScorePercent,
+                            stampDate = tr.StampDate.ToString("yyyy-MM-dd HH:mm"),
+                            verifiedName = $"{tr.VerifiedTitleTh}{tr.VerifiedFirstNameTh} {tr.VerifiedLastNameTh}".Trim(),
+                            verifiedLicenseNo = tr.VerifiedLicenseNo
+                        };
+                    })
+                    .OrderByDescending(tr => tr.id)
+                    .ToList();
                 
                 // Determine if this is a Renew 4+ registration (complex course with multiple subjects)
                 var hasRenewOther = p.Courses.Any(pc => pc.RenewOtherId.HasValue);
@@ -737,6 +766,39 @@ namespace backend.Controllers
 
                 var trainingResultsList = stampedList.Cast<dynamic>().Concat(additional5YearList).ToList();
 
+                // Build registered courses list with dates and registration timestamp
+                registerDict.TryGetValue(p.NationId, out var regRaw);
+
+                string? registeredAtDisplay = null;
+                DateTime? compTime = regRaw?.CompletionTime ?? regRaw?.CreatedAt ?? reg?.completion_time ?? reg?.start_time;
+                if (compTime.HasValue)
+                {
+                    var parsedDt = compTime.Value;
+                    var yTh = parsedDt.Year < 2500 ? parsedDt.Year + 543 : parsedDt.Year;
+                    var mTh = parsedDt.Month switch {
+                        1 => "ม.ค.", 2 => "ก.พ.", 3 => "มี.ค.", 4 => "เม.ย.",
+                        5 => "พ.ค.", 6 => "มิ.ย.", 7 => "ก.ค.", 8 => "ส.ค.",
+                        9 => "ก.ย.", 10 => "ต.ค.", 11 => "พ.ย.", 12 => "ธ.ค.",
+                        _ => ""
+                    };
+                    registeredAtDisplay = $"{parsedDt.Day} {mTh} {yTh} {parsedDt:HH:mm}";
+                }
+
+                var rawRoDates = new Dictionary<string, string>();
+                if (!string.IsNullOrEmpty(regRaw?.RenewOther))
+                {
+                    foreach (var part in regRaw.RenewOther.Split(';'))
+                    {
+                        var match = System.Text.RegularExpressions.Regex.Match(part, @"\[([^\]]+)\]\s*:\s*(.+)$");
+                        if (match.Success)
+                        {
+                            var dVal = match.Groups[1].Value.Trim();
+                            var sVal = match.Groups[2].Value.Trim();
+                            rawRoDates[sVal] = dVal;
+                        }
+                    }
+                }
+
                 // Filter out the parent course category header row (e.g. CourseId 9 or 10 with RenewOtherId == null)
                 // because it is NOT an individual course subject.
                 var targetCourses = p.Courses.Where(pc => {
@@ -765,6 +827,18 @@ namespace backend.Controllers
                             var sObj = renewCourses.FirstOrDefault(c => c.Id == ro.SubjectId);
                             var pObj = renewPillars.FirstOrDefault(pl => pl.Id == ro.PillarId);
                             cName = !string.IsNullOrEmpty(pObj?.Name) ? $"[{pObj.Name}] {sObj?.Name ?? $"วิชา {ro.SubjectId}"}" : (sObj?.Name ?? $"วิชา {ro.SubjectId}");
+
+                            // 1. Resolve date from ro.DateId
+                            if (string.IsNullOrEmpty(cDate) && ro.DateId > 0)
+                            {
+                                cDate = renewDates.FirstOrDefault(d => d.Id == ro.DateId)?.CourseDateDisplay;
+                            }
+
+                            // 2. Resolve date from register.renew_other parsed dates
+                            if (string.IsNullOrEmpty(cDate) && sObj?.Name != null && rawRoDates.TryGetValue(sObj.Name, out var pDate))
+                            {
+                                cDate = pDate;
+                            }
                         }
                     }
                     else if (pc.CourseId.HasValue)
@@ -773,6 +847,11 @@ namespace backend.Controllers
                         if (basicDict.ContainsKey(pc.CourseId.Value))
                         {
                             cName = basicDict[pc.CourseId.Value];
+                        }
+
+                        if (string.IsNullOrEmpty(cDate) && !string.IsNullOrEmpty(regRaw?.TrainingDate))
+                        {
+                            cDate = regRaw.TrainingDate;
                         }
                     }
 
@@ -802,6 +881,7 @@ namespace backend.Controllers
                         subjectId = subjectId,
                         courseName = cName ?? "วิชาที่ลงทะเบียน",
                         courseDateDisplay = cDate ?? "-",
+                        registeredAt = registeredAtDisplay ?? "-",
                         isPassed = isPassed
                     };
                 }).ToList();
@@ -829,9 +909,10 @@ namespace backend.Controllers
                 return new {
                     nationId = p.NationId,
                     fullName = $"{p.TitleTh}{p.FirstNameTh} {p.LastNameTh}".Trim(),
-                    licenseNo = lic?.LicenseNo ?? "-",
+                    licenseNo = lic?.LicenseNo ?? p.TrainingResults.FirstOrDefault()?.VerifiedLicenseNo ?? "-",
                     phone = p.PhoneOtp ?? "-",
-                    registeredDate = reg?.start_time?.ToString("yyyy-MM-dd HH:mm") ?? "-",
+                    registeredDate = registeredAtDisplay ?? reg?.start_time?.ToString("yyyy-MM-dd HH:mm") ?? "-",
+                    registeredAt = registeredAtDisplay ?? "-",
                     confirmed = reg?.confirmed ?? false,
                     registeredCourses = coursesList,
                     trainingResults = trainingResultsList,
