@@ -322,7 +322,7 @@ namespace backend.Controllers
                 .GroupBy(r => new {
                     CourseCode = r.TrainingCourseCode ?? "UNKNOWN",
                     CourseName = r.TrainingCourseName ?? "-",
-                    DateDisplay = r.TrainingDateDisplay ?? "-"
+                    DateDisplay = backend.Services.TrainingImportService.NormalizeToStartDate(r.TrainingCourseName, r.TrainingDateDisplay ?? "-")
                 })
                 .Select(g => {
                     var total = g.Count();
@@ -680,13 +680,17 @@ namespace backend.Controllers
 
                 // Deduplicate stamped results: group by (courseName, subjectNames, trainingDate)
                 var stampedList = p.TrainingResults
-                    .GroupBy(tr => new {
-                        CourseName = tr.TrainingCourseName ?? "-",
-                        Subject = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : (tr.TrainingCourseName ?? "-"),
-                        Date = tr.TrainingDateDisplay ?? "-"
+                    .GroupBy(tr => {
+                        var normalizedDate = backend.Services.TrainingImportService.NormalizeToStartDate(tr.TrainingCourseName, tr.TrainingDateDisplay ?? "-");
+                        return new {
+                            CourseName = tr.TrainingCourseName ?? "-",
+                            Subject = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : (tr.TrainingCourseName ?? "-"),
+                            Date = normalizedDate
+                        };
                     })
                     .Select(g => {
                         var tr = g.OrderByDescending(r => IsTrainingPassed(r.TrainingStatus) ? 1 : 0).ThenByDescending(r => r.Id).First();
+                        var normalizedDate = backend.Services.TrainingImportService.NormalizeToStartDate(tr.TrainingCourseName, tr.TrainingDateDisplay ?? "-");
                         return new {
                             id = tr.Id,
                             source = "stamp",
@@ -694,7 +698,7 @@ namespace backend.Controllers
                             courseCode = tr.TrainingCourseCode ?? "-",
                             courseName = tr.TrainingCourseName ?? "-",
                             subjectNames = !string.IsNullOrEmpty(tr.SubjectNames) ? tr.SubjectNames : tr.TrainingCourseName,
-                            trainingDate = tr.TrainingDateDisplay ?? "-",
+                            trainingDate = normalizedDate,
                             status = tr.TrainingStatus ?? "-",
                             isPassed = IsTrainingPassed(tr.TrainingStatus),
                             progressPercent = tr.ProgressPercent,
@@ -749,15 +753,15 @@ namespace backend.Controllers
                                 id = -(t.CourseId!.Value),
                                 source = "5year",
                                 is5YearHistory = true,
-                                courseCode = "สะสม 5 ปี",
+                                courseCode = "ข้อมูลจากผู้อบรม",
                                 courseName = "วิชาที่เคยเข้าอบรมในรอบการสะสมชั่วโมงอบรมปัจจุบัน (5 ปี)",
                                 subjectNames = sName,
-                                trainingDate = "รอบสะสม 5 ปี",
-                                status = "ผ่านแล้ว (สะสม 5 ปี)",
+                                trainingDate = "ข้อมูลจากผู้อบรม",
+                                status = "ผ่านแล้ว (ข้อมูลจากผู้อบรม)",
                                 isPassed = true,
                                 progressPercent = "100%",
                                 scorePercent = "1/1 วิชา",
-                                stampDate = "-",
+                                stampDate = "ข้อมูลจากผู้อบรม",
                                 verifiedName = $"{p.TitleTh}{p.FirstNameTh} {p.LastNameTh}".Trim(),
                                 verifiedLicenseNo = lic?.LicenseNo ?? "-"
                             };
@@ -874,13 +878,14 @@ namespace backend.Controllers
                         }
                     }
 
+                    var resolvedDate = !string.IsNullOrEmpty(cDate) && cDate != "-" ? cDate : "ข้อมูลจากผู้อบรม";
                     return new {
                         courseId = pc.CourseId,
                         renewOtherId = pc.RenewOtherId,
                         courseDateId = pc.CourseDateId,
                         subjectId = subjectId,
                         courseName = cName ?? "วิชาที่ลงทะเบียน",
-                        courseDateDisplay = cDate ?? "-",
+                        courseDateDisplay = resolvedDate,
                         registeredAt = registeredAtDisplay ?? "-",
                         isPassed = isPassed
                     };

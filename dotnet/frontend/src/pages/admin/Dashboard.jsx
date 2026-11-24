@@ -523,9 +523,13 @@ export default function Dashboard() {
                                 </span>
                               </div>
                               <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                                <span className="text-slate-600 font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs flex items-center gap-1">
+                                <span className={`font-mono text-[11px] px-2 py-0.5 rounded border shadow-2xs flex items-center gap-1 ${
+                                  rc.courseDateDisplay === 'ข้อมูลจากผู้อบรม'
+                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                    : 'text-slate-600 bg-white border-slate-200'
+                                }`}>
                                   <Calendar className="w-3 h-3 text-slate-400" />
-                                  รอบอบรม: {rc.courseDateDisplay}
+                                  {rc.courseDateDisplay === 'ข้อมูลจากผู้อบรม' ? 'ข้อมูลจากผู้อบรม' : `รอบอบรม: ${rc.courseDateDisplay}`}
                                 </span>
                                 {rc.isPassed ? (
                                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
@@ -605,10 +609,10 @@ export default function Dashboard() {
                                   <div className="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
                                     {is5Year ? (
                                       <>
-                                        <span>แหล่งข้อมูล: <b>ประวัติสะสม 5 ปี (คปภ.)</b></span>
+                                        <span>แหล่งข้อมูล: <b className="text-blue-700">ข้อมูลจากผู้อบรม</b></span>
                                         <span>•</span>
                                         <span className="text-blue-700 font-bold bg-blue-100/60 px-1.5 py-0.2 rounded border border-blue-200">
-                                          ผ่านเกณฑ์สะสม
+                                          ข้อมูลจากผู้อบรม
                                         </span>
                                       </>
                                     ) : (
@@ -632,7 +636,7 @@ export default function Dashboard() {
                                   {is5Year ? (
                                     <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-blue-600 text-white flex items-center gap-1 shadow-xs">
                                       <CheckCircle2 className="w-3.5 h-3.5" />
-                                      ผ่านแล้ว (สะสม 5 ปี)
+                                      ผ่านแล้ว (ข้อมูลจากผู้อบรม)
                                     </span>
                                   ) : tr.isPassed ? (
                                     <span className="px-2.5 py-1 rounded-full font-bold text-xs bg-emerald-600 text-white flex items-center gap-1 shadow-xs">

@@ -608,6 +608,8 @@ namespace backend.Services
                 }
             }
 
+            trainingDate = NormalizeToStartDate(batchName, trainingDate);
+
             // 3. Find subject columns in ws8 header row (Row 8)
             // Col 1=1.H.0.0.0, 2=คำสั่ง, 3=ลำดับที่, 4=เลขที่ใบอนุญาต, 5=หมายเลขบัตรประชาชน, 6=คำนำหน้า, 7=ชื่อ, 8=นามสกุล, 9=สิทธิลดหย่อน, 10=หมายเหตุ
             // Col 11.. are subject codes
@@ -805,7 +807,7 @@ namespace backend.Services
                     DeductionPrivilege = r.Cell(10).GetString().Trim().ToUpper(),
                     TrainingStatus = status,
                     DeductionDocStatus = r.Cell(13).GetString().Trim(),
-                    TrainingDateDisplay = r.Cell(17).GetString().Trim(),
+                    TrainingDateDisplay = NormalizeToStartDate(r.Cell(19).GetString().Trim(), r.Cell(17).GetString().Trim()),
                     TrainingCourseCode = courseCode,
                     TrainingCourseName = courseName,
                     VerifiedTitleTh = r.Cell(20).GetString().Trim(),
@@ -912,6 +914,42 @@ namespace backend.Services
             summary.UnmatchedPersonsCount = summary.Rows.Count(r => !r.IsPersonMatched);
 
             return summary;
+        }
+
+        public static string NormalizeToStartDate(string? courseOrBatchName, string? rawDate)
+        {
+            if (string.IsNullOrWhiteSpace(rawDate)) return rawDate ?? "";
+            var d = rawDate.Trim();
+            var name = (courseOrBatchName ?? "").Trim();
+
+            // Normalize end date to start date of the LMS 7-day training window
+            if ((name.Contains("LMS#A1") || name.Contains("#A1")) && d == "28/04/2569") return "22/04/2569";
+            if ((name.Contains("LMS#B1") || name.Contains("#B1")) && d == "12/05/2569") return "06/05/2569";
+            if ((name.Contains("LMS#C1") || name.Contains("#C1")) && d == "19/05/2569") return "13/05/2569";
+            if ((name.Contains("LMS#D1") || name.Contains("#D1")) && d == "26/05/2569") return "20/05/2569";
+            if ((name.Contains("LMS#E1") || name.Contains("#E1")) && d == "16/06/2569") return "10/06/2569";
+            if ((name.Contains("LMS#A2") || name.Contains("#A2")) && d == "11/08/2569") return "05/08/2569";
+            if ((name.Contains("LMS#B2") || name.Contains("#B2")) && d == "25/08/2569") return "19/08/2569";
+            if ((name.Contains("LMS#C2") || name.Contains("#C2")) && d == "01/09/2569") return "26/08/2569";
+            if ((name.Contains("LMS#D2") || name.Contains("#D2")) && d == "08/09/2569") return "02/09/2569";
+            if ((name.Contains("LMS#E2") || name.Contains("#E2")) && d == "15/09/2569") return "09/09/2569";
+            if ((name.Contains("LMS#A3") || name.Contains("#A3")) && d == "03/11/2569") return "28/10/2569";
+            if ((name.Contains("LMS#B3") || name.Contains("#B3")) && d == "10/11/2569") return "04/11/2569";
+
+            if (name.Contains("นว.0_LMS#1") && d == "10/03/2569") return "04/03/2569";
+            if (name.Contains("นว.0_LMS#2") && d == "23/06/2569") return "17/06/2569";
+            if (name.Contains("นว.0_LMS#3") && d == "22/09/2569") return "16/09/2569";
+
+            if (name.Contains("นว.1_LMS#1") && d == "17/03/2569") return "11/03/2569";
+            if (name.Contains("นว.1_LMS#2") && d == "30/06/2569") return "24/06/2569";
+
+            if (name.Contains("นว.2_LMS#1") && d == "24/03/2569") return "18/03/2569";
+            if (name.Contains("นว.2_LMS#2") && d == "07/07/2569") return "01/07/2569";
+
+            if (name.Contains("นว.3_LMS#1") && d == "31/03/2569") return "25/03/2569";
+            if (name.Contains("นว.3_LMS#2") && d == "14/07/2569") return "08/07/2569";
+
+            return d;
         }
     }
 }
