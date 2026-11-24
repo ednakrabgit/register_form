@@ -9,8 +9,8 @@ sudo systemctl stop viriyah-backend
 # Extract tarball
 echo "Extracting /tmp/vm_deploy.tar.gz..."
 sudo rm -rf /tmp/vm_deploy
-mkdir -p /tmp/vm_deploy
-tar -xzf /tmp/vm_deploy.tar.gz -C /tmp/vm_deploy
+sudo mkdir -p /tmp/vm_deploy
+sudo tar -xzf /tmp/vm_deploy.tar.gz -C /tmp/vm_deploy
 
 # Deploy backend
 echo "Deploying backend binaries and database..."

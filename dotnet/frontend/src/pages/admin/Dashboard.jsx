@@ -26,19 +26,18 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [hoveredBar, setHoveredBar] = useState(null);
 
-  // 2-Perspective Course Hierarchy States
-  const [courseHierarchySearch, setCourseHierarchySearch] = useState('');
+  // Unified Course & Round Training Analytics States
+  const [analyticsGroupingMode, setAnalyticsGroupingMode] = useState('yearMonth'); // 'yearMonth' (1: ปี/เดือน) | 'course' (2: group หลักสูตร)
+  const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
+  const [analyticsPassFilter, setAnalyticsPassFilter] = useState('all'); // 'all', '100pct', 'hasFailed'
   const [expandedCourses, setExpandedCourses] = useState({}); // { [courseName]: boolean }
+  const [collapsedYears, setCollapsedYears] = useState({});
+  const [collapsedMonths, setCollapsedMonths] = useState({});
 
   // Training Search & Filter States
   const [traineeQuery, setTraineeQuery] = useState('');
   const [traineeResults, setTraineeResults] = useState([]);
   const [isSearchingTrainee, setIsSearchingTrainee] = useState(false);
-  const [courseDateQuery, setCourseDateQuery] = useState('');
-  const [courseDateFilter, setCourseDateFilter] = useState('all'); // 'all', '100pct', 'hasFailed'
-  const [courseDateViewMode, setCourseDateViewMode] = useState('hierarchy'); // 'hierarchy' | 'flat'
-  const [collapsedYears, setCollapsedYears] = useState({});
-  const [collapsedMonths, setCollapsedMonths] = useState({});
 
   // Trend Controls
   const [trendPreset, setTrendPreset] = useState('30'); // '7', '14', '30', '60', 'custom'
@@ -113,21 +112,23 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, [traineeQuery, token]);
 
-  // Filter Course Date Matrix
-  const filteredCourseDates = (stats?.courseDateCompletion || []).filter(item => {
-    const q = courseDateQuery.toLowerCase();
-    const matchesSearch = !q || 
-      (item.courseCode && item.courseCode.toLowerCase().includes(q)) ||
-      (item.courseName && item.courseName.toLowerCase().includes(q)) ||
-      (item.trainingDate && item.trainingDate.toLowerCase().includes(q)) ||
-      (item.yearDisplay && item.yearDisplay.toLowerCase().includes(q)) ||
-      (item.monthDisplay && item.monthDisplay.toLowerCase().includes(q));
-    
-    if (!matchesSearch) return false;
-    if (courseDateFilter === '100pct') return item.passRatePercent === 100;
-    if (courseDateFilter === 'hasFailed') return item.failedCount > 0;
-    return true;
-  });
+  // Filter Course Date Matrix (สำหรับโหมด 1: แยกตาม ปี / เดือน)
+  const filteredCourseDates = useMemo(() => {
+    return (stats?.courseDateCompletion || []).filter(item => {
+      const q = (analyticsSearchQuery || '').toLowerCase().trim();
+      const matchesSearch = !q || 
+        (item.courseCode && item.courseCode.toLowerCase().includes(q)) ||
+        (item.courseName && item.courseName.toLowerCase().includes(q)) ||
+        (item.trainingDate && item.trainingDate.toLowerCase().includes(q)) ||
+        (item.yearDisplay && item.yearDisplay.toLowerCase().includes(q)) ||
+        (item.monthDisplay && item.monthDisplay.toLowerCase().includes(q));
+      
+      if (!matchesSearch) return false;
+      if (analyticsPassFilter === '100pct') return item.passRatePercent === 100;
+      if (analyticsPassFilter === 'hasFailed') return item.failedCount > 0;
+      return true;
+    });
+  }, [stats?.courseDateCompletion, analyticsSearchQuery, analyticsPassFilter]);
 
   const thaiMonthNames = [
     '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -227,19 +228,38 @@ export default function Dashboard() {
     return sortedYears;
   }, [filteredCourseDates]);
 
-  // Filter 2-Perspective Course Hierarchy (มุมมองรายวิชา & รายรอบ)
-  const filteredCourseHierarchy = (stats?.courseHierarchyAnalytics || []).filter(course => {
-    const q = courseHierarchySearch.toLowerCase();
-    if (!q) return true;
-    return (
-      (course.courseName && course.courseName.toLowerCase().includes(q)) ||
-      (course.courseCode && course.courseCode.toLowerCase().includes(q)) ||
-      (course.trainingDateDisplay && course.trainingDateDisplay.toLowerCase().includes(q)) ||
-      (course.rounds && course.rounds.some(r => r.roundDate && r.roundDate.toLowerCase().includes(q)))
-    );
-  });
+  // Filter 2-Perspective Course Hierarchy (สำหรับโหมด 2: Group ตามหลักสูตร)
+  const filteredCourseHierarchy = useMemo(() => {
+    return (stats?.courseHierarchyAnalytics || []).filter(course => {
+      const q = (analyticsSearchQuery || '').toLowerCase().trim();
+      const matchesSearch = !q ||
+        (course.courseName && course.courseName.toLowerCase().includes(q)) ||
+        (course.courseCode && course.courseCode.toLowerCase().includes(q)) ||
+        (course.trainingDateDisplay && course.trainingDateDisplay.toLowerCase().includes(q)) ||
+        (course.rounds && course.rounds.some(r => r.roundDate && r.roundDate.toLowerCase().includes(q)));
+      
+      if (!matchesSearch) return false;
+      if (analyticsPassFilter === '100pct') return course.overallPassRate === 100;
+      if (analyticsPassFilter === 'hasFailed') return course.totalFailed > 0;
+      return true;
+    });
+  }, [stats?.courseHierarchyAnalytics, analyticsSearchQuery, analyticsPassFilter]);
 
-  // Toggle Course Accordion
+  // Toggle Collapse/Expand Handlers
+  const toggleYearCollapse = (yKey) => {
+    setCollapsedYears(prev => ({
+      ...prev,
+      [yKey]: !prev[yKey]
+    }));
+  };
+
+  const toggleMonthCollapse = (mKey) => {
+    setCollapsedMonths(prev => ({
+      ...prev,
+      [mKey]: !prev[mKey]
+    }));
+  };
+
   const toggleCourseExpand = (cName) => {
     setExpandedCourses(prev => ({
       ...prev,
@@ -247,16 +267,32 @@ export default function Dashboard() {
     }));
   };
 
-  const expandAllCourses = () => {
-    const all = {};
-    (stats?.courseHierarchyAnalytics || []).forEach(c => {
-      all[c.courseName] = true;
-    });
-    setExpandedCourses(all);
+  const handleExpandAll = () => {
+    if (analyticsGroupingMode === 'yearMonth') {
+      setCollapsedYears({});
+      setCollapsedMonths({});
+    } else {
+      const all = {};
+      (stats?.courseHierarchyAnalytics || []).forEach(c => {
+        all[c.courseName] = true;
+      });
+      setExpandedCourses(all);
+    }
   };
 
-  const collapseAllCourses = () => {
-    setExpandedCourses({});
+  const handleCollapseAll = () => {
+    if (analyticsGroupingMode === 'yearMonth') {
+      const allY = {};
+      const allM = {};
+      groupedCourseDateHierarchy.forEach(y => {
+        allY[y.yearKey] = true;
+        y.months.forEach(m => { allM[m.monthKey] = true; });
+      });
+      setCollapsedYears(allY);
+      setCollapsedMonths(allM);
+    } else {
+      setExpandedCourses({});
+    }
   };
 
   // Scroll to rightmost (most recent date) when dailyTrend changes
@@ -728,530 +764,362 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 2-PERSPECTIVE COURSE ANALYTICS: สรุปภาพรวมรายวิชา & เจาะลึกรายรอบ */}
+      {/* UNIFIED COURSE & ROUND TRAINING ANALYTICS: แยกตาม ปี/เดือน หรือ Group ตามหลักสูตร */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl">
+        {/* Header with Title and Mode Switcher */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-indigo-100 text-indigo-700 rounded-xl shadow-xs">
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 flex-wrap">
                 <span>สถิติวิเคราะห์รายวิชา & การเปิดรอบอบรม (Course & Multi-Round Analytics)</span>
-                <span className="text-xs font-normal text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
-                  วิเคราะห์ 2 มุมมอง
+                <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                  {analyticsGroupingMode === 'yearMonth' ? 'โหมด: 1) ปี / เดือน / รอบ' : 'โหมด: 2) จัดกลุ่มตามหลักสูตร'}
+                </span>
+                <span className="text-xs font-normal text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  {analyticsGroupingMode === 'yearMonth' 
+                    ? `${filteredCourseDates.length} รอบอบรม` 
+                    : `${filteredCourseHierarchy.length} หลักสูตร`}
                 </span>
               </h3>
-              <p className="text-xs text-slate-500">
-                มุมที่ 1: สรุปภาพรวมระดับวิชา (เปิดกี่รอบ, ยอดเข้าอบรม, คนผ่านทั้งหมด) • มุมที่ 2: เจาะลึกรายรอบ (วันที่จัด, คนผ่านในแต่ละรอบ)
+              <p className="text-xs text-slate-500 mt-0.5">
+                {analyticsGroupingMode === 'yearMonth'
+                  ? 'จำแนกลำดับชั้นตาม ปี > เดือน > และรอบการอบรมที่จัดในแต่ละเดือน เพื่อการวิเคราะห์ระยะยาว'
+                  : 'จัดกลุ่มตามหลักสูตร/วิชา เพื่อดูภาพรวมยอดคนเข้าอบรมและเจาะลึกแต่ละรอบ'}
               </p>
             </div>
           </div>
 
-          {/* Search & Global Expand Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="ค้นหาชื่อวิชา, รหัสวิชา, หรือวันที่จัดอบรม..."
-                value={courseHierarchySearch}
-                onChange={(e) => setCourseHierarchySearch(e.target.value)}
-                className="pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:bg-white focus:ring-1 focus:ring-primary focus:border-primary w-full sm:w-64"
-              />
-            </div>
+          {/* Mode Switcher Toggle Pill */}
+          <div className="flex items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 shadow-inner self-start lg:self-auto">
+            <button
+              type="button"
+              onClick={() => setAnalyticsGroupingMode('yearMonth')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                analyticsGroupingMode === 'yearMonth'
+                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>1) แยกตาม ปี / เดือน</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnalyticsGroupingMode('course')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                analyticsGroupingMode === 'course'
+                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>2) Group ตามหลักสูตร</span>
+            </button>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-1.5">
+        {/* Toolbar: Search, Filter, Expand/Collapse Controls */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200/70">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder={
+                analyticsGroupingMode === 'yearMonth'
+                  ? 'ค้นหารหัสวิชา, ชื่อวิชา, วันที่ (เช่น 19/05/2569), หรือเดือน...'
+                  : 'ค้นหาชื่อหลักสูตร, รหัสวิชา, หรือวันที่รอบอบรม...'
+              }
+              value={analyticsSearchQuery}
+              onChange={(e) => setAnalyticsSearchQuery(e.target.value)}
+              className="pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary w-full shadow-xs"
+            />
+            {analyticsSearchQuery && (
               <button
-                onClick={expandAllCourses}
-                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1 cursor-pointer transition"
-                title="ขยายดูรายละเอียดทุกวิชา"
+                type="button"
+                onClick={() => setAnalyticsSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
               >
-                <ChevronDown className="w-3.5 h-3.5" />
-                <span>ขยายทุกวิชา</span>
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Status Filter */}
+            <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 text-xs shadow-xs">
+              <button
+                type="button"
+                onClick={() => setAnalyticsPassFilter('all')}
+                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer ${
+                  analyticsPassFilter === 'all'
+                    ? 'bg-slate-800 text-white font-bold'
+                    : 'text-slate-600 hover:text-slate-800'
+                }`}
+              >
+                ทั้งหมด
               </button>
               <button
-                onClick={collapseAllCourses}
-                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1 cursor-pointer transition"
-                title="ยุบทุกวิชา"
+                type="button"
+                onClick={() => setAnalyticsPassFilter('100pct')}
+                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer flex items-center gap-1 ${
+                  analyticsPassFilter === '100pct'
+                    ? 'bg-emerald-600 text-white font-bold'
+                    : 'text-slate-600 hover:text-emerald-700'
+                }`}
               >
-                <ChevronUp className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3 h-3" />
+                <span>ผ่าน 100%</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnalyticsPassFilter('hasFailed')}
+                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer flex items-center gap-1 ${
+                  analyticsPassFilter === 'hasFailed'
+                    ? 'bg-rose-600 text-white font-bold'
+                    : 'text-slate-600 hover:text-rose-700'
+                }`}
+              >
+                <XCircle className="w-3 h-3" />
+                <span>มีไม่ผ่าน</span>
+              </button>
+            </div>
+
+            {/* Global Expand / Collapse */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleExpandAll}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium flex items-center gap-1 cursor-pointer transition shadow-xs"
+                title="ขยายทุกระดับชั้น"
+              >
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                <span>ขยายทั้งหมด</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleCollapseAll}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium flex items-center gap-1 cursor-pointer transition shadow-xs"
+                title="ยุบทุกระดับชั้น"
+              >
+                <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
                 <span>ยุบทั้งหมด</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Course Hierarchy Accordion Cards */}
-        <div className="space-y-3.5">
-          {filteredCourseHierarchy.length > 0 ? (
-            filteredCourseHierarchy.map((course, idx) => {
-              const isExpanded = !!expandedCourses[course.courseName];
-              const isFullPass = course.overallPassRate === 100;
-              const hasFailed = course.totalFailed > 0;
+        {/* ========================================================= */}
+        {/* VIEW MODE 1: แยกตาม ปี > เดือน > รอบอบรมในเดือนนั้นๆ      */}
+        {/* ========================================================= */}
+        {analyticsGroupingMode === 'yearMonth' && (
+          <div className="space-y-4">
+            {groupedCourseDateHierarchy.length > 0 ? (
+              groupedCourseDateHierarchy.map((yearGroup) => {
+                const isYearCollapsed = !!collapsedYears[yearGroup.yearKey];
+                const yPassPct = yearGroup.passRatePercent;
 
-              return (
-                <div
-                  key={idx}
-                  className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-                    isExpanded 
-                      ? 'bg-slate-50/50 border-indigo-300 shadow-sm ring-1 ring-indigo-200/50' 
-                      : 'bg-white border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  {/* Perspective 1: Course Summary Header Card */}
+                return (
                   <div
-                    onClick={() => toggleCourseExpand(course.courseName)}
-                    className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-pointer select-none hover:bg-slate-50/80 transition"
+                    key={yearGroup.yearKey}
+                    className="border border-indigo-200/80 rounded-xl overflow-hidden bg-white shadow-xs transition-all"
                   >
-                    {/* Left: Course Name & Codes */}
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 bg-primary/10 text-primary rounded-xl shrink-0 mt-0.5">
-                        <BookOpen className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-bold text-slate-900 text-base">
-                            {course.courseName}
-                          </h4>
-                          {course.courseCode && (
-                            <span className="font-mono text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200 font-semibold">
-                              รหัส: {course.courseCode}
-                            </span>
+                    {/* LEVEL 1: แถบหัวข้อปี (Year Header) */}
+                    <div
+                      onClick={() => toggleYearCollapse(yearGroup.yearKey)}
+                      className="w-full flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-gradient-to-r from-indigo-50/90 via-slate-50 to-white hover:from-indigo-100/70 border-b border-indigo-100 transition cursor-pointer select-none gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-xs">
+                          {isYearCollapsed ? (
+                            <ChevronRight className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
                           )}
                         </div>
-                        <div className="flex items-center gap-2.5 text-xs text-slate-500 mt-1.5 flex-wrap">
-                          <span className="inline-flex items-center gap-1.5 font-semibold text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200 shadow-2xs">
-                            <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                            <span className="text-slate-600 font-normal">วันที่อบรม:</span>
-                            <span className="font-mono font-bold text-blue-900">
-                              {course.trainingDateDisplay || (course.rounds && course.rounds.map(r => r.roundDate).filter(d => d && d !== '-').join(', ')) || '-'}
-                            </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-extrabold text-base text-indigo-950 font-mono tracking-tight">
+                            📅 {yearGroup.yearKey}
                           </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="inline-flex items-center gap-1 font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-                            <CalendarDays className="w-3.5 h-3.5" />
-                            เปิดทั้งหมด {course.totalRounds} รอบ
+                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100/80 px-2.5 py-0.5 rounded-full">
+                            {yearGroup.months.length} เดือน
                           </span>
-                          <span className="text-slate-300">•</span>
-                          <span>ผู้เข้าอบรมรวม <b>{course.totalEnrolled?.toLocaleString() ?? 0}</b> คน</span>
+                          <span className="text-[11px] font-medium text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                            {yearGroup.totalRounds} รอบอบรม
+                          </span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Right: Pass Statistics & Expand Button */}
-                    <div className="flex items-center justify-between lg:justify-end gap-4 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                      {/* Metrics */}
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <div className="text-[11px] text-slate-400">คนที่ผ่านวิชานี้ทั้งหมด</div>
-                          <div className="font-bold text-emerald-700 text-sm sm:text-base flex items-center justify-end gap-1">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span>{course.totalPassed} / {course.totalEnrolled} คน</span>
-                            <span className="text-xs font-normal text-emerald-600">({course.overallPassRate}%)</span>
-                          </div>
+                      {/* Year Summary Stats */}
+                      <div className="flex items-center gap-4 text-xs ml-8 md:ml-0 flex-wrap">
+                        <div className="flex items-center gap-1.5 text-slate-600">
+                          <span className="text-slate-400">ผู้เข้าอบรม:</span>
+                          <span className="font-bold text-slate-800">
+                            {yearGroup.totalEnrolled.toLocaleString()} คน
+                          </span>
                         </div>
 
-                        {course.totalFailed > 0 && (
-                          <div className="text-right pl-3 border-l border-slate-200 hidden sm:block">
-                            <div className="text-[11px] text-slate-400">ไม่ผ่าน</div>
-                            <div className="font-bold text-rose-600 text-sm flex items-center justify-end gap-1">
-                              <XCircle className="w-3.5 h-3.5" />
-                              <span>{course.totalFailed} คน</span>
-                            </div>
+                        <div className="flex items-center gap-1.5 text-emerald-700">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>ผ่าน:</span>
+                          <span className="font-bold">
+                            {yearGroup.passedCount.toLocaleString()} คน ({yPassPct}%)
+                          </span>
+                        </div>
+
+                        {yearGroup.failedCount > 0 && (
+                          <div className="flex items-center gap-1.5 text-rose-600">
+                            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                            <span>ไม่ผ่าน:</span>
+                            <span className="font-bold">
+                              {yearGroup.failedCount.toLocaleString()} คน
+                            </span>
                           </div>
                         )}
                       </div>
-
-                      {/* Toggle Button */}
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-primary px-3 py-1.5 bg-primary/5 hover:bg-primary/10 rounded-lg transition">
-                        <span>{isExpanded ? 'ปิดรายรอบ' : `ดูเจาะลึก ${course.totalRounds} รอบ`}</span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </div>
                     </div>
-                  </div>
 
-                  {/* Perspective 2: Per-Round Detailed Breakdown (เมื่อคลิกขยาย) */}
-                  {isExpanded && (
-                    <div className="px-4 pb-5 sm:px-6 pt-1 border-t border-slate-200/80 bg-slate-50/80 space-y-3">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-600 pt-2">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4 text-indigo-600" />
-                          <span>รายละเอียดผลการอบรมในแต่ละรอบ ({course.totalRounds} รอบที่เปิดจัด):</span>
-                        </span>
-                        <span className="text-slate-400 font-normal">
-                          คลิกแถบเพื่อยุบเก็บ
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {course.rounds && course.rounds.map((round, rIdx) => {
-                          const rPassPct = round.passRatePercent ?? 0;
-                          const rIsFull = rPassPct === 100;
-                          const rHasFailed = round.failedCount > 0;
+                    {/* LEVEL 2: รายการเดือนภายในปี (Months in Year) */}
+                    {!isYearCollapsed && (
+                      <div className="p-3.5 space-y-3 bg-slate-50/50">
+                        {yearGroup.months.map((monthGroup) => {
+                          const isMonthCollapsed = !!collapsedMonths[monthGroup.monthKey];
+                          const mPassPct = monthGroup.passRatePercent;
 
                           return (
                             <div
-                              key={rIdx}
-                              className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs space-y-2.5 hover:border-indigo-300 transition"
+                              key={monthGroup.monthKey}
+                              className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs"
                             >
-                              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                <span className="font-bold text-xs text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
-                                  <span>🚩 รอบที่ {rIdx + 1}</span>
-                                </span>
-                                <span className="font-mono text-xs font-bold text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200 flex items-center gap-1">
-                                  <CalendarDays className="w-3.5 h-3.5 text-blue-600" />
-                                  <span>วันที่อบรม: {round.roundDate}</span>
-                                </span>
-                              </div>
-
-                              {/* Round Stats */}
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-slate-50 p-2 rounded-lg">
-                                  <div className="text-[11px] text-slate-400">เข้าอบรม</div>
-                                  <div className="font-bold text-slate-800 text-sm">
-                                    {round.enrolledCount} <span className="text-xs font-normal text-slate-500">คน</span>
-                                  </div>
-                                </div>
-                                <div className={`p-2 rounded-lg ${rIsFull ? 'bg-emerald-50 text-emerald-800' : 'bg-blue-50 text-blue-800'}`}>
-                                  <div className="text-[11px] opacity-80">คนที่ผ่านรอบนี้</div>
-                                  <div className="font-bold text-sm flex items-center gap-1">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>{round.passedCount} คน</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Progress Bar for Round */}
-                              <div className="space-y-1">
-                                <div className="flex justify-between text-[11px]">
-                                  <span className="text-slate-500">อัตราผ่านในรอบนี้</span>
-                                  <span className={`font-bold ${rIsFull ? 'text-emerald-600' : rHasFailed ? 'text-amber-600' : 'text-blue-600'}`}>
-                                    {rPassPct}%
-                                  </span>
-                                </div>
-                                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                                  <div
-                                    className={`h-2 rounded-full transition-all duration-500 ${
-                                      rIsFull ? 'bg-emerald-500' : rHasFailed ? 'bg-amber-500' : 'bg-blue-500'
-                                    }`}
-                                    style={{ width: `${Math.max(rPassPct, 4)}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-
-                              {round.failedCount > 0 && (
-                                <div className="text-[11px] text-rose-600 flex items-center gap-1 pt-1 border-t border-slate-100">
-                                  <XCircle className="w-3 h-3" />
-                                  <span>ไม่ผ่านในรอบนี้ {round.failedCount} คน</span>
-                                </div>
-                              )}
-
-                              <div className="text-[10px] text-slate-400 font-mono text-right pt-0.5">
-                                Stamp: {round.lastStampDate}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 text-slate-400 text-xs">
-              {courseHierarchySearch ? 'ไม่พบวิชาที่ตรงกับคำค้นหา' : 'ยังไม่มีข้อมูลผลการอบรมในระบบ'}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* SECTION 1: วิชาไหนที่ลงวันไหนผ่าน (Course & Training Date Completion Summary) */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
-              <CalendarDays className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 flex-wrap">
-                <span>วิชาไหนที่ลงวันไหนผ่าน (Course & Date Completion Summary)</span>
-                <span className="text-xs font-normal text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  {filteredCourseDates.length} รอบอบรม
-                </span>
-                <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
-                  แยก ปี &gt; เดือน &gt; วิชา
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500">
-                สรุปภาพรวมยอดผู้เข้าอบรม ยอดคนผ่าน และอัตราความสำเร็จ จำแนกตามปี &gt; เดือน &gt; รายวิชาและรอบที่จัดอบรม
-              </p>
-            </div>
-          </div>
-
-          {/* Search, Filter & View Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="ค้นหารหัสวิชา / ชื่อวิชา / วันที่..."
-                value={courseDateQuery}
-                onChange={(e) => setCourseDateQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:bg-white focus:ring-1 focus:ring-primary focus:border-primary w-full sm:w-56"
-              />
-            </div>
-
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
-              <button
-                onClick={() => setCourseDateFilter('all')}
-                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer ${
-                  courseDateFilter === 'all' ? 'bg-white text-slate-800 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-800'
-                }`}
-              >
-                ทั้งหมด
-              </button>
-              <button
-                onClick={() => setCourseDateFilter('100pct')}
-                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer ${
-                  courseDateFilter === '100pct' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-emerald-700'
-                }`}
-              >
-                ผ่าน 100%
-              </button>
-              <button
-                onClick={() => setCourseDateFilter('hasFailed')}
-                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer ${
-                  courseDateFilter === 'hasFailed' ? 'bg-white text-rose-700 shadow-xs font-bold' : 'text-slate-600 hover:text-rose-700'
-                }`}
-              >
-                มีไม่ผ่าน
-              </button>
-            </div>
-
-            {/* View Mode Toggle: Hierarchy vs Flat */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
-              <button
-                onClick={() => setCourseDateViewMode('hierarchy')}
-                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer flex items-center gap-1 ${
-                  courseDateViewMode === 'hierarchy' ? 'bg-white text-indigo-700 shadow-xs font-bold' : 'text-slate-600 hover:text-indigo-700'
-                }`}
-                title="แสดงผลแบบลำดับขั้น: ปี > เดือน > วิชา"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Hierarchy</span>
-              </button>
-              <button
-                onClick={() => setCourseDateViewMode('flat')}
-                className={`px-2.5 py-1 rounded-md transition font-medium cursor-pointer flex items-center gap-1 ${
-                  courseDateViewMode === 'flat' ? 'bg-white text-slate-800 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-800'
-                }`}
-                title="แสดงผลแบบตารางรวมทั้งหมด"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5" />
-                <span>ตารางรวม</span>
-              </button>
-            </div>
-
-            {/* Expand/Collapse All (only in Hierarchy mode) */}
-            {courseDateViewMode === 'hierarchy' && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => { setCollapsedYears({}); setCollapsedMonths({}); }}
-                  className="px-2 py-1 text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition flex items-center gap-1 font-medium shadow-2xs"
-                  title="ขยายทุกปีและทุกเดือน"
-                >
-                  <ChevronDown className="w-3.5 h-3.5" />
-                  <span>ขยาย</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const allY = {};
-                    const allM = {};
-                    groupedCourseDateHierarchy.forEach(y => {
-                      allY[y.yearKey] = true;
-                      y.months.forEach(m => { allM[m.monthKey] = true; });
-                    });
-                    setCollapsedYears(allY);
-                    setCollapsedMonths(allM);
-                  }}
-                  className="px-2 py-1 text-xs text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition flex items-center gap-1 font-medium shadow-2xs"
-                  title="ย่อเก็บทุกปีและทุกเดือน"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                  <span>ยุบ</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* HIERARCHY VIEW: Year > Month > Course Matrix */}
-        {courseDateViewMode === 'hierarchy' ? (
-          <div className="space-y-5">
-            {groupedCourseDateHierarchy.length > 0 ? (
-              groupedCourseDateHierarchy.map((year, yIdx) => {
-                const isYearCollapsed = collapsedYears[year.yearKey];
-                return (
-                  <div key={yIdx} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs bg-white">
-                    {/* Level 1: Year Banner */}
-                    <div
-                      onClick={() => toggleYearCollapse(year.yearKey)}
-                      className="p-3.5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none hover:brightness-110 transition"
-                    >
-                      <div className="flex items-center gap-3">
-                        <button type="button" className="p-1 rounded bg-white/10 hover:bg-white/20 text-white shrink-0">
-                          {isYearCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </button>
-                        <div>
-                          <div className="font-extrabold text-base sm:text-lg flex items-center gap-2">
-                            <span>📅 ปี {year.yearKey}</span>
-                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                              {year.months.length} เดือน
-                            </span>
-                          </div>
-                          <div className="text-xs text-slate-300 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
-                            <span>รวม {year.totalRounds} รอบอบรม</span>
-                            <span>•</span>
-                            <span>ผู้เข้าอบรม {year.totalEnrolled.toLocaleString()} คน</span>
-                            <span>•</span>
-                            <span className="text-emerald-300 font-bold">ผ่าน {year.passedCount.toLocaleString()} คน ({year.passRatePercent}%)</span>
-                            {year.failedCount > 0 && (
-                              <>
-                                <span>•</span>
-                                <span className="text-rose-300 font-bold">ไม่ผ่าน {year.failedCount.toLocaleString()} คน</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-slate-300 font-medium pl-8 md:pl-0">
-                        {isYearCollapsed ? '▶ คลิกเพื่อขยายดูรายเดือน' : '▼ คลิกเพื่อย่อเก็บ'}
-                      </div>
-                    </div>
-
-                    {/* Level 2: Months inside Year */}
-                    {!isYearCollapsed && (
-                      <div className="p-4 space-y-4 bg-slate-50/60">
-                        {year.months.map((month, mIdx) => {
-                          const isMonthCollapsed = collapsedMonths[month.monthKey];
-                          return (
-                            <div key={mIdx} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                              {/* Level 2: Month Header */}
+                              {/* แถบหัวข้อเดือน (Month Header) */}
                               <div
-                                onClick={() => toggleMonthCollapse(month.monthKey)}
-                                className="p-3 bg-gradient-to-r from-slate-100 to-indigo-50/70 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none hover:bg-indigo-50 transition"
+                                onClick={() => toggleMonthCollapse(monthGroup.monthKey)}
+                                className="w-full flex flex-col md:flex-row md:items-center justify-between p-3 bg-slate-100/70 hover:bg-slate-200/60 transition cursor-pointer select-none border-b border-slate-200/80 gap-2"
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <button type="button" className="p-1 rounded hover:bg-slate-200/70 text-slate-700 shrink-0">
-                                    {isMonthCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                  </button>
-                                  <span className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                                    <span className="text-indigo-600">🗓️</span>
-                                    <span>เดือน{month.monthDisplay} {year.yearKey}</span>
-                                  </span>
-                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white text-indigo-700 border border-indigo-200 shadow-2xs">
-                                    {month.totalRounds} รอบอบรม
-                                  </span>
+                                  <div className="p-1 text-slate-500 hover:text-slate-800">
+                                    {isMonthCollapsed ? (
+                                      <ChevronRight className="w-4 h-4" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4" />
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-slate-800 text-sm">
+                                      🗓️ {monthGroup.monthDisplay} {yearGroup.yearKey}
+                                    </span>
+                                    <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                                      {monthGroup.totalRounds} รอบอบรม
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2.5 text-xs font-mono text-slate-600 pl-7 sm:pl-0 flex-wrap">
-                                  <span>ผู้เข้าอบรม: <b>{month.totalEnrolled.toLocaleString()}</b> คน</span>
-                                  <span>•</span>
-                                  <span className="text-emerald-700 font-bold">ผ่าน: {month.passedCount.toLocaleString()} คน ({month.passRatePercent}%)</span>
-                                  {month.failedCount > 0 && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="text-rose-600 font-bold">ไม่ผ่าน: {month.failedCount.toLocaleString()} คน</span>
-                                    </>
+
+                                {/* Month Stats */}
+                                <div className="flex items-center gap-3.5 text-xs ml-6 md:ml-0 flex-wrap">
+                                  <span className="text-slate-600">
+                                    ผู้เรียน: <strong className="text-slate-800">{monthGroup.totalEnrolled.toLocaleString()}</strong> คน
+                                  </span>
+                                  <span className="text-emerald-700 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    ผ่าน: <strong className="font-bold">{monthGroup.passedCount.toLocaleString()}</strong> คน ({mPassPct}%)
+                                  </span>
+                                  {monthGroup.failedCount > 0 && (
+                                    <span className="text-rose-600 flex items-center gap-1">
+                                      <XCircle className="w-3 h-3 text-rose-500" />
+                                      ไม่ผ่าน: <strong className="font-bold">{monthGroup.failedCount.toLocaleString()}</strong> คน
+                                    </span>
                                   )}
                                 </div>
                               </div>
 
-                              {/* Level 3: Transaction Table for this Month */}
+                              {/* LEVEL 3: ตารางรอบอบรมในเดือนนั้น (Training rounds in month) */}
                               {!isMonthCollapsed && (
                                 <div className="overflow-x-auto">
-                                  <table className="w-full text-left text-sm border-collapse">
-                                    <thead className="bg-slate-50/90 text-slate-600 text-xs uppercase font-bold border-b border-slate-200">
-                                      <tr>
-                                        <th className="py-2.5 px-3.5">รหัสวิชา</th>
-                                        <th className="py-2.5 px-3.5">ชื่อวิชา / หลักสูตร</th>
-                                        <th className="py-2.5 px-3.5">วันที่จัดอบรม</th>
-                                        <th className="py-2.5 px-3.5 text-center">ยอดอบรม</th>
-                                        <th className="py-2.5 px-3.5 text-center">ผ่าน (คน)</th>
-                                        <th className="py-2.5 px-3.5 text-center">ไม่ผ่าน (คน)</th>
-                                        <th className="py-2.5 px-3.5">อัตราความสำเร็จ (% ผ่าน)</th>
-                                        <th className="py-2.5 px-3.5 text-slate-400 text-right">Stamp ล่าสุด</th>
+                                  <table className="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                      <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                        <th className="py-2.5 px-3 font-semibold w-12 text-center">#</th>
+                                        <th className="py-2.5 px-3 font-semibold whitespace-nowrap">วันที่จัดอบรม</th>
+                                        <th className="py-2.5 px-3 font-semibold">รหัส / วิชา</th>
+                                        <th className="py-2.5 px-3 font-semibold text-right whitespace-nowrap">ผู้เข้าอบรม</th>
+                                        <th className="py-2.5 px-3 font-semibold text-right whitespace-nowrap">ผ่านแล้ว</th>
+                                        <th className="py-2.5 px-3 font-semibold text-right whitespace-nowrap">ไม่ผ่าน</th>
+                                        <th className="py-2.5 px-3 font-semibold text-center whitespace-nowrap w-36">อัตราผ่าน</th>
+                                        <th className="py-2.5 px-3 font-semibold text-right whitespace-nowrap">ประทับผลล่าสุด</th>
                                       </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-                                      {month.items.map((item, idx) => {
+                                    <tbody className="divide-y divide-slate-100">
+                                      {monthGroup.items.map((item, idx) => {
                                         const passPct = item.passRatePercent ?? 0;
-                                        const isFullPass = passPct === 100;
-                                        const hasFailed = item.failedCount > 0;
+                                        const is100 = passPct === 100;
+                                        const hasFailed = (item.failedCount || 0) > 0;
 
                                         return (
-                                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                                            <td className="py-2.5 px-3.5 font-mono font-bold text-primary">
-                                              {item.courseCode}
+                                          <tr
+                                            key={`${item.courseCode || ''}_${item.trainingDate || ''}_${idx}`}
+                                            className="hover:bg-indigo-50/30 transition-colors"
+                                          >
+                                            <td className="py-2.5 px-3 text-center text-slate-400 font-mono text-[11px]">
+                                              {idx + 1}
                                             </td>
-                                            <td className="py-2.5 px-3.5 font-medium text-slate-800">
-                                              <div className="max-w-[280px] truncate" title={item.courseName}>
-                                                {item.courseName}
-                                              </div>
-                                            </td>
-                                            <td className="py-2.5 px-3.5 whitespace-nowrap text-slate-600 font-mono text-xs">
-                                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 rounded-md text-slate-700">
-                                                <Calendar className="w-3 h-3 text-slate-400" />
+                                            <td className="py-2.5 px-3 whitespace-nowrap">
+                                              <span className="inline-flex items-center gap-1 font-semibold text-slate-800 bg-slate-100/80 px-2 py-0.5 rounded border border-slate-200 font-mono">
+                                                <Calendar className="w-3 h-3 text-slate-500" />
                                                 {item.trainingDate}
                                               </span>
                                             </td>
-                                            <td className="py-2.5 px-3.5 text-center font-bold text-slate-700">
-                                              {item.totalEnrolled?.toLocaleString() ?? item.totalEnrolled}
+                                            <td className="py-2.5 px-3">
+                                              <div className="flex flex-col gap-0.5">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                  <span className="font-bold text-slate-800 hover:text-indigo-600 transition">
+                                                    {item.courseName || '-'}
+                                                  </span>
+                                                  {item.courseCode && (
+                                                    <span className="text-[10px] font-mono px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 rounded">
+                                                      {item.courseCode}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </div>
                                             </td>
-                                            <td className="py-2.5 px-3.5 text-center">
-                                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                <CheckCircle2 className="w-3 h-3" />
-                                                {item.passedCount?.toLocaleString() ?? item.passedCount}
-                                              </span>
+                                            <td className="py-2.5 px-3 text-right font-medium text-slate-700 whitespace-nowrap">
+                                              {(item.totalEnrolled || 0).toLocaleString()} คน
                                             </td>
-                                            <td className="py-2.5 px-3.5 text-center">
-                                              {item.failedCount > 0 ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                  <XCircle className="w-3 h-3" />
-                                                  {item.failedCount?.toLocaleString() ?? item.failedCount}
+                                            <td className="py-2.5 px-3 text-right font-bold text-emerald-600 whitespace-nowrap">
+                                              {(item.passedCount || 0).toLocaleString()} คน
+                                            </td>
+                                            <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                                              {hasFailed ? (
+                                                <span className="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                                  {item.failedCount.toLocaleString()} คน
                                                 </span>
                                               ) : (
-                                                <span className="text-slate-400 font-mono">-</span>
+                                                <span className="text-slate-400">-</span>
                                               )}
                                             </td>
-                                            <td className="py-2.5 px-3.5 min-w-[170px]">
-                                              <div className="space-y-1">
-                                                <div className="flex justify-between text-xs">
-                                                  <span className={`font-bold ${isFullPass ? 'text-emerald-600' : hasFailed ? 'text-amber-600' : 'text-blue-600'}`}>
-                                                    {passPct}%
-                                                  </span>
-                                                  <span className="text-slate-400 text-[11px]">
-                                                    {item.passedCount}/{item.totalEnrolled} คน
-                                                  </span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                            <td className="py-2.5 px-3 whitespace-nowrap">
+                                              <div className="flex items-center gap-2 justify-center">
+                                                <div className="w-20 bg-slate-200 rounded-full h-2 overflow-hidden">
                                                   <div
-                                                    className={`h-2 rounded-full transition-all duration-500 ${
-                                                      isFullPass 
-                                                        ? 'bg-emerald-500' 
-                                                        : hasFailed 
-                                                        ? 'bg-amber-500' 
-                                                        : 'bg-blue-500'
+                                                    className={`h-2 rounded-full transition-all duration-300 ${
+                                                      is100 ? 'bg-emerald-500' : hasFailed ? 'bg-amber-500' : 'bg-blue-500'
                                                     }`}
                                                     style={{ width: `${Math.max(passPct, 3)}%` }}
                                                   ></div>
                                                 </div>
+                                                <span
+                                                  className={`font-mono text-[11px] font-bold ${
+                                                    is100 ? 'text-emerald-600' : hasFailed ? 'text-amber-600' : 'text-blue-600'
+                                                  }`}
+                                                >
+                                                  {passPct}%
+                                                </span>
                                               </div>
                                             </td>
-                                            <td className="py-2.5 px-3.5 text-right whitespace-nowrap text-slate-400 font-mono text-[11px]">
+                                            <td className="py-2.5 px-3 text-right whitespace-nowrap text-slate-400 font-mono text-[11px]">
                                               {item.lastStampDate || '-'}
                                             </td>
                                           </tr>
@@ -1271,111 +1139,202 @@ export default function Dashboard() {
               })
             ) : (
               <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 text-slate-400 text-xs">
-                {courseDateQuery 
-                  ? 'ไม่พบข้อมูลรอบอบรมที่ตรงกับคำค้นหา' 
-                  : 'ยังไม่มีข้อมูลผลการอบรมที่ประทับสถานะ'}
+                {analyticsSearchQuery
+                  ? 'ไม่พบข้อมูลรอบอบรมตามคำค้นหาที่ระบุ'
+                  : 'ยังไม่มีข้อมูลผลการอบรมในระบบ'}
               </div>
             )}
           </div>
-        ) : (
-          /* FLAT TABLE VIEW (ตารางรวมเดิม) */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-bold border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3.5">รหัสวิชา</th>
-                  <th className="py-3 px-3.5">ชื่อวิชา / หลักสูตร</th>
-                  <th className="py-3 px-3.5">วันที่จัดอบรม</th>
-                  <th className="py-3 px-3.5 text-center">ยอดอบรม</th>
-                  <th className="py-3 px-3.5 text-center">ผ่าน (คน)</th>
-                  <th className="py-3 px-3.5 text-center">ไม่ผ่าน (คน)</th>
-                  <th className="py-3 px-3.5">อัตราความสำเร็จ (% ผ่าน)</th>
-                  <th className="py-3 px-3.5 text-slate-400 text-right">Stamp ล่าสุด</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-                {filteredCourseDates.length > 0 ? (
-                  filteredCourseDates.map((item, idx) => {
-                    const passPct = item.passRatePercent ?? 0;
-                    const isFullPass = passPct === 100;
-                    const hasFailed = item.failedCount > 0;
+        )}
 
-                    return (
-                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-3.5 font-mono font-bold text-primary">
-                          {item.courseCode}
-                        </td>
-                        <td className="py-3 px-3.5 font-medium text-slate-800">
-                          <div className="max-w-[280px] truncate" title={item.courseName}>
-                            {item.courseName}
+        {/* ========================================================= */}
+        {/* VIEW MODE 2: Group ตามหลักสูตร (วิเคราะห์ระดับหลักสูตร)    */}
+        {/* ========================================================= */}
+        {analyticsGroupingMode === 'course' && (
+          <div className="space-y-3">
+            {filteredCourseHierarchy.length > 0 ? (
+              filteredCourseHierarchy.map((course, idx) => {
+                const isExpanded = !!expandedCourses[course.courseName];
+                const isFull = course.overallPassRate === 100;
+                const hasFailed = course.totalFailed > 0;
+
+                return (
+                  <div
+                    key={`${course.courseName}_${idx}`}
+                    className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs transition hover:border-slate-300"
+                  >
+                    {/* Course Summary Card Header */}
+                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg mt-0.5 shrink-0">
+                          <BookOpen className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-slate-800 text-sm truncate" title={course.courseName}>
+                              {course.courseName}
+                            </h4>
+                            {course.courseCode && (
+                              <span className="text-[11px] font-mono px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
+                                รหัส: {course.courseCode}
+                              </span>
+                            )}
                           </div>
-                        </td>
-                        <td className="py-3 px-3.5 whitespace-nowrap text-slate-600 font-mono text-xs">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 rounded-md text-slate-700">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            {item.trainingDate}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3.5 text-center font-bold text-slate-700">
-                          {item.totalEnrolled}
-                        </td>
-                        <td className="py-3 px-3.5 text-center">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3" />
-                            {item.passedCount}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3.5 text-center">
-                          {item.failedCount > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                              <XCircle className="w-3 h-3" />
-                              {item.failedCount}
+
+                          <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 flex-wrap">
+                            {course.trainingDateDisplay && (
+                              <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                วันที่อบรม: {course.trainingDateDisplay}
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[11px] font-medium border border-indigo-100">
+                              <Layers className="w-3 h-3" />
+                              เปิดทั้งหมด {course.totalRounds} รอบ
                             </span>
-                          ) : (
-                            <span className="text-slate-400 font-mono">-</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3.5 min-w-[170px]">
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className={`font-bold ${isFullPass ? 'text-emerald-600' : hasFailed ? 'text-amber-600' : 'text-blue-600'}`}>
-                                {passPct}%
-                              </span>
-                              <span className="text-slate-400 text-[11px]">
-                                {item.passedCount}/{item.totalEnrolled} คน
-                              </span>
-                            </div>
-                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                              <div
-                                className={`h-2 rounded-full transition-all duration-500 ${
-                                  isFullPass 
-                                    ? 'bg-emerald-500' 
-                                    : hasFailed 
-                                    ? 'bg-amber-500' 
-                                    : 'bg-blue-500'
-                                }`}
-                                style={{ width: `${Math.max(passPct, 3)}%` }}
-                              ></div>
-                            </div>
+                            <span className="text-slate-400">•</span>
+                            <span>ผู้เข้าอบรมรวม {course.totalEnrolled.toLocaleString()} คน</span>
                           </div>
-                        </td>
-                        <td className="py-3 px-3.5 text-right whitespace-nowrap text-slate-400 font-mono text-[11px]">
-                          {item.lastStampDate || '-'}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
-                      {courseDateQuery 
-                        ? 'ไม่พบข้อมูลรอบอบรมที่ตรงกับคำค้นหา' 
-                        : 'ยังไม่มีข้อมูลผลการอบรมที่ประทับสถานะ'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        </div>
+                      </div>
+
+                      {/* Right: Pass Rate and Expand Button */}
+                      <div className="flex items-center gap-4 self-end md:self-center shrink-0">
+                        <div className="text-right">
+                          <div className="text-[11px] text-slate-400">คนที่ผ่านวิชานี้ทั้งหมด</div>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <span className={`font-bold text-sm ${isFull ? 'text-emerald-600' : hasFailed ? 'text-amber-600' : 'text-blue-600'}`}>
+                              {course.totalPassed.toLocaleString()} / {course.totalEnrolled.toLocaleString()} คน ({course.overallPassRate}%)
+                            </span>
+                            {isFull && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleCourseExpand(course.courseName)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
+                            isExpanded
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'
+                          }`}
+                        >
+                          <span>ดูเจาะลึก {course.totalRounds} รอบ</span>
+                          {isExpanded ? (
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expandable Rounds for this Course */}
+                    {isExpanded && (
+                      <div className="bg-slate-50/70 border-t border-slate-200 p-4 space-y-3">
+                        <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                          <span>รอบการจัดอบรมของวิชานี้ ({course.rounds?.length || 0} รอบ)</span>
+                          <span className="text-[11px] font-normal text-slate-500">
+                            เรียงตามวันที่จัดอบรมล่าสุด
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {(course.rounds || []).map((round, rIdx) => {
+                            const rPassPct = round.passRatePercent ?? 0;
+                            const rIsFull = rPassPct === 100;
+                            const rHasFailed = (round.failedCount || 0) > 0;
+
+                            return (
+                              <div
+                                key={`${round.roundDate}_${rIdx}`}
+                                className="bg-white border border-slate-200 rounded-lg p-3 space-y-2 shadow-xs hover:border-indigo-300 transition"
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+                                    <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span>{round.roundDate}</span>
+                                  </div>
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      rIsFull
+                                        ? 'bg-emerald-100 text-emerald-700'
+                                        : rHasFailed
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-blue-100 text-blue-700'
+                                    }`}
+                                  >
+                                    {rIsFull ? 'ผ่าน 100%' : `ผ่าน ${rPassPct}%`}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 text-xs">
+                                  <div className="bg-slate-50 p-2 rounded-lg">
+                                    <div className="text-[11px] text-slate-400">ผู้เข้าอบรม</div>
+                                    <div className="font-bold text-slate-700">
+                                      {round.enrolledCount} คน
+                                    </div>
+                                  </div>
+                                  <div
+                                    className={`p-2 rounded-lg ${
+                                      rIsFull ? 'bg-emerald-50 text-emerald-800' : 'bg-blue-50 text-blue-800'
+                                    }`}
+                                  >
+                                    <div className="text-[11px] opacity-80">คนที่ผ่าน</div>
+                                    <div className="font-bold text-sm flex items-center gap-1">
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                      <span>{round.passedCount} คน</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-[11px]">
+                                    <span className="text-slate-500">อัตราผ่าน</span>
+                                    <span
+                                      className={`font-bold ${
+                                        rIsFull ? 'text-emerald-600' : rHasFailed ? 'text-amber-600' : 'text-blue-600'
+                                      }`}
+                                    >
+                                      {rPassPct}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div
+                                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                                        rIsFull ? 'bg-emerald-500' : rHasFailed ? 'bg-amber-500' : 'bg-blue-500'
+                                      }`}
+                                      style={{ width: `${Math.max(rPassPct, 4)}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+
+                                {round.failedCount > 0 && (
+                                  <div className="text-[11px] text-rose-600 flex items-center gap-1 pt-1 border-t border-slate-100">
+                                    <XCircle className="w-3 h-3" />
+                                    <span>ไม่ผ่านในรอบนี้ {round.failedCount} คน</span>
+                                  </div>
+                                )}
+
+                                <div className="text-[10px] text-slate-400 font-mono text-right pt-0.5">
+                                  Stamp: {round.lastStampDate || '-'}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 text-slate-400 text-xs">
+                {analyticsSearchQuery
+                  ? 'ไม่พบหลักสูตรตามคำค้นหาที่ระบุ'
+                  : 'ยังไม่มีข้อมูลผลการอบรมในระบบ'}
+              </div>
+            )}
           </div>
         )}
       </div>
