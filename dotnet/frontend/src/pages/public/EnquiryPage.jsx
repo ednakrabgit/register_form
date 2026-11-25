@@ -109,9 +109,10 @@ export default function EnquiryPage() {
               ขอบคุณทุกท่านที่ลงทะเบียนอบรมปี 2569
             </div>
             <p className="mb-4">
-              ข้อมูลทางด้านขวาของท่าน คือ รายละเอียดที่ท่านได้แจ้งในการลงทะเบียนอบรม กรุณาตรวจสอบความถูกต้องทั้งหมด หากท่านพบว่าข้อมูลของท่านไม่ถูกต้อง กรุณา email พร้อมแจ้งรายละเอียดที่ต้องการแก้ไขได้ที่{' '}
-              <a href="mailto:iptc.ops@viriyah.co.th" className="text-[#0b3d91] font-bold hover:underline">
-                iptc.ops@viriyah.co.th
+              ข้อมูลทางด้านขวาของท่าน คือ รายละเอียดที่ท่านได้แจ้งในการลงทะเบียนอบรม กรุณาตรวจสอบความถูกต้องทั้งหมด<br/>
+              ข้อมูลบางส่วนของท่าน สามารถแก้ไขได้ โดยเข้าระบบที่{' '}
+              <a href="https://agentportal.xn--z3cbl2brb.com/" target="_blank" rel="noopener noreferrer" className="text-[#0b3d91] font-bold hover:underline">
+                https://agentportal.วิริยะ.com/
               </a>
             </p>
             <p className="mb-4">
@@ -219,7 +220,7 @@ export default function EnquiryPage() {
             )}
 
             {result && !error && (
-              <div className="mt-4 border-t border-dashed border-gray-200 pt-4">
+              <div className="mt-5 border-t border-dashed border-gray-200 pt-5">
                 {/* Secure Shareable Link Card */}
                 <div className="mb-3 p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
                   <div className="flex items-center gap-2 min-w-0">
