@@ -233,7 +233,7 @@ try
                     UPDATE mst_renew_course SET name = N'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' WHERE id = 5;
                     UPDATE mst_renew_course SET name = N'การประกันภัยต่อ' WHERE id = 6;
                     UPDATE mst_renew_course SET name = N'จรรยาบรรณและศีลธรรมของตัวแทน/นายหน้าประกันภัย' WHERE id = 7;
-                    UPDATE mst_renew_course SET name = N'พระราชบัญญัติจราจรทางบก พ.ศ.2526 (แก้ไขเพิ่มเติม 2562)และการพิจารณาคดีแพ่ง/คดีอาญา จากเหตุที่เกิดจากอุบัติเหตุจราจร' WHERE id = 8;
+                    UPDATE mst_renew_course SET name = N'พระราชบัญญัติจราจรทางบก พ.ศ.2522 (แก้ไขเพิ่มเติม 2562)และการพิจารณาคดีแพ่ง/คดีอาญา จากเหตุที่เกิดจากอุบัติเหตุจราจร' WHERE id = 8;
                     UPDATE mst_renew_course SET name = N'พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล' WHERE id = 9;
                     UPDATE mst_renew_course SET name = N'เสนอขายถูกหลักประกันภัยเติบโต' WHERE id = 10;
                     UPDATE mst_renew_course SET name = N'กฎหมายว่าด้วยการป้องกันและปราบปรามการฟอกเงินและต่อต้านการสนับสนุนทางการเงินแก่การก่อการร้าย' WHERE id = 11;
