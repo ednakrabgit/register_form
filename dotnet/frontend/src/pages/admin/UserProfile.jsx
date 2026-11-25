@@ -1,5 +1,5 @@
 import { API_BASE_URL, API_ORIGIN } from '../../config/api';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   User, Shield, Lock, MapPin, Briefcase, BookOpen, History, 
   Save, CheckCircle2, AlertCircle, RefreshCw, Key, Eye, EyeOff,
@@ -967,11 +967,9 @@ export default function UserProfile() {
     });
   };
 
-  const displayedFullName = useMemo(() => {
-    const thaiName = `${personData.titleTh || ''}${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim()
-      || `${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim();
-    return thaiName || accountData.fullName || authUser?.username || 'ผู้ใช้งาน';
-  }, [personData.titleTh, personData.firstNameTh, personData.lastNameTh, accountData.fullName, authUser?.username]);
+  const thaiName = `${personData.titleTh || ''}${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim()
+    || `${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim();
+  const displayedFullName = thaiName || accountData.fullName || authUser?.username || 'ผู้ใช้งาน';
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 animate-in fade-in duration-200">
