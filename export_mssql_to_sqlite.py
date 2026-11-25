@@ -208,6 +208,10 @@ lookup_indexes = [
     ("personlicense", "NationId"),
     ("personother", "NationId"),
     ("personregistration", "NationId"),
+    ("persontraining5y", "NationId"),
+    ("register", "national_id"),
+    ("register", "email_alt"),
+    ("person", "EmailAlt"),
     ("register_history", "register_id"),
     ("trn_training_result", "nation_id"),
 ]
