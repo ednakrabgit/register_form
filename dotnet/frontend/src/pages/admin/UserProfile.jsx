@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { 
   User, Shield, Lock, MapPin, Briefcase, BookOpen, History, 
   Save, CheckCircle2, AlertCircle, RefreshCw, Key, Eye, EyeOff,
-  Phone, Mail, Calendar, Building, Award, Clock, Image, Upload, FileText
+  Phone, Mail, Calendar, Building, Award, Clock, Image, Upload, FileText, Loader2
 } from 'lucide-react';
 import Select from 'react-select';
 import ThaiDatePicker from '../../components/ThaiDatePicker';
@@ -56,12 +56,21 @@ const formatStampDateDisplay = (dateStr) => {
 
 export default function UserProfile() {
   const { user: authUser, token } = useAuth();
-  const userRole = (authUser?.role || '').toLowerCase();
-  const canManageRemark = userRole === 'superadmin' || userRole.startsWith('admin');
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('admin_user') || localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const effectiveRole = (authUser?.role || storedUser?.role || '').toLowerCase();
+  const canManageRemark = effectiveRole === 'superadmin' || effectiveRole.startsWith('admin');
 
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'address' | 'affiliation' | 'courses' | 'other' | 'documents' | 'password' | 'history'
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingRemark, setSavingRemark] = useState(false);
+  const [remarkSaveSuccess, setRemarkSaveSuccess] = useState(false);
   const [alert, setAlert] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [uploadingDocType, setUploadingDocType] = useState(null);
@@ -785,6 +794,33 @@ export default function UserProfile() {
     }
   };
 
+  const handleSaveRemarkOnly = async () => {
+    if (!canManageRemark) return;
+    const nId = personData.nationId || authUser?.nationId;
+    if (!nId) return;
+    setSavingRemark(true);
+    setRemarkSaveSuccess(false);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/trainees/${nId}/remark`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ remark: personData.remark || '' })
+      });
+      if (res.ok) {
+        setRemarkSaveSuccess(true);
+        showAlert('success', 'บันทึกหมายเหตุเรียบร้อยแล้ว');
+        setTimeout(() => setRemarkSaveSuccess(false), 4000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showAlert('error', err.message || 'บันทึกหมายเหตุไม่สำเร็จ');
+      }
+    } catch (e) {
+      showAlert('error', e.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    } finally {
+      setSavingRemark(false);
+    }
+  };
+
   // Change Password
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -1042,20 +1078,44 @@ export default function UserProfile() {
         <div className="space-y-4 animate-in fade-in duration-150">
           {canManageRemark && (
             <div className="bg-white rounded-2xl p-6 border border-amber-200 shadow-sm space-y-3 bg-amber-50/20">
-              <label className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-600" /> หมายเหตุ
-                <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                  เฉพาะ Super Admin / Admin
-                </span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-amber-600" /> หมายเหตุ
+                  <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    เฉพาะ Super Admin / Admin
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSaveRemarkOnly}
+                  disabled={savingRemark}
+                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+                  title="บันทึกหมายเหตุทันที"
+                >
+                  {savingRemark ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังบันทึก...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" /> บันทึกหมายเหตุ
+                    </>
+                  )}
+                </button>
+              </div>
               <textarea
                 name="remark"
                 rows={3}
                 value={personData.remark || ''}
                 onChange={handlePersonChange}
                 placeholder="กรอกหมายเหตุเกี่ยวกับผู้ใช้งาน/ผู้สมัคร..."
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
+                className="w-full px-4 py-2.5 bg-white border border-amber-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all resize-y shadow-inner"
               />
+              {remarkSaveSuccess && (
+                <p className="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> บันทึกหมายเหตุเรียบร้อยแล้ว
+                </p>
+              )}
             </div>
           )}
 

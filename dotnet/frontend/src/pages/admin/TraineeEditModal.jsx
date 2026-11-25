@@ -51,11 +51,20 @@ const formatStampDateDisplay = (dateStr) => {
 export default function TraineeEditModal({ nationId, isReadOnly = false, onClose, onSuccess }) {
   const { user, canEditMenu } = useAuth();
   const effectiveReadOnly = isReadOnly || user?.role === 'Viewer' || !canEditMenu('trainees');
-  const userRole = (user?.role || '').toLowerCase();
-  const canManageRemark = userRole === 'superadmin' || userRole.startsWith('admin');
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('admin_user') || localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const effectiveRole = (user?.role || storedUser?.role || '').toLowerCase();
+  const canManageRemark = effectiveRole === 'superadmin' || effectiveRole.startsWith('admin');
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'address' | 'license' | 'course' | 'other'
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingRemark, setSavingRemark] = useState(false);
+  const [remarkSaveSuccess, setRemarkSaveSuccess] = useState(false);
   const [sameAddress, setSameAddress] = useState(true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [saveErrorMsg, setSaveErrorMsg] = useState('');
@@ -662,6 +671,41 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
     }
   };
 
+  const handleSaveRemarkOnly = async () => {
+    if (!canManageRemark) return;
+    setSavingRemark(true);
+    setRemarkSaveSuccess(false);
+    setSaveErrorMsg('');
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('admin_token');
+      const res = await fetch(`${API_BASE_URL}/admin/trainees/${nationId}/remark`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ remark: formData.remark || '' })
+      });
+
+      if (res.ok) {
+        setRemarkSaveSuccess(true);
+        if (onSuccess) {
+          onSuccess(false); // Silently refresh the list in background
+        }
+        setTimeout(() => {
+          setRemarkSaveSuccess(false);
+        }, 4000);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setSaveErrorMsg(errData.message || 'บันทึกหมายเหตุไม่สำเร็จ');
+      }
+    } catch (err) {
+      setSaveErrorMsg(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    } finally {
+      setSavingRemark(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[60] backdrop-blur-sm">
@@ -747,6 +791,8 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
       return false;
     });
   };
+
+  const fieldsetDisabledClass = "border-0 p-0 m-0 min-w-0 space-y-4 disabled:opacity-100 [&_input:disabled]:bg-gray-100 [&_input:disabled]:text-gray-800 [&_input:disabled]:cursor-not-allowed [&_select:disabled]:bg-gray-100 [&_select:disabled]:text-gray-800 [&_select:disabled]:cursor-not-allowed [&_textarea:disabled]:bg-gray-100 [&_textarea:disabled]:text-gray-800 [&_textarea:disabled]:cursor-not-allowed";
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[60] p-4 backdrop-blur-sm">
@@ -870,34 +916,55 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-1 bg-gray-50">
           <form id="editPersonForm" onSubmit={handleSubmit}>
-            <fieldset 
-              disabled={effectiveReadOnly} 
-              className="border-0 p-0 m-0 min-w-0 space-y-4 disabled:opacity-100 [&_input:disabled]:bg-gray-100 [&_input:disabled]:text-gray-800 [&_input:disabled]:cursor-not-allowed [&_select:disabled]:bg-gray-100 [&_select:disabled]:text-gray-800 [&_select:disabled]:cursor-not-allowed [&_textarea:disabled]:bg-gray-100 [&_textarea:disabled]:text-gray-800 [&_textarea:disabled]:cursor-not-allowed"
-            >
             
             {/* TAB 1: PERSONAL INFO */}
             {activeTab === 'personal' && (
               <div className="space-y-4 animate-in fade-in duration-150">
                 {canManageRemark && (
                   <div className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm space-y-3 bg-amber-50/20">
-                    <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                      <i className="fas fa-sticky-note text-amber-600"></i> หมายเหตุ
-                      <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                        เฉพาะ Super Admin / Admin
-                      </span>
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <i className="fas fa-sticky-note text-amber-600"></i> หมายเหตุ
+                        <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                          เฉพาะ Super Admin / Admin
+                        </span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleSaveRemarkOnly}
+                        disabled={savingRemark}
+                        className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+                        title="บันทึกหมายเหตุทันที"
+                      >
+                        {savingRemark ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin"></i> กำลังบันทึก...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-save"></i> บันทึกหมายเหตุ
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <textarea
                       name="remark"
                       rows={3}
                       value={formData.remark || ''}
                       onChange={handleChange}
                       placeholder="กรอกหมายเหตุเกี่ยวกับผู้ใช้งาน/ผู้สมัคร..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
+                      className="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all resize-y shadow-inner"
                     />
+                    {remarkSaveSuccess && (
+                      <p className="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 animate-in fade-in">
+                        <i className="fas fa-check-circle text-emerald-600"></i> บันทึกหมายเหตุเรียบร้อยแล้ว
+                      </p>
+                    )}
                   </div>
                 )}
 
-                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                <fieldset disabled={effectiveReadOnly} className={fieldsetDisabledClass}>
+                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                   <h4 className="font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
                     <i className="fas fa-id-badge text-primary"></i> ข้อมูลส่วนบุคคลพื้นฐาน
                   </h4>
@@ -1117,19 +1184,21 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              </fieldset>
+            </div>
+          )}
 
-            {/* TAB 2: ADDRESSES */}
-            {activeTab === 'address' && (() => {
-              const idxA = formData?.addresses?.findIndex(a => a.addressType === 'A') ?? -1;
-              const idxC = formData?.addresses?.findIndex(a => a.addressType === 'C' || a.addressType === 'M') ?? -1;
-              const actualIdxA = idxA !== -1 ? idxA : 0;
-              const actualIdxC = idxC !== -1 ? idxC : 1;
-              const addrA = formData?.addresses?.[actualIdxA] || {};
-              const addrC = formData?.addresses?.[actualIdxC] || {};
+          {/* TAB 2: ADDRESSES */}
+          {activeTab === 'address' && (() => {
+            const idxA = formData?.addresses?.findIndex(a => a.addressType === 'A') ?? -1;
+            const idxC = formData?.addresses?.findIndex(a => a.addressType === 'C' || a.addressType === 'M') ?? -1;
+            const actualIdxA = idxA !== -1 ? idxA : 0;
+            const actualIdxC = idxC !== -1 ? idxC : 1;
+            const addrA = formData?.addresses?.[actualIdxA] || {};
+            const addrC = formData?.addresses?.[actualIdxC] || {};
 
-              return (
+            return (
+              <fieldset disabled={effectiveReadOnly} className={fieldsetDisabledClass}>
                 <div className="space-y-4 animate-in fade-in duration-150">
                   {/* 1. ที่อยู่ตามทะเบียนบ้าน */}
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
@@ -1408,11 +1477,13 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                     )}
                   </div>
                 </div>
-              );
-            })()}
+              </fieldset>
+            );
+          })()}
 
-            {/* TAB 3: LICENSES & AFFILIATION */}
-            {activeTab === 'license' && (
+          {/* TAB 3: LICENSES & AFFILIATION */}
+          {activeTab === 'license' && (
+            <fieldset disabled={effectiveReadOnly} className={fieldsetDisabledClass}>
               <div className="space-y-4 animate-in fade-in duration-150">
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                   <h4 className="font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
@@ -1575,10 +1646,12 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                   })}
                 </div>
               </div>
-            )}
+            </fieldset>
+          )}
 
-            {/* TAB 4: COURSES & SUBJECTS */}
-            {activeTab === 'course' && (
+          {/* TAB 4: COURSES & SUBJECTS */}
+          {activeTab === 'course' && (
+            <fieldset disabled={effectiveReadOnly} className={fieldsetDisabledClass}>
               <div className="space-y-4 animate-in fade-in duration-150">
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                   <h4 className="font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
@@ -1901,10 +1974,12 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                   )}
                 </div>
               </div>
-            )}
+            </fieldset>
+          )}
 
-            {/* TAB 5: OTHER INFO & BUSINESS */}
-            {activeTab === 'other' && (
+          {/* TAB 5: OTHER INFO & BUSINESS */}
+          {activeTab === 'other' && (
+            <fieldset disabled={effectiveReadOnly} className={fieldsetDisabledClass}>
               <div className="space-y-4 animate-in fade-in duration-150">
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                   <h4 className="font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
@@ -2001,9 +2076,9 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
 
                 </div>
               </div>
-            )}
-
             </fieldset>
+          )}
+
           </form>
         </div>
 
@@ -2012,7 +2087,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
           <div className="flex items-center gap-2">
             {effectiveReadOnly ? (
               <span className="text-gray-600 font-medium text-xs flex items-center gap-1.5 bg-gray-200/80 border border-gray-300 px-3 py-1.5 rounded-lg">
-                <i className="fas fa-lock text-gray-500"></i> โหมดแสดงผล (Viewer): ดูข้อมูลรายละเอียดทั้งหมดเท่านั้น ไม่สามารถแก้ไขได้
+                <i className="fas fa-lock text-gray-500"></i> โหมดแสดงผล (Viewer): ดูข้อมูลรายละเอียดทั้งหมดเท่านั้น {canManageRemark ? '(สามารถแก้ไขและบันทึกหมายเหตุได้)' : 'ไม่สามารถแก้ไขได้'}
               </span>
             ) : (
               <>
@@ -2030,6 +2105,24 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
             )}
           </div>
           <div className="flex items-center gap-3">
+            {effectiveReadOnly && canManageRemark && (
+              <button 
+                type="button" 
+                onClick={handleSaveRemarkOnly} 
+                disabled={savingRemark}
+                className="px-4 py-2.5 rounded-xl font-semibold text-sm bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {savingRemark ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> กำลังบันทึกหมายเหตุ...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save"></i> บันทึกหมายเหตุ
+                  </>
+                )}
+              </button>
+            )}
             <button 
               type="button" 
               onClick={onClose} 

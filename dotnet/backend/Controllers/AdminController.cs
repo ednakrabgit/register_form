@@ -1135,6 +1135,15 @@ namespace backend.Controllers
                 
             if (p == null) return NotFound();
 
+            if (string.IsNullOrEmpty(p.Remark))
+            {
+                var reg = await context.Registers.Where(r => r.NationalId == nationId).OrderByDescending(r => r.Id).FirstOrDefaultAsync();
+                if (reg != null && !string.IsNullOrEmpty(reg.Remark))
+                {
+                    p.Remark = reg.Remark;
+                }
+            }
+
             // Auto-merge any passed courses from TrainingResults into Trainings (5-year accumulated trainings)
             if (p.TrainingResults.Any(t => IsTrainingPassed(t.TrainingStatus)))
             {
@@ -1198,6 +1207,15 @@ namespace backend.Controllers
                 .FirstOrDefaultAsync(x => x.NationId == nationId);
                 
             if (p == null) return NotFound();
+
+            if (string.IsNullOrEmpty(p.Remark))
+            {
+                var reg = await context.Registers.Where(r => r.NationalId == nationId).OrderByDescending(r => r.Id).FirstOrDefaultAsync();
+                if (reg != null && !string.IsNullOrEmpty(reg.Remark))
+                {
+                    p.Remark = reg.Remark;
+                }
+            }
 
             if (updatedPerson.Licenses != null)
             {
@@ -1380,6 +1398,73 @@ namespace backend.Controllers
             return Ok(p);
         }
 
+        [HttpPut("trainees/{nationId}/remark")]
+        public async Task<IActionResult> UpdateTraineeRemark(string nationId, [FromBody] TraineeRemarkDto dto, [FromServices] AppDbContext context)
+        {
+            var caller = GetCallerInfo(context);
+            var roleLower = (caller.Role ?? "").ToLower();
+            bool canManageRemark = roleLower == "superadmin" || roleLower.StartsWith("admin");
+            if (!canManageRemark)
+            {
+                return StatusCode(403, new { message = "เฉพาะ Super Admin และ เจ้าหน้าที่ฝ่ายฝึกอบรม (Admin) เท่านั้นที่สามารถแก้ไขหมายเหตุได้" });
+            }
+
+            var cleanNationId = (nationId ?? "").Replace("-", "").Trim();
+            var p = await context.Persons
+                .Include(x => x.Registrations)
+                .FirstOrDefaultAsync(x => x.NationId == cleanNationId || x.NationId == nationId);
+                
+            if (p == null) return NotFound(new { message = "ไม่พบข้อมูลผู้สมัคร" });
+
+            var oldSnapshotDict = BuildPersonSnapshotDict(p, "ก่อนแก้ไขหมายเหตุ");
+            var oldRemark = p.Remark;
+            p.Remark = dto?.Remark ?? "";
+
+            // Sync to Register table
+            var regs = await context.Registers.Where(r => r.NationalId == cleanNationId || r.NationalId == nationId).ToListAsync();
+            foreach (var reg in regs)
+            {
+                reg.Remark = p.Remark;
+            }
+
+            // Save history
+            var newSnapshotDict = BuildPersonSnapshotDict(p, "แก้ไขหมายเหตุ");
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = false
+            };
+            var oldHistoryJson = JsonSerializer.Serialize(oldSnapshotDict, jsonOptions);
+            var newHistoryJson = JsonSerializer.Serialize(newSnapshotDict, jsonOptions);
+
+            var regId = p.Registrations?.FirstOrDefault()?.Id ?? regs.FirstOrDefault()?.Id ?? 0;
+            var historyRecord = new RegisterHistory
+            {
+                RegisterId = regId,
+                EditedByType = caller.Role?.ToLower() ?? "admin",
+                CreatedBy = caller.Username ?? "Admin",
+                OldData = oldHistoryJson,
+                NewData = newHistoryJson,
+                CreatedAt = DateTime.UtcNow
+            };
+            context.RegisterHistories.Add(historyRecord);
+
+            var historyRecordNew = new RegistrationHistoryModel
+            {
+                RegisterId = regId,
+                NationId = p.NationId,
+                EditedByType = caller.Role?.ToLower() ?? "admin",
+                CreatedBy = caller.Username ?? "Admin",
+                OldData = oldHistoryJson,
+                NewData = newHistoryJson,
+                CreatedAt = DateTime.UtcNow
+            };
+            context.RegistrationHistoriesNew.Add(historyRecordNew);
+
+            await context.SaveChangesAsync();
+            return Ok(new { message = "บันทึกหมายเหตุเรียบร้อยแล้ว", remark = p.Remark });
+        }
+
         // [Authorize(Roles = "Admin")] // Only full admins can delete
         [HttpDelete("trainees/{id}")]
         public async Task<IActionResult> DeleteTrainee(int id, [FromServices] AppDbContext context)
@@ -1543,5 +1628,10 @@ namespace backend.Controllers
             if (s.Contains("1/2") || s.Contains("0 วิชา")) return false;
             return s.Contains("ครบทุกวิชา") || s == "ผ่าน" || s.StartsWith("อนุมัติ") || s == "passed" || s == "pass" || s == "approved" || s == "สำเร็จ";
         }
+    }
+
+    public class TraineeRemarkDto
+    {
+        public string? Remark { get; set; }
     }
 }
