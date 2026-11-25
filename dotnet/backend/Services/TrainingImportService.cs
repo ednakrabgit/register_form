@@ -62,6 +62,8 @@ namespace backend.Services
         public int MatchedPersonsCount { get; set; }
         public int UnmatchedPersonsCount { get; set; }
         public int MismatchedDataCount { get; set; }
+        public int UpdatedRecordsCount { get; set; }
+        public int InsertedRecordsCount { get; set; }
         public List<TrainingImportRowDto> Rows { get; set; } = new List<TrainingImportRowDto>();
     }
 
@@ -395,44 +397,53 @@ namespace backend.Services
                 .Where(p => nationIds.Contains(p.NationId!))
                 .ToDictionaryAsync(p => p.NationId!, p => p);
 
-            var resultsToInsert = new List<TrnTrainingResult>();
+            // Pre-fetch existing training results for all nationIds to check for duplicates
+            var existingResults = await _context.TrainingResults
+                .Where(t => nationIds.Contains(t.NationId!))
+                .ToListAsync();
+
+            // Match lookups:
+            // 1. Exact match: (NationId, TrainingCourseName, SubjectNames, NormalizedDate)
+            // 2. Subject match: (NationId, SubjectNames, NormalizedDate)
+            var existingMapExact = new Dictionary<string, TrnTrainingResult>(StringComparer.OrdinalIgnoreCase);
+            var existingMapSubject = new Dictionary<string, TrnTrainingResult>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var ex in existingResults)
+            {
+                var normD = NormalizeToStartDate(ex.TrainingCourseName, ex.TrainingDateDisplay ?? "");
+                var exactK = $"{ex.NationId?.Trim()}_{ex.TrainingCourseName?.Trim()}_{ex.SubjectNames?.Trim()}_{normD}";
+                if (!existingMapExact.ContainsKey(exactK))
+                {
+                    existingMapExact[exactK] = ex;
+                }
+                if (!string.IsNullOrEmpty(ex.SubjectNames))
+                {
+                    var subK = $"{ex.NationId?.Trim()}_{ex.SubjectNames?.Trim()}_{normD}";
+                    if (!existingMapSubject.ContainsKey(subK))
+                    {
+                        existingMapSubject[subK] = ex;
+                    }
+                }
+            }
+
+            int updatedRecordsCount = 0;
+            int insertedRecordsCount = 0;
 
             foreach (var r in summary.Rows)
             {
-                var result = new TrnTrainingResult
-                {
-                    NationId = r.NationalId,
-                    OriginalLicenseNo = r.OriginalLicenseNo,
-                    TrainingCourseCode = r.TrainingCourseCode,
-                    TrainingCourseName = r.TrainingCourseName,
-                    SubjectNames = !string.IsNullOrEmpty(r.PassedSubjectsDisplay) && r.PassedSubjectsDisplay != "ไม่มีวิชาที่ผ่าน" ? r.PassedSubjectsDisplay : r.TrainingCourseName,
-                    TrainingDateDisplay = r.TrainingDateDisplay,
-                    TrainingStatus = r.TrainingStatus,
-                    DeductionPrivilege = r.DeductionPrivilege,
-                    DeductionDocStatus = r.DeductionDocStatus,
-                    ProgressPercent = r.ProgressPercent,
-                    ScorePercent = r.ScorePercent,
-                    EnrollmentUrl = r.EnrollmentUrl,
-                    VerifiedTitleTh = r.VerifiedTitleTh,
-                    VerifiedFirstNameTh = r.VerifiedFirstNameTh,
-                    VerifiedLastNameTh = r.VerifiedLastNameTh,
-                    VerifiedLicenseNo = r.VerifiedLicenseNo,
-                    VerifiedLicenseIssueDate = r.VerifiedLicenseIssueDate,
-                    VerifiedLicenseExpiryDate = r.VerifiedLicenseExpiryDate,
-                    VerifiedApplicantType = r.VerifiedApplicantType,
-                    VerifiedLicenseType = r.VerifiedLicenseType,
-                    VerifiedInsuranceType = r.VerifiedInsuranceType,
-                    StampDate = DateTime.Now,
-                    ImportFileName = fileName,
-                    IsDataMismatch = r.IsDataMismatch ? "Y" : "N"
-                };
+                var normTrainingDate = NormalizeToStartDate(r.TrainingCourseName, r.TrainingDateDisplay ?? "");
+                var subName = !string.IsNullOrEmpty(r.PassedSubjectsDisplay) && r.PassedSubjectsDisplay != "ไม่มีวิชาที่ผ่าน" 
+                    ? r.PassedSubjectsDisplay 
+                    : r.TrainingCourseName;
+
+                int? personRegId = null;
 
                 if (!string.IsNullOrEmpty(r.NationalId) && persons.TryGetValue(r.NationalId, out var person))
                 {
                     var latestReg = person.Registrations.OrderByDescending(reg => reg.Id).FirstOrDefault();
                     if (latestReg != null)
                     {
-                        result.PersonRegistrationId = latestReg.Id;
+                        personRegId = latestReg.Id;
 
                         // If passed in training system ("อนุมัติ" or "ผ่าน"), stamp confirmed status
                         if (r.TrainingStatus != null && (r.TrainingStatus.StartsWith("อนุมัติ") || r.TrainingStatus.StartsWith("ผ่าน")))
@@ -452,8 +463,6 @@ namespace backend.Services
                         }
                     }
 
-
-
                     // Optional sync of verified data to person master & license
                     if (syncVerifiedDataToPerson)
                     {
@@ -461,10 +470,10 @@ namespace backend.Services
                         if (!string.IsNullOrWhiteSpace(r.VerifiedFirstNameTh)) person.FirstNameTh = r.VerifiedFirstNameTh.Trim();
                         if (!string.IsNullOrWhiteSpace(r.VerifiedLastNameTh)) person.LastNameTh = r.VerifiedLastNameTh.Trim();
 
+                        var license = person.Licenses.FirstOrDefault();
                         if (!string.IsNullOrWhiteSpace(r.VerifiedLicenseNo))
                         {
                             var cleanLic = r.VerifiedLicenseNo.Trim();
-                            var license = person.Licenses.FirstOrDefault();
                             if (license == null)
                             {
                                 license = new PersonLicense
@@ -478,7 +487,10 @@ namespace backend.Services
                             {
                                 license.LicenseNo = cleanLic;
                             }
+                        }
 
+                        if (license != null)
+                        {
                             if (DateTime.TryParse(r.VerifiedLicenseIssueDate, out var issueDate))
                             {
                                 license.LicenseIssueDate = issueDate;
@@ -491,39 +503,92 @@ namespace backend.Services
                     }
                 }
 
-                resultsToInsert.Add(result);
+                // Check for duplicate record: If already stamped, UPDATE existing record instead of inserting new
+                var exactKey = $"{r.NationalId?.Trim()}_{r.TrainingCourseName?.Trim()}_{subName?.Trim()}_{normTrainingDate}";
+                var subKey = !string.IsNullOrEmpty(subName) ? $"{r.NationalId?.Trim()}_{subName?.Trim()}_{normTrainingDate}" : null;
+
+                TrnTrainingResult? target = null;
+                if (existingMapExact.TryGetValue(exactKey, out var foundExact))
+                {
+                    target = foundExact;
+                }
+                else if (subKey != null && existingMapSubject.TryGetValue(subKey, out var foundSub))
+                {
+                    target = foundSub;
+                }
+
+                if (target != null)
+                {
+                    // UPDATE existing record in-place (ใช้ record ที่ซ้ำ update record เดิมแทน ไม่ใช่การเพิ่ม)
+                    if (personRegId.HasValue) target.PersonRegistrationId = personRegId.Value;
+                    if (!string.IsNullOrWhiteSpace(r.OriginalLicenseNo)) target.OriginalLicenseNo = r.OriginalLicenseNo;
+                    if (!string.IsNullOrWhiteSpace(r.TrainingCourseCode)) target.TrainingCourseCode = r.TrainingCourseCode;
+                    if (!string.IsNullOrWhiteSpace(r.TrainingCourseName)) target.TrainingCourseName = r.TrainingCourseName;
+                    if (!string.IsNullOrWhiteSpace(subName)) target.SubjectNames = subName;
+                    target.TrainingDateDisplay = normTrainingDate;
+                    if (!string.IsNullOrWhiteSpace(r.TrainingStatus)) target.TrainingStatus = r.TrainingStatus;
+                    if (!string.IsNullOrWhiteSpace(r.DeductionPrivilege)) target.DeductionPrivilege = r.DeductionPrivilege;
+                    if (!string.IsNullOrWhiteSpace(r.DeductionDocStatus)) target.DeductionDocStatus = r.DeductionDocStatus;
+                    if (!string.IsNullOrWhiteSpace(r.ProgressPercent)) target.ProgressPercent = r.ProgressPercent;
+                    if (!string.IsNullOrWhiteSpace(r.ScorePercent)) target.ScorePercent = r.ScorePercent;
+                    if (!string.IsNullOrWhiteSpace(r.EnrollmentUrl)) target.EnrollmentUrl = r.EnrollmentUrl;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedTitleTh)) target.VerifiedTitleTh = r.VerifiedTitleTh;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedFirstNameTh)) target.VerifiedFirstNameTh = r.VerifiedFirstNameTh;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedLastNameTh)) target.VerifiedLastNameTh = r.VerifiedLastNameTh;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedLicenseNo)) target.VerifiedLicenseNo = r.VerifiedLicenseNo;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedLicenseIssueDate)) target.VerifiedLicenseIssueDate = r.VerifiedLicenseIssueDate;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedLicenseExpiryDate)) target.VerifiedLicenseExpiryDate = r.VerifiedLicenseExpiryDate;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedApplicantType)) target.VerifiedApplicantType = r.VerifiedApplicantType;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedLicenseType)) target.VerifiedLicenseType = r.VerifiedLicenseType;
+                    if (!string.IsNullOrWhiteSpace(r.VerifiedInsuranceType)) target.VerifiedInsuranceType = r.VerifiedInsuranceType;
+                    target.StampDate = DateTime.Now;
+                    target.ImportFileName = fileName;
+                    target.IsDataMismatch = r.IsDataMismatch ? "Y" : "N";
+
+                    updatedRecordsCount++;
+                }
+                else
+                {
+                    // INSERT new record (เพิ่มเฉพาะกรณีไม่เคยมี record นี้มาก่อน)
+                    var newResult = new TrnTrainingResult
+                    {
+                        NationId = r.NationalId,
+                        PersonRegistrationId = personRegId,
+                        OriginalLicenseNo = r.OriginalLicenseNo,
+                        TrainingCourseCode = r.TrainingCourseCode,
+                        TrainingCourseName = r.TrainingCourseName,
+                        SubjectNames = subName,
+                        TrainingDateDisplay = normTrainingDate,
+                        TrainingStatus = r.TrainingStatus,
+                        DeductionPrivilege = r.DeductionPrivilege,
+                        DeductionDocStatus = r.DeductionDocStatus,
+                        ProgressPercent = r.ProgressPercent,
+                        ScorePercent = r.ScorePercent,
+                        EnrollmentUrl = r.EnrollmentUrl,
+                        VerifiedTitleTh = r.VerifiedTitleTh,
+                        VerifiedFirstNameTh = r.VerifiedFirstNameTh,
+                        VerifiedLastNameTh = r.VerifiedLastNameTh,
+                        VerifiedLicenseNo = r.VerifiedLicenseNo,
+                        VerifiedLicenseIssueDate = r.VerifiedLicenseIssueDate,
+                        VerifiedLicenseExpiryDate = r.VerifiedLicenseExpiryDate,
+                        VerifiedApplicantType = r.VerifiedApplicantType,
+                        VerifiedLicenseType = r.VerifiedLicenseType,
+                        VerifiedInsuranceType = r.VerifiedInsuranceType,
+                        StampDate = DateTime.Now,
+                        ImportFileName = fileName,
+                        IsDataMismatch = r.IsDataMismatch ? "Y" : "N"
+                    };
+
+                    _context.TrainingResults.Add(newResult);
+                    existingMapExact[exactKey] = newResult;
+                    if (subKey != null) existingMapSubject[subKey] = newResult;
+                    insertedRecordsCount++;
+                }
             }
 
-            // Prevent duplicate records:
-            // 1. Remove previous records for this fileName
-            var existingResultsForFile = await _context.TrainingResults.Where(t => t.ImportFileName == fileName).ToListAsync();
-            if (existingResultsForFile.Count > 0)
-            {
-                _context.TrainingResults.RemoveRange(existingResultsForFile);
-            }
-
-            // 2. Deduplicate resultsToInsert within the batch itself
-            resultsToInsert = resultsToInsert
-                .GroupBy(r => new { r.NationId, r.TrainingCourseName, r.SubjectNames, r.TrainingDateDisplay })
-                .Select(g => g.OrderByDescending(x => x.TrainingStatus != null && x.TrainingStatus.Contains("ผ่าน") ? 1 : 0).First())
-                .ToList();
-
-            // 3. Prevent duplicate records across different files for the same person, round, subject, and date
-            var insertKeys = resultsToInsert.Select(r => $"{r.NationId}_{r.TrainingCourseName}_{r.SubjectNames}_{r.TrainingDateDisplay}").ToHashSet();
-            var existingDuplicates = await _context.TrainingResults
-                .Where(t => nationIds.Contains(t.NationId!))
-                .ToListAsync();
-            
-            var existingToRemove = existingDuplicates
-                .Where(t => insertKeys.Contains($"{t.NationId}_{t.TrainingCourseName}_{t.SubjectNames}_{t.TrainingDateDisplay}"))
-                .ToList();
-            if (existingToRemove.Count > 0)
-            {
-                _context.TrainingResults.RemoveRange(existingToRemove);
-            }
-
-            await _context.TrainingResults.AddRangeAsync(resultsToInsert);
             await _context.SaveChangesAsync();
+            summary.UpdatedRecordsCount = updatedRecordsCount;
+            summary.InsertedRecordsCount = insertedRecordsCount;
 
             return summary;
         }

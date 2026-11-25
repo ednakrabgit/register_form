@@ -120,9 +120,16 @@ export default function TrainingImport() {
       }
 
       const json = await res.json();
-      setSuccessMessage(`ดำเนินการ Stamp ผลการอบรมสำเร็จเรียบร้อยแล้ว (${json.summary?.passedCount || 0} ผ่าน / ${json.summary?.failedCount || 0} ไม่ผ่าน)`);
+      const updated = json.summary?.updatedRecordsCount || 0;
+      const inserted = json.summary?.insertedRecordsCount || 0;
+      let msg = `ดำเนินการ Stamp ผลการอบรมสำเร็จเรียบร้อยแล้ว (${json.summary?.passedCount || 0} ผ่าน / ${json.summary?.failedCount || 0} ไม่ผ่าน)`;
+      if (updated > 0 || inserted > 0) {
+        msg += ` • บันทึกใหม่ ${inserted} รายการ • อัปเดตข้อมูลเดิม ${updated} รายการ`;
+      }
+      setSuccessMessage(msg);
       setPreviewData(null);
       setSelectedFile(null);
+      fetchHistory();
     } catch (err) {
       setErrorMessage(err.message);
     } finally {
