@@ -468,7 +468,18 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <a
+                        href={`/enquiry/?citizen_id=${trainee.nationId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 text-xs bg-white hover:bg-slate-50 text-blue-700 border border-blue-200 rounded-lg font-semibold flex items-center gap-1.5 shadow-2xs transition"
+                        title="เปิดดูหน้ารายละเอียด Enquiry ที่แปลงรหัสปลอดภัยแล้ว"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                        <span>ลิงก์ตรวจสอบ (Enquiry)</span>
+                      </a>
+
                       {trainee.totalResults > 0 && trainee.totalPassed >= trainee.totalResults ? (
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-2xs">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />

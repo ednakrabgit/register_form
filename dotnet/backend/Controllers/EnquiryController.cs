@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
+using backend.Services;
 
 namespace backend.Controllers
 {
@@ -21,30 +22,70 @@ namespace backend.Controllers
             _context = context;
         }
 
-        [HttpGet("{citizenId}")]
-        public async Task<IActionResult> GetByPath(string citizenId)
+        [HttpGet("encode/{citizenId}")]
+        public IActionResult EncodeCitizenId(string citizenId)
         {
-            return await QueryEnquiry(citizenId);
+            var clean = new string((citizenId ?? "").Where(char.IsDigit).ToArray());
+            if (clean.Length != 13) return BadRequest(new { message = "Citizen ID must be 13 digits" });
+            var code = CitizenIdSecurity.Encrypt(clean);
+            return Ok(new
+            {
+                code = code,
+                maskedCitizenId = CitizenIdSecurity.Mask(clean),
+                shareUrl = $"/enquiry/?code={code}"
+            });
+        }
+
+        [HttpGet("{citizenIdOrCode}")]
+        public async Task<IActionResult> GetByPath(string citizenIdOrCode)
+        {
+            return await QueryEnquiry(citizenIdOrCode);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetByQuery([FromQuery] string? citizen_id, [FromQuery] string? national_id)
+        public async Task<IActionResult> GetByQuery(
+            [FromQuery] string? code,
+            [FromQuery] string? token,
+            [FromQuery] string? citizen_id,
+            [FromQuery] string? national_id)
         {
-            var id = !string.IsNullOrEmpty(citizen_id) ? citizen_id : national_id;
-            return await QueryEnquiry(id);
+            var idOrCode = !string.IsNullOrEmpty(code) ? code
+                         : (!string.IsNullOrEmpty(token) ? token
+                         : (!string.IsNullOrEmpty(citizen_id) ? citizen_id : national_id));
+            return await QueryEnquiry(idOrCode);
         }
 
-        private async Task<IActionResult> QueryEnquiry(string? citizenId)
+        private async Task<IActionResult> QueryEnquiry(string? idOrCode)
         {
-            if (string.IsNullOrWhiteSpace(citizenId))
+            if (string.IsNullOrWhiteSpace(idOrCode))
             {
-                return BadRequest(new { message = "กรุณากรอกเลขบัตรประชาชน 13 หลัก" });
+                return BadRequest(new { message = "กรุณากรอกเลขบัตรประชาชน 13 หลัก หรือรหัสที่ปลอดภัย" });
             }
 
-            var cleanId = new string(citizenId.Where(char.IsDigit).ToArray());
+            var trimmed = idOrCode.Trim();
+            string cleanId;
+
+            // 1. Try to decrypt if it looks like a secure code/token (not raw 13 digits)
+            if (trimmed.Length != 13 || !trimmed.All(char.IsDigit))
+            {
+                var decrypted = CitizenIdSecurity.Decrypt(trimmed);
+                if (!string.IsNullOrEmpty(decrypted))
+                {
+                    cleanId = decrypted;
+                }
+                else
+                {
+                    cleanId = new string(trimmed.Where(char.IsDigit).ToArray());
+                }
+            }
+            else
+            {
+                cleanId = trimmed;
+            }
+
             if (cleanId.Length != 13)
             {
-                return BadRequest(new { message = "กรุณากรอกเลขบัตรประชาชน 13 หลัก" });
+                return BadRequest(new { message = "กรุณากรอกเลขบัตรประชาชน 13 หลัก หรือรหัสอ้างอิงที่ถูกต้อง" });
             }
 
             // Optional check for Thai ID format
@@ -173,10 +214,17 @@ namespace backend.Controllers
                 })
                 .ToList();
 
+            var secureCode = CitizenIdSecurity.Encrypt(cleanId);
+            var reqHost = Request.Host.Value;
+            var reqScheme = Request.Scheme;
+            var shareUrl = $"{reqScheme}://{reqHost}/enquiry/?code={secureCode}";
+
             return Ok(new
             {
                 found = true,
-                citizenId = cleanId,
+                code = secureCode,
+                secureCode = secureCode,
+                shareUrl = shareUrl,
                 maskedCitizenId = maskedId,
                 fullName,
                 title,

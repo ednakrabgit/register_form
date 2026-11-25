@@ -5,17 +5,18 @@ import { useLocation } from 'react-router-dom';
 export default function EnquiryPage() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const initialId = searchParams.get('citizen_id') || searchParams.get('national_id') || '';
+  const initialQuery = searchParams.get('code') || searchParams.get('token') || searchParams.get('citizen_id') || searchParams.get('national_id') || '';
 
-  const [nationalId, setNationalId] = useState(initialId.replace(/\D/g, ''));
+  const [nationalId, setNationalId] = useState(initialQuery);
   const [isSearching, setIsSearching] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const fetchEnquiry = async (idToSearch) => {
-    const cleanId = (idToSearch || '').replace(/\D/g, '');
-    if (!cleanId || cleanId.length !== 13) {
-      setError("กรุณากรอกเลขบัตรประชาชน 13 หลัก");
+    const rawVal = (idToSearch || '').trim();
+    if (!rawVal) {
+      setError("กรุณากรอกเลขบัตรประชาชน 13 หลัก หรือรหัสที่ปลอดภัย");
       return;
     }
 
@@ -24,7 +25,7 @@ export default function EnquiryPage() {
     setResult(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/Enquiry/${cleanId}`);
+      const res = await fetch(`${API_BASE_URL}/Enquiry?code=${encodeURIComponent(rawVal)}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -33,9 +34,17 @@ export default function EnquiryPage() {
       }
 
       setResult(data);
-      // Update URL without refresh
-      const newUrl = `${window.location.pathname}?citizen_id=${cleanId}`;
-      window.history.replaceState({ path: newUrl }, '', newUrl);
+      // Mask the ID in the input box so plain citizen ID is hidden
+      if (data.maskedCitizenId) {
+        setNationalId(data.maskedCitizenId);
+      }
+
+      // Update URL with secure code (hides the plain citizen ID completely)
+      if (data.secureCode || data.code) {
+        const secureParam = data.secureCode || data.code;
+        const newUrl = `${window.location.pathname}?code=${encodeURIComponent(secureParam)}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+      }
     } catch (err) {
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ กรุณาลองใหม่อีกครั้ง');
     } finally {
@@ -44,14 +53,37 @@ export default function EnquiryPage() {
   };
 
   useEffect(() => {
-    if (initialId && initialId.replace(/\D/g, '').length === 13) {
-      fetchEnquiry(initialId);
+    if (initialQuery) {
+      fetchEnquiry(initialQuery);
     }
-  }, [initialId]);
+  }, [initialQuery]);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     fetchEnquiry(nationalId);
+  };
+
+  const copyShareLink = () => {
+    const code = result?.secureCode || result?.code;
+    const url = code 
+      ? `${window.location.origin}/enquiry/?code=${encodeURIComponent(code)}`
+      : window.location.href;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
   };
 
   return (
@@ -125,18 +157,41 @@ export default function EnquiryPage() {
 
             <form onSubmit={handleSearch}>
               <div className="mb-3">
-                <label className="block text-sm font-bold text-gray-900 mb-1.5">
-                  เลขบัตรประชาชน
-                </label>
-                <input
-                  type="text"
-                  maxLength="13"
-                  value={nationalId}
-                  onChange={(e) => setNationalId(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3.5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 text-sm sm:text-base font-mono transition-all"
-                  placeholder="ตัวเลข 13 หลัก"
-                />
-                <p className="text-xs text-gray-500 mt-1.5">* กรอกเฉพาะตัวเลข 13 หลัก</p>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-bold text-gray-900">
+                    เลขบัตรประชาชน
+                  </label>
+                  {result?.maskedCitizenId && (
+                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                      <i className="fas fa-shield-alt text-emerald-600 text-[10px]"></i> ซ่อนข้อมูลส่วนบุคคลแล้ว
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={nationalId}
+                    onFocus={() => {
+                      if (nationalId.startsWith('X')) {
+                        setNationalId('');
+                      }
+                    }}
+                    onChange={(e) => setNationalId(e.target.value.trim())}
+                    className="w-full pl-3.5 pr-8 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 text-sm sm:text-base font-mono transition-all"
+                    placeholder="กรอกเลขบัตร 13 หลัก หรือรหัสอ้างอิง"
+                  />
+                  {nationalId && (
+                    <button
+                      type="button"
+                      onClick={() => setNationalId('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded"
+                      title="ล้างข้อความ"
+                    >
+                      <i className="fas fa-times text-xs"></i>
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5">* กรอกเลขบัตร ปชช. 13 หลัก หรือรหัสอ้างอิงที่ได้รับ</p>
                 <p className="text-xs text-gray-500 mt-0.5">* ถ้าท่านลงทะเบียนมากกว่า 1 ครั้ง ศูนย์ฝึกฯ จะใช้ข้อมูลที่ท่านลงทะเบียนเข้ามาครั้งล่าสุด</p>
               </div>
 
@@ -165,6 +220,32 @@ export default function EnquiryPage() {
 
             {result && !error && (
               <div className="mt-4 border-t border-dashed border-gray-200 pt-4">
+                {/* Secure Shareable Link Card */}
+                <div className="mb-3 p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                      <i className="fas fa-shield-alt text-base"></i>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-emerald-900 flex items-center gap-1.5">
+                        <span>ลิงก์ที่ปลอดภัย (แปลงรหัสแล้ว)</span>
+                        <span className="text-[10px] bg-emerald-200/70 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">ส่งต่อได้</span>
+                      </div>
+                      <div className="text-[11px] text-emerald-700 truncate">
+                        ซ่อนเลขบัตรประชาชน ปลอดภัยสำหรับการส่งต่อ
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyShareLink}
+                    className="shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <i className={`fas ${copied ? 'fa-check' : 'fa-link'}`}></i>
+                    <span>{copied ? 'คัดลอกเรียบร้อย!' : 'คัดลอกลิงก์ส่งต่อ'}</span>
+                  </button>
+                </div>
+
                 <div className="mb-3 p-3 bg-cyan-50 border border-cyan-200 text-cyan-800 rounded-xl text-xs sm:text-sm">
                   <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold text-xs mr-2">
                     พบข้อมูล

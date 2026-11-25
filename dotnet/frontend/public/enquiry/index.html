@@ -249,12 +249,12 @@
                             type="text"
                             id="citizen_id"
                             name="citizen_id"
-                            inputmode="numeric"
                             autocomplete="off"
-                            maxlength="13"
-                            placeholder="ตัวเลข 13 หลัก"
+                            maxlength="100"
+                            placeholder="กรอกเลขบัตร 13 หลัก หรือรหัสอ้างอิง"
+                            onfocus="if(this.value.startsWith('X')) this.value='';"
                         >
-                        <div class="help">* กรอกเฉพาะตัวเลข 13 หลัก</div>
+                        <div class="help">* กรอกเลขบัตร ปชช. 13 หลัก หรือรหัสอ้างอิงที่ได้รับ</div>
                         <div class="help">* ถ้าท่านลงทะเบียนมากกว่า 1 ครั้ง ศูนย์ฝึกฯ จะใช้ข้อมูลที่ท่านลงทะเบียนเข้ามาครั้งล่าสุด</div>
                     </div>
 
@@ -264,6 +264,23 @@
                 <div id="errorBox" class="msg err" style="display:none;"></div>
 
                 <div id="resultBox" style="display:none;">
+                    <div id="shareBox" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; padding:12px; border-radius:12px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:32px; height:32px; border-radius:50%; background:#d1fae5; color:#059669; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:bold; font-size:13px; color:#064e3b;">ลิงก์ที่ปลอดภัย (แปลงรหัสแล้ว)</div>
+                                    <div style="font-size:11px; color:#047857;">ซ่อนเลขบัตรประชาชน ปลอดภัยสำหรับการส่งต่อ</div>
+                                </div>
+                            </div>
+                            <button type="button" id="copyShareBtn" onclick="copyShareUrl()" style="background:#059669; color:#fff; border:none; padding:7px 14px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                                <i class="fas fa-link"></i> <span id="copyBtnText">คัดลอกลิงก์ส่งต่อ</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div id="dateNoticeBox" class="msg ok">
                         <span class="badge">พบข้อมูล</span> ข้อมูลที่ท่านลงทะเบียนด้วยตนเองในวันที่ <b id="lblRegDate"></b>
                     </div>
@@ -341,20 +358,46 @@
         return div.innerHTML;
     }
 
+    var currentShareCode = '';
+
+    function copyShareUrl() {
+        var code = currentShareCode;
+        var url = code 
+            ? (window.location.protocol + "//" + window.location.host + window.location.pathname + '?code=' + encodeURIComponent(code))
+            : window.location.href;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(function() {
+                var btnText = document.getElementById('copyBtnText');
+                btnText.innerText = 'คัดลอกเรียบร้อยแล้ว!';
+                setTimeout(function() { btnText.innerText = 'คัดลอกลิงก์ส่งต่อ'; }, 2500);
+            });
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = url;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            var btnText = document.getElementById('copyBtnText');
+            btnText.innerText = 'คัดลอกเรียบร้อยแล้ว!';
+            setTimeout(function() { btnText.innerText = 'คัดลอกลิงก์ส่งต่อ'; }, 2500);
+        }
+    }
+
     async function doSearch() {
         var input = document.getElementById('citizen_id');
         var btn = document.getElementById('searchBtn');
         var errBox = document.getElementById('errorBox');
         var resBox = document.getElementById('resultBox');
 
-        var val = (input.value || '').replace(/\D/g, '');
-        input.value = val;
+        var val = (input.value || '').trim();
 
         errBox.style.display = 'none';
         resBox.style.display = 'none';
 
-        if (val.length !== 13) {
-            errBox.innerText = 'กรุณากรอกเลขบัตรประชาชน 13 หลัก';
+        if (!val) {
+            errBox.innerText = 'กรุณากรอกเลขบัตรประชาชน 13 หลัก หรือรหัสอ้างอิง';
             errBox.style.display = 'block';
             return;
         }
@@ -363,7 +406,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังค้นหา...';
 
         try {
-            var res = await fetch('/api/Enquiry/' + val);
+            var res = await fetch('/api/Enquiry?code=' + encodeURIComponent(val));
             var data = await res.json();
 
             if (!res.ok) {
@@ -385,6 +428,11 @@
             document.getElementById('lblRenewLevel').innerText = data.renewLevel || 'ไม่มีข้อมูล';
             document.getElementById('lblPastCourses').innerText = data.pastCourses || 'ไม่มีข้อมูล';
             document.getElementById('lblWantCourses').innerText = data.wantCourses || 'ไม่มีข้อมูล';
+
+            // Mask the ID in the input box so it is not visible on screen
+            if (data.maskedCitizenId) {
+                input.value = data.maskedCitizenId;
+            }
 
             // Stamped results if any
             var stampSection = document.getElementById('stampedResultsSection');
@@ -409,9 +457,14 @@
 
             resBox.style.display = 'block';
 
-            // Update URL without reloading page
-            var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?citizen_id=' + val;
-            window.history.replaceState({ path: newUrl }, '', newUrl);
+            // Update URL with secure code (hides raw citizen ID completely)
+            var secureCode = data.secureCode || data.code;
+            if (secureCode) {
+                currentShareCode = secureCode;
+                var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?code=' + encodeURIComponent(secureCode);
+                window.history.replaceState({ path: newUrl }, '', newUrl);
+                document.getElementById('shareBox').style.display = 'block';
+            }
 
         } catch (e) {
             errBox.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
@@ -425,13 +478,10 @@
     // Auto-search if query param present
     window.addEventListener('DOMContentLoaded', function() {
         var params = new URLSearchParams(window.location.search);
-        var qId = params.get('citizen_id') || params.get('national_id');
-        if (qId) {
-            var clean = qId.replace(/\D/g, '');
-            if (clean.length === 13) {
-                document.getElementById('citizen_id').value = clean;
-                doSearch();
-            }
+        var q = params.get('code') || params.get('token') || params.get('citizen_id') || params.get('national_id');
+        if (q) {
+            document.getElementById('citizen_id').value = q.trim();
+            doSearch();
         }
     });
 </script>
