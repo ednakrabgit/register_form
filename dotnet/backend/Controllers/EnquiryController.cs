@@ -119,12 +119,15 @@ namespace backend.Controllers
                 .Include(p => p.Licenses)
                 .Include(p => p.Affiliations)
                 .Include(p => p.TrainingResults)
+                .Include(p => p.Trainings)
                 .FirstOrDefaultAsync(p => p.NationId == cleanId);
 
             if (reg == null && person == null)
             {
                 return NotFound(new { message = "ไม่พบข้อมูลการอบรมของท่าน" });
             }
+
+            var allRenewCourses = await _context.RenewCourses.ToListAsync();
 
             // Build attributes
             var title = reg?.TitleTh ?? person?.TitleTh ?? "";
@@ -166,12 +169,12 @@ namespace backend.Controllers
                 ? FormatThaiDateShort(reg.CompletionTime.Value)
                 : (reg?.CreatedAt.HasValue == true ? FormatThaiDateShort(reg.CreatedAt.Value) : "ไม่ทราบวันที่");
 
-            var pastCourses = FormatPastCourses(reg?.PastTraining5y);
-
             // Stamped passed results from new system
             var passedStamps = person?.TrainingResults?
                 .Where(t => t.TrainingStatus != null && (t.TrainingStatus.Contains("ผ่าน") || t.TrainingStatus.Contains("อนุมัติ")))
                 .ToList() ?? new List<TrnTrainingResult>();
+
+            var pastCourses = FormatPastCourses(reg?.PastTraining5y, passedStamps, person?.Trainings?.ToList(), allRenewCourses);
 
             // Wanted courses: Check override columns first (renew_agent_1..3, renew_broker_1..3)
             var wantCandidates = new List<string>();
@@ -302,45 +305,87 @@ namespace backend.Controllers
             return new string(chars);
         }
 
-        private static string FormatPastCourses(string? s)
+        private static string FormatPastCourses(
+            string? rawPastTraining,
+            List<TrnTrainingResult>? passedStamps,
+            List<PersonTraining5y>? personTrainings,
+            List<MstRenewCourse>? allRenewCourses)
         {
-            if (string.IsNullOrWhiteSpace(s) || s.Trim() == "ไม่มีข้อมูล") return "ไม่มีข้อมูล";
-
-            var parts = Regex.Split(s, @"\s*;\s*|\n+");
-            var items = new List<string>();
+            var renewDict = allRenewCourses?.ToDictionary(c => c.Id, c => c.Name) ?? new Dictionary<int, string>();
+            var collected = new List<string>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var p in parts)
+            void AddItem(string? name)
             {
-                var clean = p.Trim();
-                if (string.IsNullOrEmpty(clean)) continue;
+                if (string.IsNullOrWhiteSpace(name)) return;
+                var trimmed = name.Trim();
+                if (trimmed == "ไม่มีข้อมูล" || trimmed == "ไม่เคยผ่านการอบรมมาก่อน" || trimmed == "-" || trimmed == "null") return;
 
-                // Normalize key for deduplication
-                var dedup = Regex.Replace(clean, @"^\s*\d+[\.\)\s]+", "");
-                dedup = dedup.Replace("กฏ", "กฎ");
-                dedup = CleanDedupKey(dedup);
-                if (!string.IsNullOrEmpty(dedup))
+                // Strip leading numbering e.g. "1. ", "1) "
+                var cleanName = Regex.Replace(trimmed, @"^\s*\d+[\.\)\s]+", "").Trim();
+                var dedupKey = CleanSubjectKey(cleanName);
+                if (!string.IsNullOrEmpty(dedupKey) && !seen.Contains(dedupKey))
                 {
-                    if (seen.Contains(dedup)) continue;
-                    seen.Add(dedup);
+                    seen.Add(dedupKey);
+                    collected.Add(cleanName);
                 }
-                items.Add(clean);
             }
 
-            if (items.Count == 0) return "ไม่มีข้อมูล";
-
-            // Sort by leading number if any
-            items.Sort((a, b) =>
+            // 1. From raw past_training_5y in register table
+            if (!string.IsNullOrWhiteSpace(rawPastTraining))
             {
-                int na = 1000000000, nb = 1000000000;
-                var ma = Regex.Match(a, @"^\s*(\d+)");
-                if (ma.Success) int.TryParse(ma.Groups[1].Value, out na);
-                var mb = Regex.Match(b, @"^\s*(\d+)");
-                if (mb.Success) int.TryParse(mb.Groups[1].Value, out nb);
-                return na.CompareTo(nb);
-            });
+                var parts = Regex.Split(rawPastTraining, @"\s*;\s*|\n+");
+                foreach (var p in parts)
+                {
+                    if (int.TryParse(p.Trim(), out int cid) && renewDict.TryGetValue(cid, out var cName))
+                    {
+                        AddItem(cName);
+                    }
+                    else
+                    {
+                        AddItem(p);
+                    }
+                }
+            }
 
-            return string.Join("\n", items);
+            // 2. From personTrainings (persontraining5y)
+            if (personTrainings != null)
+            {
+                foreach (var pt in personTrainings)
+                {
+                    if (pt.CourseId.HasValue && renewDict.TryGetValue(pt.CourseId.Value, out var cName))
+                    {
+                        AddItem(cName);
+                    }
+                }
+            }
+
+            // 3. From passed stamped results (trn_training_result)
+            if (passedStamps != null)
+            {
+                foreach (var st in passedStamps)
+                {
+                    if (!string.IsNullOrWhiteSpace(st.SubjectNames) && st.SubjectNames.Trim() != "-")
+                    {
+                        var subs = Regex.Split(st.SubjectNames, @"[,;\n]+");
+                        foreach (var sub in subs) AddItem(sub);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(st.TrainingCourseName) && st.TrainingCourseName.Trim() != "-")
+                    {
+                        AddItem(st.TrainingCourseName);
+                    }
+                }
+            }
+
+            if (collected.Count == 0) return "ไม่มีข้อมูล";
+
+            // Return numbered list
+            var outList = new List<string>();
+            for (int i = 0; i < collected.Count; i++)
+            {
+                outList.Add($"{i + 1}. {collected[i]}");
+            }
+            return string.Join("\n", outList);
         }
 
         private static (string Text, List<WantCourseItemDto> Items) FormatWantCourses(
