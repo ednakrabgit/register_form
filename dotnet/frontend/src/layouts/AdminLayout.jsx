@@ -14,7 +14,9 @@ const DEFAULT_ADMIN_MENUS = [
   { menuKey: 'config', menuName: 'ตั้งค่าระบบ (System Config)', path: '/admin/config', icon: 'fas fa-cogs', sortOrder: 7, category: 'Admin' },
   { menuKey: 'master_data', menuName: 'จัดการข้อมูล (Master Data)', path: '/admin/master-data', icon: 'fas fa-database', sortOrder: 8, category: 'Admin' },
   { menuKey: 'audit_logs', menuName: 'ประวัติการแก้ไข (Audit Logs)', path: '/admin/audit-logs', icon: 'fas fa-history', sortOrder: 9, category: 'Admin' },
-  { menuKey: 'system_logs', menuName: 'บันทึกระบบ (System Logs)', path: '/admin/system-logs', icon: 'fas fa-terminal', sortOrder: 10, category: 'Admin' }
+  { menuKey: 'system_logs', menuName: 'บันทึกระบบ (System Logs)', path: '/admin/system-logs', icon: 'fas fa-terminal', sortOrder: 10, category: 'Admin' },
+  { menuKey: 'registration_form', menuName: 'แบบฟอร์มลงทะเบียน', path: '/', icon: 'fas fa-edit', sortOrder: 11, category: 'Applicant' },
+  { menuKey: 'my_registrations', menuName: 'ประวัติการสมัครของผู้เข้าอบรม', path: '/my-registrations', icon: 'fas fa-id-card', sortOrder: 12, category: 'Applicant' }
 ];
 
 export default function AdminLayout() {
@@ -27,12 +29,7 @@ export default function AdminLayout() {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          const adminMenus = data
-            .filter(m => m.category === 'Admin')
-            .sort((a, b) => a.sortOrder - b.sortOrder);
-          if (adminMenus.length > 0) {
-            setMenus(adminMenus);
-          }
+          setMenus(data);
         }
       })
       .catch(() => {
@@ -79,39 +76,42 @@ export default function AdminLayout() {
                 <i className="fas fa-id-card w-5 text-center"></i> ข้อมูลส่วนตัว
               </NavLink>
             </>
-          ) : (
-            menus
-              .filter(menu => canViewMenu(menu.menuKey))
-              .map(menu => {
-                const isExternal = menu.path?.startsWith('http://') || menu.path?.startsWith('https://');
-                if (isExternal) {
-                  return (
-                    <a
-                      key={menu.menuKey}
-                      href={menu.path}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-3 border-l-4 transition-colors text-white border-transparent hover:bg-white/10 hover:border-white/50"
-                    >
-                      <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center`}></i>
-                      <span className="flex-1">{menu.menuName}</span>
-                      <i className="fas fa-arrow-up-right-from-square text-xs text-white/50"></i>
-                    </a>
-                  );
-                }
+          ) : (() => {
+            const isSuperAdmin = String(user?.role || '').toLowerCase() === 'superadmin';
+            const visibleMenus = menus
+              .filter(menu => (isSuperAdmin || menu.category === 'Admin') && canViewMenu(menu.menuKey))
+              .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+            return visibleMenus.map(menu => {
+              const isExternal = menu.path?.startsWith('http://') || menu.path?.startsWith('https://');
+              if (isExternal) {
                 return (
-                  <NavLink
+                  <a
                     key={menu.menuKey}
-                    to={menu.path}
-                    end={menu.path === '/admin'}
-                    className={navLinkClass}
+                    href={menu.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 border-l-4 transition-colors text-white border-transparent hover:bg-white/10 hover:border-white/50"
                   >
-                    <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center ${menu.menuKey === 'training_import' ? 'text-[#ffc107]' : ''}`}></i>
-                    <span>{menu.menuName}</span>
-                  </NavLink>
+                    <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center`}></i>
+                    <span className="flex-1">{menu.menuName}</span>
+                    <i className="fas fa-arrow-up-right-from-square text-xs text-white/50"></i>
+                  </a>
                 );
-              })
-          )}
+              }
+              return (
+                <NavLink
+                  key={menu.menuKey}
+                  to={menu.path}
+                  end={menu.path === '/admin' || menu.path === '/'}
+                  className={navLinkClass}
+                >
+                  <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center ${menu.menuKey === 'training_import' ? 'text-[#ffc107]' : ''}`}></i>
+                  <span>{menu.menuName}</span>
+                </NavLink>
+              );
+            });
+          })()}
         </nav>
 
         <div className="p-4 border-t border-white/20 mt-auto">
