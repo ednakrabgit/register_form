@@ -392,6 +392,83 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* System Shortcuts & Tools (Full width row with 4 cols) */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div className="flex items-center justify-between mb-3.5">
+          <h3 className="font-bold text-slate-800 text-base sm:text-lg flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            <span>ทางลัดเมนูหลัก (Shortcuts)</span>
+          </h3>
+          <span className="text-xs text-slate-400 hidden sm:inline">ระบบจัดการ Viriyah Registration Portal</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <Link
+            to="/admin/trainees"
+            className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-primary hover:bg-blue-50/40 hover:shadow-xs transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-100 text-blue-700 rounded-lg group-hover:bg-primary group-hover:text-white transition">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-800 group-hover:text-primary transition">ข้อมูลผู้สมัคร/ผู้อบรม</div>
+                <div className="text-xs text-slate-500">จัดการ ค้นหา และแก้ไขข้อมูล</div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition shrink-0" />
+          </Link>
+
+          <Link
+            to="/admin/reports/export"
+            className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 hover:shadow-xs transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition">
+                <FileSpreadsheet className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition">ส่งออกรายงาน (Export)</div>
+                <div className="text-xs text-slate-500">ดาวน์โหลด Excel / CSV</div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition shrink-0" />
+          </Link>
+
+          <Link
+            to="/admin/master-data"
+            className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50/40 hover:shadow-xs transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-100 text-amber-700 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition">
+                <Database className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-800 group-hover:text-amber-700 transition">จัดการข้อมูล (Master Data)</div>
+                <div className="text-xs text-slate-500">หลักสูตร วันอบรม สาขา</div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 group-hover:translate-x-0.5 transition shrink-0" />
+          </Link>
+
+          <Link
+            to="/admin/config"
+            className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-purple-500 hover:bg-purple-50/40 hover:shadow-xs transition group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-purple-100 text-purple-700 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition">
+                <Settings className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-800 group-hover:text-purple-700 transition">ตั้งค่าระบบ (System Config)</div>
+                <div className="text-xs text-slate-500">เปิด-ปิดระบบ และแบบฟอร์ม</div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition shrink-0" />
+          </Link>
+        </div>
+      </div>
+
       {/* รายละเอียดรายบุคคล (Trainee Inspector) */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -1748,163 +1825,80 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Bottom Row: Recent Registrations & System Shortcuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Registrations Table (8 Cols) */}
-        <div className="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-emerald-600" />
-              <h3 className="font-bold text-slate-800 text-base sm:text-lg">
-                ผู้สมัครล่าสุด (Recent Registrations)
-              </h3>
-            </div>
-            <Link
-              to="/admin/trainees"
-              className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1"
-            >
-              <span>ดูทั้งหมด</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+      {/* Recent Registrations Table (Full Width) */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <UserCheck className="w-5 h-5 text-emerald-600" />
+            <h3 className="font-bold text-slate-800 text-base sm:text-lg">
+              ผู้สมัครล่าสุด (Recent Registrations)
+            </h3>
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-bold border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3">ชื่อ - นามสกุล</th>
-                  <th className="py-3 px-3">หลักสูตร</th>
-                  <th className="py-3 px-3">วันที่สมัคร</th>
-                  <th className="py-3 px-3 text-center">สถานะ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-                {stats?.recentRegistrations && stats.recentRegistrations.length > 0 ? (
-                  stats.recentRegistrations.map((trainee, idx) => {
-                    const tName = trainee.name || trainee.Name || '-';
-                    const tNationId = trainee.nationId || trainee.NationId || '';
-                    const tCourse = trainee.courseName || trainee.CourseName || '-';
-                    const tDate = trainee.date || trainee.Date || '-';
-                    const tConfirmed = trainee.confirmed ?? trainee.Confirmed ?? false;
-
-                    return (
-                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-3 font-semibold text-slate-800">
-                          <div>{tName}</div>
-                          <div className="text-[11px] text-slate-400 font-mono">{tNationId}</div>
-                        </td>
-                        <td className="py-3 px-3 text-slate-600">
-                          <span className="inline-block max-w-[220px] truncate" title={tCourse}>
-                            {tCourse}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-slate-500 whitespace-nowrap font-mono text-xs">
-                          {tDate}
-                        </td>
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
-                          {tConfirmed ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold">
-                              <CheckCircle className="w-3 h-3" /> ยืนยันแล้ว
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-semibold">
-                              <Clock className="w-3 h-3" /> รอยืนยัน
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-center text-slate-400 text-xs">
-                      ยังไม่มีรายการผู้สมัครล่าสุด
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Link
+            to="/admin/trainees"
+            className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1"
+          >
+            <span>ดูทั้งหมด</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
-        {/* System Shortcuts & Tools (4 Cols) */}
-        <div className="lg:col-span-4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-slate-800 text-base sm:text-lg mb-4 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <span>ทางลัดเมนูหลัก (Shortcuts)</span>
-            </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-bold border-b border-slate-200">
+              <tr>
+                <th className="py-3 px-3">ชื่อ - นามสกุล</th>
+                <th className="py-3 px-3">หลักสูตร</th>
+                <th className="py-3 px-3">วันที่สมัคร</th>
+                <th className="py-3 px-3 text-center">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
+              {stats?.recentRegistrations && stats.recentRegistrations.length > 0 ? (
+                stats.recentRegistrations.map((trainee, idx) => {
+                  const tName = trainee.name || trainee.Name || '-';
+                  const tNationId = trainee.nationId || trainee.NationId || '';
+                  const tCourse = trainee.courseName || trainee.CourseName || '-';
+                  const tDate = trainee.date || trainee.Date || '-';
+                  const tConfirmed = trainee.confirmed ?? trainee.Confirmed ?? false;
 
-            <div className="space-y-2.5">
-              <Link
-                to="/admin/trainees"
-                className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-blue-50/40 transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 text-blue-700 rounded-md group-hover:bg-primary group-hover:text-white transition">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-800">ข้อมูลผู้สมัคร/ผู้อบรม</div>
-                    <div className="text-xs text-slate-500">จัดการ ค้นหา และแก้ไขข้อมูล</div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition" />
-              </Link>
-
-              <Link
-                to="/admin/reports/export"
-                className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-100 text-emerald-700 rounded-md group-hover:bg-emerald-600 group-hover:text-white transition">
-                    <FileSpreadsheet className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-800">ส่งออกรายงาน (Export)</div>
-                    <div className="text-xs text-slate-500">ดาวน์โหลด Excel / CSV</div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition" />
-              </Link>
-
-              <Link
-                to="/admin/master-data"
-                className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-amber-500 hover:bg-amber-50/40 transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 text-amber-700 rounded-md group-hover:bg-amber-500 group-hover:text-white transition">
-                    <Database className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-800">จัดการข้อมูล (Master Data)</div>
-                    <div className="text-xs text-slate-500">หลักสูตร วันอบรม สาขา</div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-amber-500 group-hover:translate-x-0.5 transition" />
-              </Link>
-
-              <Link
-                to="/admin/config"
-                className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-purple-500 hover:bg-purple-50/40 transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 text-purple-700 rounded-md group-hover:bg-purple-600 group-hover:text-white transition">
-                    <Settings className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-800">ตั้งค่าระบบ (System Config)</div>
-                    <div className="text-xs text-slate-500">เปิด-ปิดระบบ และแบบฟอร์ม</div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
-            ระบบจัดการ Viriyah Registration Portal
-          </div>
+                  return (
+                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-3 font-semibold text-slate-800">
+                        <div>{tName}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">{tNationId}</div>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600">
+                        <span className="inline-block max-w-[280px] sm:max-w-md truncate" title={tCourse}>
+                          {tCourse}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-slate-500 whitespace-nowrap font-mono text-xs">
+                        {tDate}
+                      </td>
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        {tConfirmed ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold">
+                            <CheckCircle className="w-3 h-3" /> ยืนยันแล้ว
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-semibold">
+                            <Clock className="w-3 h-3" /> รอยืนยัน
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-slate-400 text-xs">
+                    ยังไม่มีรายการผู้สมัครล่าสุด
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
