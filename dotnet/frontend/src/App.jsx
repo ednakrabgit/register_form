@@ -45,10 +45,11 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-          {/* Public Auth Routes */}
+          {/* Public Routes (No Login Required) */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin/login" element={<Login />} />
+          <Route path="/enquiry" element={<EnquiryPage />} />
 
           {/* Protected Public / Applicant Routes (Mandatory Login) */}
           <Route path="/" element={

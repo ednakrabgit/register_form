@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ค้นหารายละเอียดข้อมูลการอบรม - Viriyah Online Learning</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --primary: #0b3d91;  /* deep blue */
+            --accent: #f6c343;   /* warm yellow */
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e5e7eb;
+        }
+        *{ box-sizing: border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .wrap{
+            max-width: 1180px;
+            margin: 28px auto;
+            padding: 0 18px;
+        }
+        .shell{
+            display: flex;
+            gap: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, .10);
+            background: var(--card);
+        }
+        .left{
+            flex: 1.05;
+            padding: 36px 34px;
+            background: var(--card);
+        }
+        .right{
+            flex: 0.95;
+            padding: 32px 26px;
+            background: var(--primary);
+            display:flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .left img{ display:block; margin:0 auto 8px; max-width:520px; width:90%; height:auto; }
+        .title-main{ font-size:24px; font-weight:700; color:#002c6a; margin:0 0 4px 0; line-height:1.25; text-align: left; }
+        .premium-bar{ margin-top:16px; border-radius:16px; background:#ffe6a3; padding:18px 18px; font-size:14px; color:#7a4a00; font-weight:600; line-height:1.55; }
+        .premium-bar a{ color:#0b3d91; font-weight:800; text-decoration:none; }
+        .premium-bar a:hover{ text-decoration:underline; }
+
+        .panel{
+            width: min(520px, 100%);
+            background: var(--card);
+            border-radius: 18px;
+            padding: 22px 22px;
+            box-shadow: 0 12px 28px rgba(0,0,0,.18);
+        }
+        .panel h2{
+            margin:0 0 14px 0;
+            font-size: 22px;
+            color: var(--primary);
+            font-weight: 800;
+        }
+        .field{
+            margin-top: 12px;
+        }
+        label{
+            display:block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        input[type="text"]{
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            outline: none;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        input[type="text"]:focus{
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 4px rgba(59,130,246,.15);
+        }
+        .help{
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .btn{
+            margin-top: 14px;
+            width: 100%;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #111827;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .btn:hover{
+            background: #eab308;
+        }
+        .btn:disabled{
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+        .msg{
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .msg.err{
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+        }
+        .msg.ok{
+            background: #ecfeff;
+            border: 1px solid #a5f3fc;
+            color: #155e75;
+        }
+        .result{
+            margin-top: 14px;
+            border-top: 1px dashed var(--border);
+            padding-top: 14px;
+        }
+        .row{
+            display:flex;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .row.stack{
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .row.stack .k{
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        .row.stack .v{
+            width: 100%;
+            text-align: left;
+            font-weight: 400;
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+        .row:last-child{ border-bottom:none; }
+        .k{
+            width: 44%;
+            color: #334155;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .v{
+            width: 56%;
+            color: #0f172a;
+            font-size: 14px;
+            text-align: right;
+            word-break: break-word;
+        }
+        .badge{
+            display:inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .stamped-box {
+            margin-top: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .stamped-item {
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 12px;
+        }
+        .stamped-item:last-child { border-bottom: none; }
+        @media (max-width: 980px){
+            .shell{ flex-direction: column; }
+            .right{ padding: 22px 18px; }
+            .left{ padding: 26px 22px; }
+            .title-main{ text-align: center; font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="shell">
+        <div class="left">
+            <img src="/logo-vonlinelearning.jpg" onerror="this.onerror=null; this.src='/icon/logo-vonlinelearning.jpg';" width="90%" alt="Online Learning Logo">
+            <h1 class="title-main"><br>ศูนย์ฝึกอบรมและพัฒนานักประกันภัย<br>บริษัท วิริยะประกันภัย จำกัด (มหาชน)</h1><br>
+
+            <div id="step23Block" class="premium-bar focus-target">
+                <div style="font-size:150%; font-weight:900;">ศูนย์ฝึกอบรมและพัฒนานักประกันภัย <br> ขอบคุณทุกท่านที่ลงทะเบียนอบรมปี 2569</div><br><br>
+                ข้อมูลทางด้านขวาของท่าน คือ รายละเอียดที่ท่านได้แจ้งในการลงทะเบียนอบรม กรุณาตรวจสอบความถูกต้องทั้งหมด หากท่านพบว่าข้อมูลของท่านไม่ถูกต้อง กรุณา email พร้อมแจ้งรายละเอียดที่ต้องการแก้ไขได้ที่ <a href="mailto:iptc.ops@viriyah.co.th">iptc.ops@viriyah.co.th</a><br><br>
+
+                หากว่าข้อมูลทุกอย่างถูกต้อง<br>ท่านจะได้รับ e-mail เพื่อเข้าอบรมก่อนวันอบรมจริง 15 วัน เพื่อตั้ง password<br>และจะได้รับ email ยืนยันก่อนเข้ารอบอบรมจริง 7 วัน<br><br>
+                หากท่านมีข้อสงสัยหรือต้องการสอบถามเพิ่มเติม กรุณาติดต่อ ผ่าน<br>
+                Line Official Account :
+                <a href="https://lin.ee/4k6FJ6g" target="_blank" rel="noopener noreferrer">@viriyahiptc</a>
+                หรือ
+                <a href="https://lin.ee/4k6FJ6g" target="_blank" rel="noopener noreferrer">https://lin.ee/4k6FJ6g</a>
+                <br><br>
+                
+                ถ้ามีข้อสงสัยเกี่ยวกับระบบ V Online Learning ติดต่อสอบถาม<br>
+                ทีมบริการและสนับสนุนผู้ใช้ระบบ V Online Learning <br>
+                จะสอบถามข้อมูลส่วนตัว เพื่อให้ได้คำแนะนำที่ถูกต้องเฉพาะตัวท่านเองได้ที่<br><br>
+
+                โทร: 02-821-6729<br>
+                วันจันทร์ - อาทิตย์ และวันหยุดนักขัตฤกษ์ เวลา 9:00 - 17:00 น.<br><br>
+
+                LINE: @IPTC.LMS<br>
+                Email: iptc.support.vol@viriyah.co.th<br>
+                วันจันทร์ - ศุกร์ เวลา 9:00 - 20:00 น.<br>
+                วันเสาร์ - อาทิตย์ และวันหยุดนักขัตฤกษ์ เวลา 9:00 - 17:00 น.
+            </div>
+        </div>
+
+        <div class="right">
+            <div class="panel">
+                <h2>ค้นหารายละเอียดข้อมูลการอบรม</h2>
+
+                <form id="searchForm" onsubmit="event.preventDefault(); doSearch();">
+                    <div class="field">
+                        <label for="citizen_id">เลขบัตรประชาชน</label>
+                        <input
+                            type="text"
+                            id="citizen_id"
+                            name="citizen_id"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            maxlength="13"
+                            placeholder="ตัวเลข 13 หลัก"
+                        >
+                        <div class="help">* กรอกเฉพาะตัวเลข 13 หลัก</div>
+                        <div class="help">* ถ้าท่านลงทะเบียนมากกว่า 1 ครั้ง ศูนย์ฝึกฯ จะใช้ข้อมูลที่ท่านลงทะเบียนเข้ามาครั้งล่าสุด</div>
+                    </div>
+
+                    <button class="btn" id="searchBtn" type="submit">ค้นหา</button>
+                </form>
+
+                <div id="errorBox" class="msg err" style="display:none;"></div>
+
+                <div id="resultBox" style="display:none;">
+                    <div id="dateNoticeBox" class="msg ok">
+                        <span class="badge">พบข้อมูล</span> ข้อมูลที่ท่านลงทะเบียนด้วยตนเองในวันที่ <b id="lblRegDate"></b>
+                    </div>
+
+                    <div class="result">
+                        <div class="row">
+                            <div class="k">ชื่อ - นามสกุล</div>
+                            <div class="v" id="lblFullName">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">รหัสบัตรประชาชน</div>
+                            <div class="v" id="lblMaskedId">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">อีเมล</div>
+                            <div class="v" id="lblEmail">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">สาขาที่สังกัด</div>
+                            <div class="v" id="lblBranch">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">รหัสตัวแทน/นายหน้า</div>
+                            <div class="v" id="lblAgentCode">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">เลขที่ใบอนุญาต</div>
+                            <div class="v" id="lblLicenseNo">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">วันใบอนุญาตหมดอายุ</div>
+                            <div class="v" id="lblLicenseExpiry">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">ประเภทใบอนุญาต</div>
+                            <div class="v" id="lblCourseType">-</div>
+                        </div>
+                        <div class="row">
+                            <div class="k">หลักสูตรที่ท่านต้องอบรมคือ</div>
+                            <div class="v" id="lblRenewLevel">-</div>
+                        </div>
+
+                        <div class="row stack">
+                            <div class="k">
+                                <b>วิชาที่ท่านแจ้งว่าผ่านการอบรมแล้ว<br>
+                                <span style="color:#dc2626; font-size:13px; font-weight:normal;">วิชาที่ท่านผ่านการอบรมแล้ว จะไม่จัดท่านเข้าอบรมหลักสูตรนั้นอีก</span></b>
+                            </div>
+                            <div class="v" id="lblPastCourses">ไม่มีข้อมูล</div>
+                        </div>
+
+                        <div class="row stack">
+                            <div class="k"><b>วิชาที่ท่านลงทะเบียนเพื่ออบรมในปี 2569</b></div>
+                            <div class="v" id="lblWantCourses">ไม่มีข้อมูล</div>
+                        </div>
+
+                        <div id="stampedResultsSection" style="display:none;" class="stamped-box">
+                            <div style="font-weight:bold; color:#0b3d91; font-size:13px; margin-bottom:6px;">
+                                <i class="fas fa-certificate text-emerald-600"></i> ผลการอบรมจริงที่ประทับผลแล้ว (Training Results)
+                            </div>
+                            <div id="stampedItemsList"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.innerText = text;
+        return div.innerHTML;
+    }
+
+    async function doSearch() {
+        var input = document.getElementById('citizen_id');
+        var btn = document.getElementById('searchBtn');
+        var errBox = document.getElementById('errorBox');
+        var resBox = document.getElementById('resultBox');
+
+        var val = (input.value || '').replace(/\D/g, '');
+        input.value = val;
+
+        errBox.style.display = 'none';
+        resBox.style.display = 'none';
+
+        if (val.length !== 13) {
+            errBox.innerText = 'กรุณากรอกเลขบัตรประชาชน 13 หลัก';
+            errBox.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังค้นหา...';
+
+        try {
+            var res = await fetch('/api/Enquiry/' + val);
+            var data = await res.json();
+
+            if (!res.ok) {
+                errBox.innerText = data.message || 'ไม่พบข้อมูลการอบรมของท่าน';
+                errBox.style.display = 'block';
+                return;
+            }
+
+            // Fill Data
+            document.getElementById('lblRegDate').innerText = data.registrationDate || 'ไม่ทราบวันที่';
+            document.getElementById('lblFullName').innerText = data.fullName || 'ไม่มีข้อมูล';
+            document.getElementById('lblMaskedId').innerText = data.maskedCitizenId || val;
+            document.getElementById('lblEmail').innerText = data.email || 'ไม่มีข้อมูล';
+            document.getElementById('lblBranch').innerText = data.branch || 'ไม่มีข้อมูล';
+            document.getElementById('lblAgentCode').innerText = data.agentCode || 'ไม่มีข้อมูล';
+            document.getElementById('lblLicenseNo').innerText = data.licenseNo || 'ไม่มีข้อมูล';
+            document.getElementById('lblLicenseExpiry').innerText = data.licenseExpiryDate || 'ไม่มีข้อมูล';
+            document.getElementById('lblCourseType').innerText = data.courseType || 'ไม่มีข้อมูล';
+            document.getElementById('lblRenewLevel').innerText = data.renewLevel || 'ไม่มีข้อมูล';
+            document.getElementById('lblPastCourses').innerText = data.pastCourses || 'ไม่มีข้อมูล';
+            document.getElementById('lblWantCourses').innerText = data.wantCourses || 'ไม่มีข้อมูล';
+
+            // Stamped results if any
+            var stampSection = document.getElementById('stampedResultsSection');
+            var stampList = document.getElementById('stampedItemsList');
+            if (data.stampedResults && data.stampedResults.length > 0) {
+                var itemsHtml = '';
+                data.stampedResults.forEach(function(item) {
+                    var statusColor = (item.status && (item.status.indexOf('ผ่าน') >= 0 || item.status.indexOf('อนุมัติ') >= 0)) ? '#15803d' : '#b91c1c';
+                    itemsHtml += '<div class="stamped-item">' +
+                        '<div style="font-weight:600; color:#1e293b;">' + escapeHtml(item.subjectNames || item.courseName) + '</div>' +
+                        '<div style="color:#64748b; margin-top:2px; display:flex; justify-content:space-between;">' +
+                            '<span>รอบวันที่: ' + escapeHtml(item.trainingDate || '-') + '</span>' +
+                            '<span style="font-weight:bold; color:' + statusColor + ';">' + escapeHtml(item.status || '-') + '</span>' +
+                        '</div>' +
+                    '</div>';
+                });
+                stampList.innerHTML = itemsHtml;
+                stampSection.style.display = 'block';
+            } else {
+                stampSection.style.display = 'none';
+            }
+
+            resBox.style.display = 'block';
+
+            // Update URL without reloading page
+            var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?citizen_id=' + val;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+
+        } catch (e) {
+            errBox.innerText = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
+            errBox.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'ค้นหา';
+        }
+    }
+
+    // Auto-search if query param present
+    window.addEventListener('DOMContentLoaded', function() {
+        var params = new URLSearchParams(window.location.search);
+        var qId = params.get('citizen_id') || params.get('national_id');
+        if (qId) {
+            var clean = qId.replace(/\D/g, '');
+            if (clean.length === 13) {
+                document.getElementById('citizen_id').value = clean;
+                doSearch();
+            }
+        }
+    });
+</script>
+</body>
+</html>
