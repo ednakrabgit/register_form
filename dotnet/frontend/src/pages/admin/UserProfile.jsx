@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { 
   User, Shield, Lock, MapPin, Briefcase, BookOpen, History, 
   Save, CheckCircle2, AlertCircle, RefreshCw, Key, Eye, EyeOff,
-  Phone, Mail, Calendar, Building, Award, Clock, Image, Upload
+  Phone, Mail, Calendar, Building, Award, Clock, Image, Upload, FileText
 } from 'lucide-react';
 import Select from 'react-select';
 import ThaiDatePicker from '../../components/ThaiDatePicker';
@@ -56,6 +56,8 @@ const formatStampDateDisplay = (dateStr) => {
 
 export default function UserProfile() {
   const { user: authUser, token } = useAuth();
+  const userRole = (authUser?.role || '').toLowerCase();
+  const canManageRemark = userRole === 'superadmin' || userRole.startsWith('admin');
 
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'address' | 'affiliation' | 'courses' | 'other' | 'documents' | 'password' | 'history'
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,7 @@ export default function UserProfile() {
     medicalCondition: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
+    remark: '',
     addresses: [],
     affiliations: [],
     licenses: [],
@@ -243,6 +246,7 @@ export default function UserProfile() {
           medicalCondition: p.medicalCondition || '',
           emergencyContactName: p.emergencyContactName || '',
           emergencyContactPhone: p.emergencyContactPhone || '',
+          remark: p.remark || '',
           addresses: addrs,
           affiliations: p.affiliations?.length > 0 ? p.affiliations : [{ brokerType: 'agent', branchId: null, brokerCompany: '', brokerBranch: '', viriyahAgentCode: '' }],
           licenses: p.licenses?.map(l => ({
@@ -1036,6 +1040,25 @@ export default function UserProfile() {
       {/* TAB 1: PERSONAL INFO */}
       {activeTab === 'personal' && (
         <div className="space-y-4 animate-in fade-in duration-150">
+          {canManageRemark && (
+            <div className="bg-white rounded-2xl p-6 border border-amber-200 shadow-sm space-y-3 bg-amber-50/20">
+              <label className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-amber-600" /> หมายเหตุ
+                <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                  เฉพาะ Super Admin / Admin
+                </span>
+              </label>
+              <textarea
+                name="remark"
+                rows={3}
+                value={personData.remark || ''}
+                onChange={handlePersonChange}
+                placeholder="กรอกหมายเหตุเกี่ยวกับผู้ใช้งาน/ผู้สมัคร..."
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
+              />
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
             <h2 className="text-base font-bold text-slate-800 border-b pb-3 flex items-center gap-2">
               <User className="w-5 h-5 text-primary" /> ข้อมูลส่วนบุคคลพื้นฐาน

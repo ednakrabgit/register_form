@@ -1219,6 +1219,21 @@ namespace backend.Controllers
 
             // 2. Update scalar fields of Person
             context.Entry(p).CurrentValues.SetValues(updatedPerson);
+
+            var roleLower = (caller.Role ?? "").ToLower();
+            bool canManageRemark = roleLower == "superadmin" || roleLower.StartsWith("admin");
+            if (!canManageRemark)
+            {
+                p.Remark = oldSnapshotDict.TryGetValue("Remark", out var oldR) ? oldR?.ToString() : p.Remark;
+            }
+            else
+            {
+                var reg = await context.Registers.Where(r => r.NationalId == nationId).OrderByDescending(r => r.Id).FirstOrDefaultAsync();
+                if (reg != null)
+                {
+                    reg.Remark = p.Remark;
+                }
+            }
             
             // Registrations
             foreach(var r in updatedPerson.Registrations) {
@@ -1476,6 +1491,7 @@ namespace backend.Controllers
                 ["Instagram"] = p.Instagram,
                 ["EmergencyContactName"] = p.EmergencyContactName,
                 ["EmergencyContactPhone"] = p.EmergencyContactPhone,
+                ["Remark"] = p.Remark,
                 ["HouseNo"] = addrA?.HouseNo,
                 ["Moo"] = addrA?.Moo,
                 ["Village"] = addrA?.Village,

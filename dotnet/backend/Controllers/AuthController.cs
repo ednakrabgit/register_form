@@ -1454,6 +1454,18 @@ namespace backend.Controllers
 
                     p.EmergencyContactPhone = request.PersonData.EmergencyContactPhone;
 
+                    var roleLower = (user.Role ?? "").ToLower();
+                    bool canManageRemark = roleLower == "superadmin" || roleLower.StartsWith("admin");
+                    if (canManageRemark && request.PersonData.Remark != null)
+                    {
+                        p.Remark = request.PersonData.Remark;
+                        var reg = await _context.Registers.Where(r => r.NationalId == nationId).OrderByDescending(r => r.Id).FirstOrDefaultAsync();
+                        if (reg != null)
+                        {
+                            reg.Remark = request.PersonData.Remark;
+                        }
+                    }
+
 
 
                     // Addresses
@@ -1989,6 +2001,8 @@ namespace backend.Controllers
                 ["EmergencyContactName"] = p.EmergencyContactName,
 
                 ["EmergencyContactPhone"] = p.EmergencyContactPhone,
+
+                ["Remark"] = p.Remark,
 
                 ["HouseNo"] = addrA?.HouseNo,
 

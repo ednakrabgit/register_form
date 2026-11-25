@@ -51,6 +51,8 @@ const formatStampDateDisplay = (dateStr) => {
 export default function TraineeEditModal({ nationId, isReadOnly = false, onClose, onSuccess }) {
   const { user, canEditMenu } = useAuth();
   const effectiveReadOnly = isReadOnly || user?.role === 'Viewer' || !canEditMenu('trainees');
+  const userRole = (user?.role || '').toLowerCase();
+  const canManageRemark = userRole === 'superadmin' || userRole.startsWith('admin');
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'address' | 'license' | 'course' | 'other'
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,6 +83,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
     medicalCondition: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
+    remark: '',
     addresses: [],
     affiliations: [],
     licenses: [],
@@ -875,6 +878,25 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
             {/* TAB 1: PERSONAL INFO */}
             {activeTab === 'personal' && (
               <div className="space-y-4 animate-in fade-in duration-150">
+                {canManageRemark && (
+                  <div className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm space-y-3 bg-amber-50/20">
+                    <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <i className="fas fa-sticky-note text-amber-600"></i> หมายเหตุ
+                      <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                        เฉพาะ Super Admin / Admin
+                      </span>
+                    </label>
+                    <textarea
+                      name="remark"
+                      rows={3}
+                      value={formData.remark || ''}
+                      onChange={handleChange}
+                      placeholder="กรอกหมายเหตุเกี่ยวกับผู้ใช้งาน/ผู้สมัคร..."
+                      className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
+                    />
+                  </div>
+                )}
+
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                   <h4 className="font-bold text-gray-700 border-b pb-2 flex items-center gap-2">
                     <i className="fas fa-id-badge text-primary"></i> ข้อมูลส่วนบุคคลพื้นฐาน

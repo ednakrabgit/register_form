@@ -116,12 +116,14 @@ try
         if (context.Database.IsSqlite())
         {
             context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
+            try { context.Database.ExecuteSqlRaw("ALTER TABLE person ADD COLUMN Remark TEXT;"); } catch {}
         }
         else if (context.Database.IsSqlServer())
         {
         // Ensure new columns exist
         string[] schemaMigrations = new[]
         {
+            "IF OBJECT_ID('person', 'U') IS NOT NULL AND COL_LENGTH('person', 'Remark') IS NULL BEGIN ALTER TABLE person ADD Remark NVARCHAR(MAX) NULL; END",
             "IF OBJECT_ID('personregistration', 'U') IS NOT NULL AND COL_LENGTH('personregistration', 'DeductionPrivilege') IS NULL BEGIN ALTER TABLE personregistration ADD DeductionPrivilege NVARCHAR(MAX) NULL; END",
             "IF OBJECT_ID('personregistration', 'U') IS NOT NULL AND COL_LENGTH('personregistration', 'MasterDegreeStatus') IS NULL BEGIN ALTER TABLE personregistration ADD MasterDegreeStatus NVARCHAR(MAX) NULL; END",
             "IF OBJECT_ID('registrations', 'U') IS NOT NULL AND COL_LENGTH('registrations', 'master_degree_status') IS NULL BEGIN ALTER TABLE registrations ADD master_degree_status NVARCHAR(MAX) NULL; END",

@@ -37,6 +37,8 @@ namespace backend.Models
         public string? MedicalCondition { get; set; }
         public string? EmergencyContactName { get; set; }
         public string? EmergencyContactPhone { get; set; }
+        [Column("Remark")]
+        public string? Remark { get; set; }
 
         // Navigation properties
         public ICollection<PersonRegistration> Registrations { get; set; } = new List<PersonRegistration>();
