@@ -1,5 +1,5 @@
 import { API_BASE_URL, API_ORIGIN } from '../../config/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   User, Shield, Lock, MapPin, Briefcase, BookOpen, History, 
   Save, CheckCircle2, AlertCircle, RefreshCw, Key, Eye, EyeOff,
@@ -755,8 +755,13 @@ export default function UserProfile() {
         finalAddresses.push({ ...addrC, addressType: 'C' });
       }
 
+      const finalFullName = `${personData.titleTh || ''}${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim()
+        || `${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim()
+        || accountData.fullName
+        || authUser?.username;
+
       const payload = {
-        fullName: accountData.fullName || `${personData.firstNameTh} ${personData.lastNameTh}`.trim(),
+        fullName: finalFullName,
         phone: accountData.phone || personData.phoneOtp,
         email: accountData.email || personData.emailAlt,
         personData: {
@@ -786,6 +791,16 @@ export default function UserProfile() {
         }
         throw new Error(errMsg || 'บันทึกข้อมูลไม่สำเร็จ');
       }
+
+      setAccountData(prev => ({
+        ...prev,
+        fullName: finalFullName
+      }));
+
+      try {
+        const stored = JSON.parse(localStorage.getItem('authUser') || '{}');
+        localStorage.setItem('authUser', JSON.stringify({ ...stored, fullName: finalFullName }));
+      } catch {}
 
       showAlert('success', 'บันทึกข้อมูลและประวัติการแก้ไขสำเร็จ (History Saved)');
       fetchProfile();
@@ -952,6 +967,12 @@ export default function UserProfile() {
     });
   };
 
+  const displayedFullName = useMemo(() => {
+    const thaiName = `${personData.titleTh || ''}${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim()
+      || `${personData.firstNameTh || ''} ${personData.lastNameTh || ''}`.trim();
+    return thaiName || accountData.fullName || authUser?.username || 'ผู้ใช้งาน';
+  }, [personData.titleTh, personData.firstNameTh, personData.lastNameTh, accountData.fullName, authUser?.username]);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Alert Banner */}
@@ -968,11 +989,11 @@ export default function UserProfile() {
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-[#002882] text-white flex items-center justify-center text-2xl font-black shadow-md">
-            {(accountData.fullName || authUser?.username || 'U').charAt(0).toUpperCase()}
+            {(displayedFullName || 'U').charAt(0).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-900">{accountData.fullName || authUser?.username}</h1>
+              <h1 className="text-xl font-bold text-slate-900">{displayedFullName}</h1>
               <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
                 {authUser?.role || 'Applicant'}
               </span>

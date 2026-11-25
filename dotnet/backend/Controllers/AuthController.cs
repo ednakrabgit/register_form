@@ -1327,8 +1327,16 @@ namespace backend.Controllers
 
 
             // 2. Update user account info
+            var newFullName = request.FullName?.Trim();
+            if (string.IsNullOrWhiteSpace(newFullName) && request.PersonData != null)
+            {
+                newFullName = $"{request.PersonData.TitleTh}{request.PersonData.FirstNameTh} {request.PersonData.LastNameTh}".Trim();
+            }
 
-            if (!string.IsNullOrWhiteSpace(request.FullName)) user.FullName = request.FullName.Trim();
+            if (!string.IsNullOrWhiteSpace(newFullName))
+            {
+                user.FullName = newFullName;
+            }
 
             if (!string.IsNullOrWhiteSpace(request.Phone)) user.Phone = request.Phone.Trim();
 
@@ -1419,6 +1427,15 @@ namespace backend.Controllers
                     p.MiddleNameTh = request.PersonData.MiddleNameTh;
 
                     p.LastNameTh = request.PersonData.LastNameTh;
+
+                    var regUser = await _context.Registers.Where(r => r.NationalId == nationId).OrderByDescending(r => r.Id).FirstOrDefaultAsync();
+                    if (regUser != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(p.TitleTh)) regUser.TitleTh = p.TitleTh;
+                        if (!string.IsNullOrWhiteSpace(p.FirstNameTh)) regUser.FirstNameTh = p.FirstNameTh;
+                        if (!string.IsNullOrWhiteSpace(p.LastNameTh)) regUser.LastNameTh = p.LastNameTh;
+                        if (!string.IsNullOrWhiteSpace(p.MiddleNameTh)) regUser.MiddleNameTh = p.MiddleNameTh;
+                    }
 
                     p.TitleOldTh = request.PersonData.TitleOldTh;
 
