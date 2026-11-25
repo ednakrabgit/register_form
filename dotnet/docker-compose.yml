@@ -22,10 +22,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8085
       - TZ=Asia/Bangkok
-      - ConnectionStrings__DefaultConnection=Server=mssql;Database=thaiairp_iptc;User Id=sa;Password=Pass@456981@XKTT;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Data Source=/App/app.db
       - ConnectionStrings__MySqlConnection=Server=host.docker.internal;Database=thaiairp_iptc;User=thaiairp_iptc;Password=Pass@456981@XKTT;SslMode=none;AllowPublicKeyRetrieval=True;
     volumes:
       - ./backend/LocalData:/App/LocalData
+      - ./backend/app.db:/App/app.db
     depends_on:
       - mssql
 
