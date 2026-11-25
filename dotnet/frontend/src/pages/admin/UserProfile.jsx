@@ -10,6 +10,50 @@ import ThaiDatePicker from '../../components/ThaiDatePicker';
 import HistorySnapshotViewer from '../../components/HistorySnapshotViewer';
 import { useAuth } from '../../context/AuthContext';
 
+// Helper: Check if training result matches a specific subject
+const isSubjectMatch = (tr, courseName) => {
+  if (!tr || !courseName) return false;
+  const isPassed = tr.trainingStatus && (tr.trainingStatus.includes('ผ่าน') || tr.trainingStatus.includes('อนุมัติ'));
+  if (!isPassed) return false;
+  const sText = `${tr.subjectNames || ''} ${tr.trainingCourseName || ''} ${tr.trainingCourseCode || ''}`;
+  return sText.includes(courseName) ||
+    (courseName === 'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' && sText.includes('ระดับความเสี่ยง')) ||
+    (courseName === 'การจัดการสินไหมทดแทน Non-Motor' && (sText.toLowerCase().includes('non-motor') || sText.toLowerCase().includes('nonmotor'))) ||
+    (courseName === 'การประกันความเสี่ยงภัยทรัพย์สิน' && sText.includes('ความเสี่ยงภัยทรัพย์สิน')) ||
+    (courseName === 'การวางแผนเพื่อวัยเกษียณ' && sText.includes('วัยเกษียณ')) ||
+    (courseName === 'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' && sText.includes('การวางแผนภาษี')) ||
+    (courseName === 'การประกันภัยต่อ' && sText.includes('การประกันภัยต่อ')) ||
+    (courseName === 'จรรยาบรรณและศีลธรรมของตัวแทน/นายหน้าประกันภัย' && sText.includes('จรรยาบรรณและศีลธรรม')) ||
+    (courseName === 'พ.ร.บ. จราจรทางบก พ.ศ.2522 (แก้ไขเพิ่มเติม2562) และการพิจารณาคดีแพ่ง/อาญาเมื่อเกิดอุบัติเหตุจราจร' && sText.includes('จราจร')) ||
+    (courseName === 'พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล' && (sText.includes('คุ้มครองข้อมูลส่วนบุคคล') || sText.toLowerCase().includes('pdpa'))) ||
+    (courseName === 'เสนอขายถูกหลักประกันภัยเติบโต' && sText.includes('เสนอขายถูกหลัก')) ||
+    (courseName === 'กฎหมายว่าด้วยการป้องกันและปราบปรามการฟอกเงินและต่อต้านการสนับสนุนทางการเงินแก่การก่อการร้าย' && sText.includes('ฟอกเงิน')) ||
+    (courseName === 'กรมธรรม์ประกันภัยรถยนต์ไฟฟ้ารวมการคุ้มครองผู้ประสบภัยจากรถ' && sText.includes('รถยนต์ไฟฟ้า')) ||
+    (courseName === 'พ.ร.บ.การทวงถามหนี้' && sText.includes('ทวงถามหนี้')) ||
+    (courseName === 'ความเสี่ยงต่อความรับผิดในฐานะตัวแทน/นายหน้าประกันภัย' && sText.includes('ความรับผิดในฐานะตัวแทน')) ||
+    (courseName === 'การตลาดยุคใหม่' && sText.includes('การตลาดยุคใหม่')) ||
+    (courseName === 'รู้จักประกันภัยสุขภาพ' && sText.includes('ประกันภัยสุขภาพ')) ||
+    (courseName === 'การพิจารณารับประกันภัยรถยนต์' && sText.includes('รับประกันภัยรถยนต์'));
+};
+
+// Helper: Format stamp date nicely for tooltips
+const formatStampDateDisplay = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const day = d.getDate();
+    const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear() < 2500 ? d.getFullYear() + 543 : d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return `${day} ${month} ${year} ${hours}:${mins} น.`;
+  } catch {
+    return dateStr;
+  }
+};
+
 export default function UserProfile() {
   const { user: authUser, token } = useAuth();
 
@@ -1755,38 +1799,16 @@ export default function UserProfile() {
                       const isCheckedInForm = personData.trainings?.some(t => t.courseId?.toString() === course.id.toString());
 
                       // Check if this course was passed in stamped trainingResults
-                      const isPassedFromStamp = personData.trainingResults?.some(tr => {
-                        const isPassed = tr.trainingStatus && (tr.trainingStatus.includes('ผ่าน') || tr.trainingStatus.includes('อนุมัติ'));
-                        if (!isPassed) return false;
-                        const sText = `${tr.subjectNames || ''} ${tr.trainingCourseName || ''} ${tr.trainingCourseCode || ''}`;
-                        return sText.includes(course.name) ||
-                          (course.name === 'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' && sText.includes('ระดับความเสี่ยง')) ||
-                          (course.name === 'การจัดการสินไหมทดแทน Non-Motor' && (sText.toLowerCase().includes('non-motor') || sText.toLowerCase().includes('nonmotor'))) ||
-                          (course.name === 'การประกันความเสี่ยงภัยทรัพย์สิน' && sText.includes('ความเสี่ยงภัยทรัพย์สิน')) ||
-                          (course.name === 'การวางแผนเพื่อวัยเกษียณ' && sText.includes('วัยเกษียณ')) ||
-                          (course.name === 'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' && sText.includes('การวางแผนภาษี')) ||
-                          (course.name === 'การประกันภัยต่อ' && sText.includes('การประกันภัยต่อ')) ||
-                          (course.name === 'จรรยาบรรณและศีลธรรมของตัวแทน/นายหน้าประกันภัย' && sText.includes('จรรยาบรรณและศีลธรรม')) ||
-                          (course.name === 'พ.ร.บ. จราจรทางบก พ.ศ.2522 (แก้ไขเพิ่มเติม2562) และการพิจารณาคดีแพ่ง/อาญาเมื่อเกิดอุบัติเหตุจราจร' && sText.includes('จราจร')) ||
-                          (course.name === 'พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล' && (sText.includes('คุ้มครองข้อมูลส่วนบุคคล') || sText.toLowerCase().includes('pdpa'))) ||
-                          (course.name === 'เสนอขายถูกหลักประกันภัยเติบโต' && sText.includes('เสนอขายถูกหลัก')) ||
-                          (course.name === 'กฎหมายว่าด้วยการป้องกันและปราบปรามการฟอกเงินและต่อต้านการสนับสนุนทางการเงินแก่การก่อการร้าย' && sText.includes('ฟอกเงิน')) ||
-                          (course.name === 'กรมธรรม์ประกันภัยรถยนต์ไฟฟ้ารวมการคุ้มครองผู้ประสบภัยจากรถ' && sText.includes('รถยนต์ไฟฟ้า')) ||
-                          (course.name === 'พ.ร.บ.การทวงถามหนี้' && sText.includes('ทวงถามหนี้')) ||
-                          (course.name === 'ความเสี่ยงต่อความรับผิดในฐานะตัวแทน/นายหน้าประกันภัย' && sText.includes('ความรับผิดในฐานะตัวแทน')) ||
-                          (course.name === 'การตลาดยุคใหม่' && sText.includes('การตลาดยุคใหม่')) ||
-                          (course.name === 'รู้จักประกันภัยสุขภาพ' && sText.includes('ประกันภัยสุขภาพ')) ||
-                          (course.name === 'การพิจารณารับประกันภัยรถยนต์' && sText.includes('รับประกันภัยรถยนต์'));
-                      });
-
+                      const matchedResults = (personData.trainingResults || []).filter(tr => isSubjectMatch(tr, course.name));
+                      const isPassedFromStamp = matchedResults.length > 0;
                       const isChecked = isCheckedInForm || isPassedFromStamp;
 
                       return (
                         <label 
                           key={idx} 
-                          className={`flex items-start gap-2.5 p-2 rounded-lg border transition-all ${
+                          className={`group/stamp relative flex items-start gap-2.5 p-2 rounded-lg border transition-all ${
                             isPassedFromStamp 
-                              ? 'bg-emerald-50/80 border-emerald-300 shadow-2xs' 
+                              ? 'bg-emerald-50/80 border-emerald-300 shadow-2xs hover:border-emerald-400 hover:bg-emerald-50' 
                               : isChecked 
                                 ? 'bg-blue-50/50 border-blue-200' 
                                 : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -1805,9 +1827,76 @@ export default function UserProfile() {
                                 {course.name}
                               </span>
                               {isPassedFromStamp && (
-                                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full border border-emerald-300 shrink-0 flex items-center gap-1 shadow-2xs">
-                                  <i className="fas fa-check-circle text-emerald-600"></i> ผ่านการอบรมแล้ว (Stamp ผล)
-                                </span>
+                                <div className="relative shrink-0">
+                                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300 shrink-0 flex items-center gap-1 shadow-2xs cursor-pointer hover:bg-emerald-200 transition">
+                                    <i className="fas fa-check-circle text-emerald-600"></i> ผ่านการอบรมแล้ว (Stamp ผล)
+                                    <i className="fas fa-info-circle text-emerald-700 ml-0.5 text-[9px]"></i>
+                                  </span>
+
+                                  {/* Floating Tooltip on Mouse Over */}
+                                  <div className="pointer-events-none absolute right-0 bottom-full mb-2 hidden group-hover/stamp:flex flex-col z-50 w-72 sm:w-80 p-3 bg-slate-900/95 text-white rounded-xl shadow-2xl text-xs border border-slate-700 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-150">
+                                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-700/80">
+                                      <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                                        <i className="fas fa-calendar-check text-amber-400"></i>
+                                        <span>รายละเอียดรอบที่อบรมผ่านแล้ว</span>
+                                      </div>
+                                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold">
+                                        {matchedResults.length} รายการ
+                                      </span>
+                                    </div>
+
+                                    <div className="space-y-2 pt-2">
+                                      {matchedResults.map((tr, rIdx) => (
+                                        <div key={rIdx} className={rIdx > 0 ? 'pt-2 border-t border-slate-800' : ''}>
+                                          <div className="flex items-center justify-between gap-1 text-slate-200">
+                                            <span className="font-semibold text-emerald-300 flex items-center gap-1">
+                                              <i className="far fa-calendar-alt text-slate-400 text-[11px]"></i> 
+                                              รอบวันที่: <span className="text-white font-bold">{tr.trainingDateDisplay || tr.trainingDate || '-'}</span>
+                                            </span>
+                                            <span className="text-[10px] text-emerald-300 bg-emerald-950/80 border border-emerald-600/40 px-1.5 py-0.5 rounded font-medium">
+                                              {tr.trainingStatus || 'ผ่าน'}
+                                            </span>
+                                          </div>
+
+                                          <div className="text-[11px] text-slate-300 mt-1 flex flex-col gap-0.5">
+                                            <div className="flex items-start gap-1">
+                                              <span className="text-slate-400 shrink-0">รอบ/รุ่น:</span>
+                                              <span className="font-mono text-[10.5px] text-sky-300 break-all">{tr.trainingCourseName || tr.trainingCourseCode || '-'}</span>
+                                            </div>
+                                            {tr.trainingCourseCode && tr.trainingCourseName && tr.trainingCourseName !== tr.trainingCourseCode && (
+                                              <div className="flex items-center gap-1">
+                                                <span className="text-slate-400 shrink-0">รหัสหลักสูตร:</span>
+                                                <span className="font-mono text-[10.5px] text-slate-200">{tr.trainingCourseCode}</span>
+                                              </div>
+                                            )}
+                                            {(tr.scorePercent || tr.progressPercent) && (
+                                              <div className="flex items-center gap-2 text-[10.5px] text-slate-300">
+                                                {tr.scorePercent && <span>ผลสอบ: <strong className="text-amber-300">{tr.scorePercent}</strong></span>}
+                                                {tr.progressPercent && <span>ความคืบหน้า: <strong className="text-sky-300">{tr.progressPercent}</strong></span>}
+                                              </div>
+                                            )}
+                                            {tr.stampDate && (
+                                              <div className="text-[9.5px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                                <i className="far fa-clock text-[9px]"></i>
+                                                <span>ประทับผลเมื่อ: {formatStampDateDisplay(tr.stampDate)}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Pointer triangle */}
+                                    <div className="w-2.5 h-2.5 bg-slate-900 rotate-45 absolute right-6 -bottom-1 border-r border-b border-slate-700"></div>
+                                  </div>
+                                </div>
+                              )}
+                              {!isPassedFromStamp && isCheckedInForm && (
+                                <div className="relative shrink-0">
+                                  <span className="text-[10px] bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded-full border border-blue-200 shrink-0 flex items-center gap-1 shadow-2xs">
+                                    <i className="fas fa-check text-blue-600 text-[9px]"></i> ข้อมูลจากผู้อบรม
+                                  </span>
+                                </div>
                               )}
                             </div>
                           </div>
