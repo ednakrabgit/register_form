@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { API_BASE_URL } from '../config/api';
 
 const DEFAULT_ADMIN_MENUS = [
   { menuKey: 'dashboard', menuName: 'หน้าแรก (Dashboard)', path: '/admin', icon: 'fas fa-home', sortOrder: 1, category: 'Admin' },
@@ -22,7 +23,7 @@ export default function AdminLayout() {
   const [menus, setMenus] = useState(DEFAULT_ADMIN_MENUS);
 
   useEffect(() => {
-    fetch('/api/roles/menus')
+    fetch(`${API_BASE_URL}/roles/menus`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
@@ -81,17 +82,35 @@ export default function AdminLayout() {
           ) : (
             menus
               .filter(menu => canViewMenu(menu.menuKey))
-              .map(menu => (
-                <NavLink
-                  key={menu.menuKey}
-                  to={menu.path}
-                  end={menu.path === '/admin'}
-                  className={navLinkClass}
-                >
-                  <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center ${menu.menuKey === 'training_import' ? 'text-[#ffc107]' : ''}`}></i>
-                  <span>{menu.menuName}</span>
-                </NavLink>
-              ))
+              .map(menu => {
+                const isExternal = menu.path?.startsWith('http://') || menu.path?.startsWith('https://');
+                if (isExternal) {
+                  return (
+                    <a
+                      key={menu.menuKey}
+                      href={menu.path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 border-l-4 transition-colors text-white border-transparent hover:bg-white/10 hover:border-white/50"
+                    >
+                      <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center`}></i>
+                      <span className="flex-1">{menu.menuName}</span>
+                      <i className="fas fa-arrow-up-right-from-square text-xs text-white/50"></i>
+                    </a>
+                  );
+                }
+                return (
+                  <NavLink
+                    key={menu.menuKey}
+                    to={menu.path}
+                    end={menu.path === '/admin'}
+                    className={navLinkClass}
+                  >
+                    <i className={`${menu.icon || 'fas fa-circle'} w-5 text-center ${menu.menuKey === 'training_import' ? 'text-[#ffc107]' : ''}`}></i>
+                    <span>{menu.menuName}</span>
+                  </NavLink>
+                );
+              })
           )}
         </nav>
 

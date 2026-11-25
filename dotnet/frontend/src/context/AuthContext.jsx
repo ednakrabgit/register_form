@@ -101,21 +101,23 @@ export function AuthProvider({ children }) {
 
   const isAuthenticated = !!token && !!user;
   const role = user?.role || null;
-  const isApplicant = role === 'Applicant';
-  const isAdminOrViewer = ['Superadmin', 'Admin', 'Viewer'].includes(role) || (user?.permissions && user.permissions.some(p => p.canView && p.menuKey !== 'registration_form' && p.menuKey !== 'my_registrations'));
+  const normalizedRole = String(role || '').toLowerCase();
+  const isApplicant = normalizedRole === 'applicant';
+  const isAdminOrViewer = ['superadmin', 'admin', 'viewer', 'admin2', 'admin3'].includes(normalizedRole) || (user?.permissions && user.permissions.some(p => p.canView && p.menuKey !== 'registration_form' && p.menuKey !== 'my_registrations'));
 
   // Dynamic permission checkers
   const hasPermission = (menuKey, action = 'view') => {
     if (!user) return false;
-    if (user.role === 'Superadmin') return true; // Superadmin has all permissions
+    const userRole = String(user.role || '').toLowerCase();
+    if (userRole === 'superadmin') return true; // Superadmin has all permissions
 
     const targetKey = String(menuKey || '').toLowerCase();
 
     if (!user.permissions || !Array.isArray(user.permissions) || user.permissions.length === 0) {
       // Fallback defaults for standard roles if permissions not loaded
-      if (user.role === 'Admin') return !['registration_form', 'my_registrations'].includes(targetKey);
-      if (user.role === 'Viewer') return action === 'view' && ['dashboard', 'trainees', 'reports', 'profile'].includes(targetKey);
-      if (user.role === 'Applicant') return ['registration_form', 'my_registrations', 'trainees', 'profile'].includes(targetKey);
+      if (userRole.startsWith('admin')) return !['registration_form', 'my_registrations'].includes(targetKey);
+      if (userRole === 'viewer') return action === 'view' && ['dashboard', 'trainees', 'reports', 'profile'].includes(targetKey);
+      if (userRole === 'applicant') return ['registration_form', 'my_registrations', 'trainees', 'profile'].includes(targetKey);
       return false;
     }
 
@@ -123,8 +125,8 @@ export function AuthProvider({ children }) {
       String(p.menuKey || p.MenuKey || '').toLowerCase() === targetKey
     );
     if (!perm) {
-      if (user.role === 'Admin') return !['registration_form', 'my_registrations'].includes(targetKey);
-      if (user.role === 'Applicant' && targetKey === 'trainees') return true;
+      if (userRole.startsWith('admin') || userRole === 'superadmin') return !['registration_form', 'my_registrations'].includes(targetKey);
+      if (userRole === 'applicant' && targetKey === 'trainees') return true;
       return false;
     }
 
