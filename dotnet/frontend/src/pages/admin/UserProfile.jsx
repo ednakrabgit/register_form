@@ -19,7 +19,8 @@ const isSubjectMatch = (tr, courseName) => {
   return sText.includes(courseName) ||
     (courseName === 'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' && sText.includes('ระดับความเสี่ยง')) ||
     (courseName === 'การจัดการสินไหมทดแทน Non-Motor' && (sText.toLowerCase().includes('non-motor') || sText.toLowerCase().includes('nonmotor'))) ||
-    (courseName === 'การประกันความเสี่ยงภัยทรัพย์สิน' && sText.includes('ความเสี่ยงภัยทรัพย์สิน')) ||
+    (courseName === 'การประกันภัยความเสี่ยงภัยทรัพย์สิน' && sText.includes('ความเสี่ยงภัยทรัพย์สิน')) ||
+    (courseName.includes('ทรัพย์สิน') && sText.includes('ทรัพย์สิน')) ||
     (courseName === 'การวางแผนเพื่อวัยเกษียณ' && sText.includes('วัยเกษียณ')) ||
     (courseName === 'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' && sText.includes('การวางแผนภาษี')) ||
     (courseName === 'การประกันภัยต่อ' && sText.includes('การประกันภัยต่อ')) ||

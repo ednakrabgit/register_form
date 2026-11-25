@@ -663,7 +663,7 @@ export default function MasterDataCrud() {
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none" 
-                  placeholder={isRenewCourse ? 'เช่น การประกันความเสี่ยงภัยทรัพย์สิน' : ''}
+                  placeholder={isRenewCourse ? 'เช่น การประกันภัยความเสี่ยงภัยทรัพย์สิน' : ''}
                 />
               </div>
 

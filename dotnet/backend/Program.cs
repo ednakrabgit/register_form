@@ -228,7 +228,7 @@ try
                 BEGIN
                     UPDATE mst_renew_course SET name = N'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' WHERE id = 1;
                     UPDATE mst_renew_course SET name = N'การจัดการสินไหมทดแทน Non-Motor' WHERE id = 2;
-                    UPDATE mst_renew_course SET name = N'การประกันความเสี่ยงภัยทรัพย์สิน' WHERE id = 3;
+                    UPDATE mst_renew_course SET name = N'การประกันภัยความเสี่ยงภัยทรัพย์สิน' WHERE id = 3;
                     UPDATE mst_renew_course SET name = N'การวางแผนเพื่อวัยเกษียณ' WHERE id = 4;
                     UPDATE mst_renew_course SET name = N'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' WHERE id = 5;
                     UPDATE mst_renew_course SET name = N'การประกันภัยต่อ' WHERE id = 6;

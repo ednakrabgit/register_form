@@ -1581,7 +1581,7 @@ $brokerStyle = (defined('DEFAULT_AGENT_TYPE') && DEFAULT_AGENT_TYPE === 'agent')
                     <div class="radio-group" style="padding: 15px; border: 1px solid var(--border-color); border-radius: 6px; background-color: #F8F9FA;">
                         <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง"> การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง</label>
                         <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การจัดการสินไหมทดแทน Non-Motor"> การจัดการสินไหมทดแทน Non-Motor</label>
-                        <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การประกันความเสี่ยงภัยทรัพย์สิน"> การประกันความเสี่ยงภัยทรัพย์สิน</label>
+                        <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การประกันภัยความเสี่ยงภัยทรัพย์สิน"> การประกันภัยความเสี่ยงภัยทรัพย์สิน</label>
                         <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การวางแผนเพื่อวัยเกษียณ"> การวางแผนเพื่อวัยเกษียณ</label>
                         <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย"> การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย</label>
                         <label class="radio-item"><input type="checkbox" name="previousCourses[]" value="การประกันภัยต่อ"> การประกันภัยต่อ</label>
