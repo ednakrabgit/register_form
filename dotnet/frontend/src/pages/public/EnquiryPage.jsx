@@ -307,34 +307,25 @@ export default function EnquiryPage() {
                     <div className="font-bold text-slate-700 mb-1">
                       วิชาที่ท่านลงทะเบียนเพื่ออบรมในปี 2569
                     </div>
-                    <div className="text-slate-800 whitespace-pre-line leading-relaxed text-xs sm:text-sm pl-2 border-l-2 border-amber-300 mt-1">
-                      {result.wantCourses || 'ไม่มีข้อมูล'}
-                    </div>
-                  </div>
-
-                  {result.stampedResults && result.stampedResults.length > 0 && (
-                    <div className="py-3 bg-slate-50 -mx-6 px-6 border-t border-slate-200 mt-2">
-                      <div className="font-bold text-[#0b3d91] text-xs sm:text-sm flex items-center gap-1.5 mb-2">
-                        <i className="fas fa-certificate text-emerald-600"></i> ผลการอบรมจริงที่ประทับผลแล้ว (Training Results)
-                      </div>
-                      <div className="space-y-2">
-                        {result.stampedResults.map((item, idx) => (
-                          <div key={idx} className="bg-white p-2.5 rounded-lg border border-slate-200 text-xs">
-                            <div className="font-semibold text-slate-800">{item.subjectNames || item.courseName}</div>
-                            <div className="flex justify-between text-slate-500 mt-1">
-                              <span>รอบวันที่: {item.trainingDate || '-'}</span>
-                              <span className={`font-bold ${
-                                item.status && (item.status.includes('ผ่าน') || item.status.includes('อนุมัติ'))
-                                  ? 'text-emerald-700' : 'text-red-600'
-                              }`}>
-                                {item.status || '-'}
-                              </span>
+                    {result.wantCoursesList && result.wantCoursesList.length > 0 ? (
+                      <div className="space-y-3 pl-2 border-l-2 border-amber-300 mt-1">
+                        {result.wantCoursesList.map((c, i) => (
+                          <div key={i} className="text-xs sm:text-sm leading-relaxed">
+                            <div className={c.isPassed ? "font-bold text-slate-900" : "text-slate-700"}>
+                              {c.index ? `${c.index}. ` : ''}{c.header ? `${c.header}:` : ''}
+                            </div>
+                            <div className={c.isPassed ? "font-bold text-emerald-800" : "text-slate-800"}>
+                              {c.courseName} {c.isPassed && <span className="font-bold text-emerald-700">(ผ่านการอบรมแล้ว)</span>}
                             </div>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-slate-800 whitespace-pre-line leading-relaxed text-xs sm:text-sm pl-2 border-l-2 border-amber-300 mt-1">
+                        {result.wantCourses || 'ไม่มีข้อมูล'}
+                      </div>
+                    )}
+                  </div>
 
                 </div>
               </div>

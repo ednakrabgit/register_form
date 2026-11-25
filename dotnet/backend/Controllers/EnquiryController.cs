@@ -168,6 +168,11 @@ namespace backend.Controllers
 
             var pastCourses = FormatPastCourses(reg?.PastTraining5y);
 
+            // Stamped passed results from new system
+            var passedStamps = person?.TrainingResults?
+                .Where(t => t.TrainingStatus != null && (t.TrainingStatus.Contains("ผ่าน") || t.TrainingStatus.Contains("อนุมัติ")))
+                .ToList() ?? new List<TrnTrainingResult>();
+
             // Wanted courses: Check override columns first (renew_agent_1..3, renew_broker_1..3)
             var wantCandidates = new List<string>();
             var overrides = new[] { reg?.RenewAgent1, reg?.RenewAgent2, reg?.RenewAgent3, reg?.RenewBroker1, reg?.RenewBroker2, reg?.RenewBroker3 };
@@ -177,27 +182,30 @@ namespace backend.Controllers
             }
 
             string wantCourses;
+            List<WantCourseItemDto> wantCoursesList;
+
             if (wantCandidates.Count > 0)
             {
                 var rawJoined = string.Join("; ", wantCandidates);
-                var formatted = FormatWantCourses(rawJoined);
+                var formatted = FormatWantCourses(rawJoined, renewLevel, passedStamps);
+                wantCourses = formatted.Text;
+                wantCoursesList = formatted.Items;
+
                 if (!string.IsNullOrEmpty(renewLevel) && renewLevel != "ไม่มีข้อมูล")
                 {
-                    wantCourses = $"หลักสูตรที่ท่านต้องอบรมคือ : {renewLevel}\n{formatted}";
-                }
-                else
-                {
-                    wantCourses = formatted;
+                    wantCourses = $"หลักสูตรที่ท่านต้องอบรมคือ : {renewLevel}\n{wantCourses}";
                 }
             }
             else
             {
-                wantCourses = FormatWantCourses(reg?.RenewOther);
+                var formatted = FormatWantCourses(reg?.RenewOther, renewLevel, passedStamps);
+                wantCourses = formatted.Text;
+                wantCoursesList = formatted.Items;
             }
 
             var maskedId = MaskCitizenId(cleanId);
 
-            // Stamped results from new system if any
+            // Stamped results from new system if any (for API reference)
             var stampedResults = person?.TrainingResults
                 .OrderByDescending(t => t.StampDate)
                 .Select(t => new
@@ -240,6 +248,7 @@ namespace backend.Controllers
                 registrationDate,
                 pastCourses,
                 wantCourses,
+                wantCoursesList,
                 stampedResults = stampedResults ?? new()
             });
         }
@@ -334,9 +343,15 @@ namespace backend.Controllers
             return string.Join("\n", items);
         }
 
-        private static string FormatWantCourses(string? s)
+        private static (string Text, List<WantCourseItemDto> Items) FormatWantCourses(
+            string? s,
+            string? renewLevel,
+            List<TrnTrainingResult> passedStamps)
         {
-            if (string.IsNullOrWhiteSpace(s) || s.Trim() == "ไม่มีข้อมูล") return "ไม่มีข้อมูล";
+            if (string.IsNullOrWhiteSpace(s) || s.Trim() == "ไม่มีข้อมูล")
+            {
+                return ("ไม่มีข้อมูล", new List<WantCourseItemDto>());
+            }
 
             var parts = Regex.Split(s, @"\s*;\s*|\n+");
             var thaiMonths = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
@@ -348,8 +363,8 @@ namespace backend.Controllers
 
             int ExtractDateKey(string item)
             {
-                // Pattern: [Pillar X] [DD Month YYYY]
-                var m = Regex.Match(item, @"\]\s*\[\s*([0-9]{1,2})\s+([^\s\]]+)\s+([0-9]{4})\s*\]");
+                // Pattern: [Pillar X] [DD Month YYYY] or [DD Month YYYY]
+                var m = Regex.Match(item, @"\[\s*([0-9]{1,2})\s+([^\s\]]+)\s+([0-9]{4})\s*\]");
                 if (m.Success)
                 {
                     int.TryParse(m.Groups[1].Value, out int day);
@@ -381,7 +396,7 @@ namespace backend.Controllers
                 parsed.Add((clean, ExtractDateKey(clean), pillar, idx++));
             }
 
-            if (parsed.Count == 0) return "ไม่มีข้อมูล";
+            if (parsed.Count == 0) return ("ไม่มีข้อมูล", new List<WantCourseItemDto>());
 
             // Sort by Date ASC, Pillar ASC, Index ASC
             parsed.Sort((a, b) =>
@@ -416,28 +431,210 @@ namespace backend.Controllers
             // 1. [Pillar X] [Date]:
             // Course name...
             var outLines = new List<string>();
+            var itemsList = new List<WantCourseItemDto>();
             int counter = 1;
+
             foreach (var item in unique)
             {
-                var pos = item.IndexOf(':');
-                if (pos >= 0)
+                string head = "";
+                string tail = "";
+                var bracketColonPos = item.IndexOf("]:");
+                if (bracketColonPos >= 0)
                 {
-                    var head = item.Substring(0, pos).Trim();
-                    var tail = item.Substring(pos + 1).Trim();
-                    outLines.Add($"{counter}. {head}:");
-                    if (!string.IsNullOrEmpty(tail))
+                    head = item.Substring(0, bracketColonPos + 1).Trim();
+                    tail = item.Substring(bracketColonPos + 2).Trim();
+                }
+                else
+                {
+                    // Check if item is a date string e.g. "2569-12-15 00:00:00"
+                    var mDate = Regex.Match(item, @"^(\d{4})-(\d{2})-(\d{2})");
+                    if (mDate.Success)
                     {
-                        outLines.Add(tail);
+                        int.TryParse(mDate.Groups[1].Value, out int yr);
+                        int.TryParse(mDate.Groups[2].Value, out int mo);
+                        int.TryParse(mDate.Groups[3].Value, out int dy);
+                        if (yr > 2400) yr -= 543;
+                        try
+                        {
+                            var dtParsed = new DateTime(yr, mo, dy);
+                            head = $"[{FormatThaiDate(dtParsed)}]";
+                        }
+                        catch
+                        {
+                            head = $"[{mDate.Groups[0].Value}]";
+                        }
+                        tail = !string.IsNullOrEmpty(renewLevel) && renewLevel != "ไม่มีข้อมูล" ? renewLevel : item.Trim();
+                    }
+                    else
+                    {
+                        var colonPos = item.IndexOf(':');
+                        if (colonPos >= 0)
+                        {
+                            head = item.Substring(0, colonPos).Trim();
+                            tail = item.Substring(colonPos + 1).Trim();
+                        }
+                        else
+                        {
+                            tail = item.Trim();
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(tail) && !string.IsNullOrEmpty(renewLevel) && renewLevel != "ไม่มีข้อมูล")
+                {
+                    tail = renewLevel;
+                }
+
+                bool isPassed = IsCoursePassed(tail, head, renewLevel, passedStamps);
+                var displayCourseName = isPassed ? $"{tail} (ผ่านการอบรมแล้ว)" : tail;
+
+                if (!string.IsNullOrEmpty(head))
+                {
+                    outLines.Add($"{counter}. {head}:");
+                    if (!string.IsNullOrEmpty(displayCourseName))
+                    {
+                        outLines.Add(displayCourseName);
                     }
                 }
                 else
                 {
-                    outLines.Add($"{counter}. {item}");
+                    outLines.Add($"{counter}. {displayCourseName}");
                 }
+
+                itemsList.Add(new WantCourseItemDto
+                {
+                    Index = counter,
+                    Header = head,
+                    CourseName = tail,
+                    IsPassed = isPassed
+                });
+
                 counter++;
             }
 
-            return string.Join("\n", outLines);
+            return (string.Join("\n", outLines), itemsList);
         }
+
+        private static bool IsCoursePassed(
+            string courseTitle,
+            string? courseHeader,
+            string? renewLevel,
+            List<TrnTrainingResult> passedStamps)
+        {
+            if (passedStamps == null || passedStamps.Count == 0) return false;
+
+            var cleanTitle = CleanSubjectKey(courseTitle);
+            var cleanHeader = CleanSubjectKey(courseHeader ?? "");
+            var cleanLevel = CleanSubjectKey(renewLevel ?? "");
+
+            foreach (var st in passedStamps)
+            {
+                var cleanSub = CleanSubjectKey(st.SubjectNames ?? "");
+                var cleanCourse = CleanSubjectKey(st.TrainingCourseName ?? "");
+                var cleanCode = CleanSubjectKey(st.TrainingCourseCode ?? "");
+
+                // 1. Direct or substring match on subject name
+                if (!string.IsNullOrEmpty(cleanTitle) && !string.IsNullOrEmpty(cleanSub))
+                {
+                    if (cleanTitle.Contains(cleanSub) || cleanSub.Contains(cleanTitle))
+                        return true;
+                }
+
+                // 2. Keyword matching for known subject variations (Renew 4+)
+                if (IsRenew4SubjectMatch(cleanTitle, cleanSub, cleanCourse))
+                    return true;
+
+                // 3. Basic course matching (ขอรับ / ต่อ 1-3)
+                if (IsBasicCourseMatch(cleanTitle, cleanLevel, cleanCourse, cleanCode))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static string CleanSubjectKey(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            var chars = s.Where(c => !char.IsWhiteSpace(c) && c != '.' && c != ':' && c != '-' && c != '_' && c != '(' && c != ')' && c != '[' && c != ']' && c != ',' && c != '/').ToArray();
+            var cleaned = new string(chars).ToLower();
+            cleaned = cleaned.Replace("กฏ", "กฎ");
+            cleaned = cleaned.Replace("วินาศภัย", "ภัย");
+            cleaned = cleaned.Replace("พระราชบัญญัติ", "พรบ");
+            cleaned = cleaned.Replace("พศ2522", "").Replace("พศ2526", "").Replace("แก้ไขเพิ่มเติม2562", "");
+            return cleaned;
+        }
+
+        private static bool IsRenew4SubjectMatch(string t, string sub, string crs)
+        {
+            // จราจรทางบก
+            if (t.Contains("จราจร") && (sub.Contains("จราจร") || crs.Contains("จราจร"))) return true;
+            // ข้อมูลส่วนบุคคล / PDPA
+            if ((t.Contains("ข้อมูลส่วนบุคคล") || t.Contains("pdpa")) && (sub.Contains("ข้อมูลส่วนบุคคล") || sub.Contains("pdpa"))) return true;
+            // ฟอกเงิน
+            if (t.Contains("ฟอกเงิน") && sub.Contains("ฟอกเงิน")) return true;
+            // ทวงถามหนี้
+            if (t.Contains("ทวงถามหนี้") && sub.Contains("ทวงถามหนี้")) return true;
+            // จรรยาบรรณ
+            if (t.Contains("จรรยาบรรณ") && sub.Contains("จรรยาบรรณ")) return true;
+            // ไฟฟ้า / รถยนต์ไฟฟ้า
+            if (t.Contains("ไฟฟ้า") && sub.Contains("ไฟฟ้า")) return true;
+            // เสนอขายถูกหลัก
+            if (t.Contains("เสนอขายถูกหลัก") && sub.Contains("เสนอขายถูกหลัก")) return true;
+            // ตลาดยุคใหม่
+            if (t.Contains("ตลาดยุคใหม่") && sub.Contains("ตลาดยุคใหม่")) return true;
+            // พิจารณารับประกัน
+            if (t.Contains("พิจารณารับประกัน") && sub.Contains("พิจารณารับประกัน")) return true;
+            // สุขภาพ
+            if (t.Contains("สุขภาพ") && sub.Contains("สุขภาพ")) return true;
+            // ความเสี่ยงต่อความรับผิด
+            if (t.Contains("ความเสี่ยงต่อความรับผิด") && sub.Contains("ความเสี่ยงต่อความรับผิด")) return true;
+            // Non-Motor
+            if ((t.Contains("nonmotor") || t.Contains("สินไหม")) && (sub.Contains("nonmotor") || sub.Contains("สินไหม"))) return true;
+            // ความเสี่ยงภัยทรัพย์สิน
+            if (t.Contains("ทรัพย์สิน") && sub.Contains("ทรัพย์สิน")) return true;
+            // วัยเกษียณ
+            if (t.Contains("เกษียณ") && sub.Contains("เกษียณ")) return true;
+            // วางแผนภาษี
+            if (t.Contains("ภาษี") && sub.Contains("ภาษี")) return true;
+            // ประกันภัยต่อ
+            if (t.Contains("ประกันภัยต่อ") && (sub.Contains("ประกันภัยต่อ") || sub.Contains("ประกันต่อ"))) return true;
+            // ระดับความเสี่ยง
+            if (t.Contains("ระดับความเสี่ยง") && sub.Contains("ระดับความเสี่ยง")) return true;
+
+            return false;
+        }
+
+        private static bool IsBasicCourseMatch(string title, string level, string courseName, string courseCode)
+        {
+            var text = $"{title} {level}";
+            var target = $"{courseName} {courseCode}";
+
+            // ขอรับนายหน้า (นว.0)
+            if (text.Contains("ขอรับ") && text.Contains("นายหน้า") && (target.Contains("นว0") || target.Contains("นว.0") || target.Contains("ขอรับ"))) return true;
+            // ขอรับตัวแทน (ตว.0)
+            if (text.Contains("ขอรับ") && text.Contains("ตัวแทน") && (target.Contains("ตว0") || target.Contains("ตว.0") || target.Contains("ขอรับ"))) return true;
+            // ต่อ 1 นายหน้า (นว.1)
+            if (text.Contains("1") && text.Contains("นายหน้า") && (target.Contains("นว1") || target.Contains("นว.1"))) return true;
+            // ต่อ 1 ตัวแทน (ตว.1)
+            if (text.Contains("1") && text.Contains("ตัวแทน") && (target.Contains("ตว1") || target.Contains("ตว.1"))) return true;
+            // ต่อ 2 นายหน้า (นว.2)
+            if (text.Contains("2") && text.Contains("นายหน้า") && (target.Contains("นว2") || target.Contains("นว.2"))) return true;
+            // ต่อ 2 ตัวแทน (ตว.2)
+            if (text.Contains("2") && text.Contains("ตัวแทน") && (target.Contains("ตว2") || target.Contains("ตว.2"))) return true;
+            // ต่อ 3 นายหน้า (นว.3)
+            if (text.Contains("3") && text.Contains("นายหน้า") && (target.Contains("นว3") || target.Contains("นว.3"))) return true;
+            // ต่อ 3 ตัวแทน (ตว.3)
+            if (text.Contains("3") && text.Contains("ตัวแทน") && (target.Contains("ตว3") || target.Contains("ตว.3"))) return true;
+
+            return false;
+        }
+    }
+
+    public class WantCourseItemDto
+    {
+        public int Index { get; set; }
+        public string Header { get; set; } = "";
+        public string CourseName { get; set; } = "";
+        public bool IsPassed { get; set; }
     }
 }

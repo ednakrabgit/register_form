@@ -335,13 +335,6 @@
                             <div class="k"><b>วิชาที่ท่านลงทะเบียนเพื่ออบรมในปี 2569</b></div>
                             <div class="v" id="lblWantCourses">ไม่มีข้อมูล</div>
                         </div>
-
-                        <div id="stampedResultsSection" style="display:none;" class="stamped-box">
-                            <div style="font-weight:bold; color:#0b3d91; font-size:13px; margin-bottom:6px;">
-                                <i class="fas fa-certificate text-emerald-600"></i> ผลการอบรมจริงที่ประทับผลแล้ว (Training Results)
-                            </div>
-                            <div id="stampedItemsList"></div>
-                        </div>
                     </div>
                 </div>
 
@@ -427,32 +420,40 @@
             document.getElementById('lblCourseType').innerText = data.courseType || 'ไม่มีข้อมูล';
             document.getElementById('lblRenewLevel').innerText = data.renewLevel || 'ไม่มีข้อมูล';
             document.getElementById('lblPastCourses').innerText = data.pastCourses || 'ไม่มีข้อมูล';
-            document.getElementById('lblWantCourses').innerText = data.wantCourses || 'ไม่มีข้อมูล';
+
+            // Render Want Courses with Bold & "(ผ่านการอบรมแล้ว)"
+            if (data.wantCoursesList && data.wantCoursesList.length > 0) {
+                var cHtml = '';
+                data.wantCoursesList.forEach(function(c) {
+                    if (c.isPassed) {
+                        cHtml += '<div style="margin-bottom:8px; line-height:1.5;">' +
+                            '<div style="font-weight:bold; color:#0f172a;">' + (c.index ? c.index + '. ' : '') + (c.header ? escapeHtml(c.header) + ':' : '') + '</div>' +
+                            '<div style="font-weight:bold; color:#15803d;">' + escapeHtml(c.courseName) + ' <span style="font-weight:bold; color:#16a34a;">(ผ่านการอบรมแล้ว)</span></div>' +
+                        '</div>';
+                    } else {
+                        cHtml += '<div style="margin-bottom:8px; color:#334155; line-height:1.5;">' +
+                            '<div>' + (c.index ? c.index + '. ' : '') + (c.header ? escapeHtml(c.header) + ':' : '') + '</div>' +
+                            '<div>' + escapeHtml(c.courseName) + '</div>' +
+                        '</div>';
+                    }
+                });
+                document.getElementById('lblWantCourses').innerHTML = cHtml;
+            } else if (data.wantCourses) {
+                var lines = data.wantCourses.split('\n');
+                var fHtml = lines.map(function(l) {
+                    if (l.indexOf('(ผ่านการอบรมแล้ว)') >= 0) {
+                        return '<div style="font-weight:bold; color:#15803d; margin-bottom:4px;">' + escapeHtml(l) + '</div>';
+                    }
+                    return '<div style="margin-bottom:4px;">' + escapeHtml(l) + '</div>';
+                }).join('');
+                document.getElementById('lblWantCourses').innerHTML = fHtml;
+            } else {
+                document.getElementById('lblWantCourses').innerText = 'ไม่มีข้อมูล';
+            }
 
             // Mask the ID in the input box so it is not visible on screen
             if (data.maskedCitizenId) {
                 input.value = data.maskedCitizenId;
-            }
-
-            // Stamped results if any
-            var stampSection = document.getElementById('stampedResultsSection');
-            var stampList = document.getElementById('stampedItemsList');
-            if (data.stampedResults && data.stampedResults.length > 0) {
-                var itemsHtml = '';
-                data.stampedResults.forEach(function(item) {
-                    var statusColor = (item.status && (item.status.indexOf('ผ่าน') >= 0 || item.status.indexOf('อนุมัติ') >= 0)) ? '#15803d' : '#b91c1c';
-                    itemsHtml += '<div class="stamped-item">' +
-                        '<div style="font-weight:600; color:#1e293b;">' + escapeHtml(item.subjectNames || item.courseName) + '</div>' +
-                        '<div style="color:#64748b; margin-top:2px; display:flex; justify-content:space-between;">' +
-                            '<span>รอบวันที่: ' + escapeHtml(item.trainingDate || '-') + '</span>' +
-                            '<span style="font-weight:bold; color:' + statusColor + ';">' + escapeHtml(item.status || '-') + '</span>' +
-                        '</div>' +
-                    '</div>';
-                });
-                stampList.innerHTML = itemsHtml;
-                stampSection.style.display = 'block';
-            } else {
-                stampSection.style.display = 'none';
             }
 
             resBox.style.display = 'block';
