@@ -70,6 +70,7 @@ export default function ExportDataReport() {
               groups[item.courseName].dates.push({
                 dateId: item.dateId,
                 display: item.dateDisplay,
+                courseDate: item.courseDate,
                 year: extractBuddhistYear(item.courseDate, item.dateDisplay)
               });
             }
@@ -81,9 +82,21 @@ export default function ExportDataReport() {
           groups[tor4Name].dates = otherCoursesData.map(o => ({
             dateId: o.id,
             display: o.displayName,
+            courseDate: o.courseDate,
             year: extractBuddhistYear(o.courseDate, o.dateDisplay || o.displayName)
           }));
         }
+
+        // Sort dates chronologically within each course
+        Object.values(groups).forEach(g => {
+          if (g.courseName !== tor4Name && g.dates.length > 1) {
+            g.dates.sort((a, b) => {
+              const da = a.courseDate ? new Date(a.courseDate).getTime() : 0;
+              const db = b.courseDate ? new Date(b.courseDate).getTime() : 0;
+              return da - db;
+            });
+          }
+        });
 
         const courseList = Object.values(groups);
         setGroupedCourses(courseList);

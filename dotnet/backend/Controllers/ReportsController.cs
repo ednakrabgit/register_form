@@ -197,14 +197,36 @@ namespace backend.Controllers
             // Apply Course filter
             if (!hasPersonFilter && request.SelectedCourses != null && request.SelectedCourses.Count > 0)
             {
+                var allBasics = await _context.RenewBasics.ToListAsync();
+                var basicNameMap = allBasics.ToDictionary(b => b.Id, b => b.CourseName);
+                var sameNameIdsMap = allBasics
+                    .GroupBy(b => b.CourseName)
+                    .ToDictionary(g => g.Key, g => g.Select(b => b.Id).ToHashSet());
+
                 var validRecords = new List<Person>();
                 foreach (var person in personsList)
                 {
                     bool match = false;
                     foreach (var c in request.SelectedCourses)
                     {
+                        if (!c.CourseId.HasValue) continue;
+                        int cid = c.CourseId.Value;
+                        HashSet<int>? allowedCourseIds = null;
+                        if (cid == 9 || cid == 10)
+                        {
+                            allowedCourseIds = new HashSet<int> { 9, 10 };
+                        }
+                        else if (basicNameMap.TryGetValue(cid, out var cName) && !string.IsNullOrEmpty(cName) && sameNameIdsMap.TryGetValue(cName, out var groupIds))
+                        {
+                            allowedCourseIds = groupIds;
+                        }
+                        else
+                        {
+                            allowedCourseIds = new HashSet<int> { cid };
+                        }
+
                         if (person.Courses.Any(pc => 
-                            (c.CourseId == 9 || c.CourseId == 10 ? (pc.CourseId == 9 || pc.CourseId == 10) : pc.CourseId == c.CourseId) && 
+                            allowedCourseIds.Contains(pc.CourseId ?? 0) && 
                             (c.DateIds == null || c.DateIds.Count == 0 || c.DateIds.Contains(pc.CourseDateId ?? 0) || c.DateIds.Contains(pc.RenewOtherId ?? 0))))
                         {
                             match = true;
