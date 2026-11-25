@@ -1587,16 +1587,65 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
                           {masterData?.renewCourseCheckboxes?.map((course, idx) => {
-                            const isChecked = formData.trainings?.some(t => t.courseId?.toString() === course.id.toString());
+                            const isCheckedInForm = formData.trainings?.some(t => t.courseId?.toString() === course.id.toString());
+
+                            // Check if this course was passed in stamped trainingResults
+                            const isPassedFromStamp = formData.trainingResults?.some(tr => {
+                              const isPassed = tr.trainingStatus && (tr.trainingStatus.includes('ผ่าน') || tr.trainingStatus.includes('อนุมัติ'));
+                              if (!isPassed) return false;
+                              const sText = `${tr.subjectNames || ''} ${tr.trainingCourseName || ''} ${tr.trainingCourseCode || ''}`;
+                              return sText.includes(course.name) ||
+                                (course.name === 'การกำกับดูแลบริษัทประกันภัยตามระดับความเสี่ยง' && sText.includes('ระดับความเสี่ยง')) ||
+                                (course.name === 'การจัดการสินไหมทดแทน Non-Motor' && (sText.toLowerCase().includes('non-motor') || sText.toLowerCase().includes('nonmotor'))) ||
+                                (course.name === 'การประกันความเสี่ยงภัยทรัพย์สิน' && sText.includes('ความเสี่ยงภัยทรัพย์สิน')) ||
+                                (course.name === 'การวางแผนเพื่อวัยเกษียณ' && sText.includes('วัยเกษียณ')) ||
+                                (course.name === 'การวางแผนภาษีสำหรับตัวแทนและนายหน้าประกันภัย' && sText.includes('การวางแผนภาษี')) ||
+                                (course.name === 'การประกันภัยต่อ' && sText.includes('การประกันภัยต่อ')) ||
+                                (course.name === 'จรรยาบรรณและศีลธรรมของตัวแทน/นายหน้าประกันภัย' && sText.includes('จรรยาบรรณและศีลธรรม')) ||
+                                (course.name === 'พ.ร.บ. จราจรทางบก พ.ศ.2522 (แก้ไขเพิ่มเติม2562) และการพิจารณาคดีแพ่ง/อาญาเมื่อเกิดอุบัติเหตุจราจร' && sText.includes('จราจร')) ||
+                                (course.name === 'พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล' && (sText.includes('คุ้มครองข้อมูลส่วนบุคคล') || sText.toLowerCase().includes('pdpa'))) ||
+                                (course.name === 'เสนอขายถูกหลักประกันภัยเติบโต' && sText.includes('เสนอขายถูกหลัก')) ||
+                                (course.name === 'กฎหมายว่าด้วยการป้องกันและปราบปรามการฟอกเงินและต่อต้านการสนับสนุนทางการเงินแก่การก่อการร้าย' && sText.includes('ฟอกเงิน')) ||
+                                (course.name === 'กรมธรรม์ประกันภัยรถยนต์ไฟฟ้ารวมการคุ้มครองผู้ประสบภัยจากรถ' && sText.includes('รถยนต์ไฟฟ้า')) ||
+                                (course.name === 'พ.ร.บ.การทวงถามหนี้' && sText.includes('ทวงถามหนี้')) ||
+                                (course.name === 'ความเสี่ยงต่อความรับผิดในฐานะตัวแทน/นายหน้าประกันภัย' && sText.includes('ความรับผิดในฐานะตัวแทน')) ||
+                                (course.name === 'การตลาดยุคใหม่' && sText.includes('การตลาดยุคใหม่')) ||
+                                (course.name === 'รู้จักประกันภัยสุขภาพ' && sText.includes('ประกันภัยสุขภาพ')) ||
+                                (course.name === 'การพิจารณารับประกันภัยรถยนต์' && sText.includes('รับประกันภัยรถยนต์'));
+                            });
+
+                            const isChecked = isCheckedInForm || isPassedFromStamp;
+
                             return (
-                              <label key={idx} className="flex items-start gap-2.5 p-2 bg-white rounded-lg border cursor-pointer hover:bg-gray-50">
+                              <label 
+                                key={idx} 
+                                className={`flex items-start gap-2.5 p-2 rounded-lg border transition-all ${
+                                  isPassedFromStamp 
+                                    ? 'bg-emerald-50/80 border-emerald-300 shadow-2xs' 
+                                    : isChecked 
+                                      ? 'bg-blue-50/50 border-blue-200' 
+                                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                                } ${effectiveReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
+                              >
                                 <input
                                   type="checkbox"
-                                  className="mt-1 w-4 h-4 accent-primary"
+                                  className="mt-1 w-4 h-4 accent-emerald-600 rounded"
                                   checked={isChecked}
+                                  disabled={effectiveReadOnly}
                                   onChange={(e) => handleTrainingChange(course.id, e.target.checked)}
                                 />
-                                <span className="text-xs text-slate-700">{course.name}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-1 flex-wrap">
+                                    <span className={`text-xs ${isPassedFromStamp ? 'font-semibold text-emerald-950' : 'text-slate-700'}`}>
+                                      {course.name}
+                                    </span>
+                                    {isPassedFromStamp && (
+                                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full border border-emerald-300 shrink-0 flex items-center gap-1 shadow-2xs">
+                                        <i className="fas fa-check-circle text-emerald-600"></i> ผ่านการอบรมแล้ว (Stamp ผล)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </label>
                             );
                           })}

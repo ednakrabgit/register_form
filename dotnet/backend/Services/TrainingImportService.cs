@@ -429,6 +429,9 @@ namespace backend.Services
             int updatedRecordsCount = 0;
             int insertedRecordsCount = 0;
 
+            var allRenewCourses = await _context.RenewCourses.ToListAsync();
+            var allCurriculums = await _context.CourseCurriculums.ToListAsync();
+
             foreach (var r in summary.Rows)
             {
                 var normTrainingDate = NormalizeToStartDate(r.TrainingCourseName, r.TrainingDateDisplay ?? "");
@@ -583,6 +586,24 @@ namespace backend.Services
                     existingMapExact[exactKey] = newResult;
                     if (subKey != null) existingMapSubject[subKey] = newResult;
                     insertedRecordsCount++;
+                }
+
+                // If training status is passed, auto-stamp to 5-year previous trainings (PersonTraining5y)
+                var isPassedStatus = r.TrainingStatus != null && (r.TrainingStatus.Contains("ผ่าน") || r.TrainingStatus.Contains("อนุมัติ"));
+                if (isPassedStatus && !string.IsNullOrEmpty(r.NationalId) && persons.TryGetValue(r.NationalId, out var personEntity))
+                {
+                    var matchedRenewIds = MatchRenewCourseIds(r.TrainingCourseCode, subName, r.TrainingCourseName, allRenewCourses, allCurriculums);
+                    foreach (var cId in matchedRenewIds)
+                    {
+                        if (!personEntity.Trainings.Any(t => t.CourseId == cId))
+                        {
+                            personEntity.Trainings.Add(new PersonTraining5y
+                            {
+                                NationId = personEntity.NationId,
+                                CourseId = cId
+                            });
+                        }
+                    }
                 }
             }
 

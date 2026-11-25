@@ -1134,6 +1134,32 @@ namespace backend.Controllers
                 .FirstOrDefaultAsync(x => x.NationId == nationId);
                 
             if (p == null) return NotFound();
+
+            // Auto-merge any passed courses from TrainingResults into Trainings (5-year accumulated trainings)
+            if (p.TrainingResults.Any(t => IsTrainingPassed(t.TrainingStatus)))
+            {
+                var allRenewCourses = await context.RenewCourses.ToListAsync();
+                var allCurriculums = await context.CourseCurriculums.ToListAsync();
+                var passedIds = new HashSet<int>();
+
+                foreach (var tr in p.TrainingResults.Where(t => IsTrainingPassed(t.TrainingStatus)))
+                {
+                    var matched = backend.Services.TrainingImportService.MatchRenewCourseIds(tr.TrainingCourseCode, tr.SubjectNames, tr.TrainingCourseName, allRenewCourses, allCurriculums);
+                    foreach (var m in matched) passedIds.Add(m);
+                }
+
+                foreach (var cid in passedIds)
+                {
+                    if (!p.Trainings.Any(t => t.CourseId == cid))
+                    {
+                        p.Trainings.Add(new PersonTraining5y
+                        {
+                            NationId = p.NationId,
+                            CourseId = cid
+                        });
+                    }
+                }
+            }
             
             return Ok(p);
         }
