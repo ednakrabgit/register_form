@@ -224,10 +224,10 @@ export default function Tab5Course() {
         {isComplexCourse && (
           <div className="mb-6 animate-[fadeIn_0.3s]">
             
-            <label className="block mb-2 font-medium text-textMain mt-2">
+            <span className="block mb-2 font-medium text-textMain mt-2">
               หากท่านถือใบอนุญาตเป็นตัวแทนหรือนายหน้าประกันวินาศภัยที่ต่ออายุครั้งที่ 4 เป็นต้นไป โปรดระบุวิชาที่ท่านเคยเข้าอบรมในรอบการสะสมชั่วโมงอบรมปัจจุบัน (5 ปี)<br/>
               <span className="text-error text-sm font-normal">* สำคัญ * : เพื่อท่านจะต้องไม่อบรมวิชาที่เคยเข้าอบรมซ้ำอีก ตามข้อกำหนดของ สำนักงาน คปภ.</span>
-            </label>
+            </span>
             <div className="p-4 border border-border rounded-md bg-gray-50 flex flex-col gap-3 mb-6">
               {renewCourseCheckboxes.map((course, idx) => (
                 <label key={idx} className="flex items-start gap-3 cursor-pointer">

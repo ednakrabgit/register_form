@@ -147,7 +147,11 @@ export default function UploadPage() {
                   <i className="fas fa-image mr-2 text-[#1C3672]"></i> ขั้นตอนการลงทะเบียน
                 </h3>
               </div>
-              <div className="aspect-video bg-gray-50 flex items-center justify-center p-2 relative group cursor-pointer" onClick={() => setPreviewImage('/icon/infographic2569.png')}>
+              <button
+                type="button"
+                className="w-full aspect-video bg-gray-50 flex items-center justify-center p-2 relative group cursor-pointer border-0"
+                onClick={() => setPreviewImage('/icon/infographic2569.png')}
+              >
                 <img 
                   src="/icon/infographic2569.png" 
                   alt="ขั้นตอนการลงทะเบียน" 
@@ -158,7 +162,7 @@ export default function UploadPage() {
                     <i className="fas fa-search-plus mr-1"></i> ขยายรูปภาพ
                   </span>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
           
@@ -192,9 +196,9 @@ export default function UploadPage() {
             
             {/* File 1 */}
             <div className="pt-2 border-t border-gray-200">
-              <label className="block text-sm font-bold text-gray-800 mb-1">
-                ไฟล์ภาพที่ 1 <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-200 cursor-pointer" onClick={() => setPreviewImage('/icon/sample1.png')}>กดเพื่อดูตัวอย่างภาพที่ถูกต้อง</span>
-              </label>
+              <div className="block text-sm font-bold text-gray-800 mb-1">
+                ไฟล์ภาพที่ 1 <button type="button" className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-200 cursor-pointer" onClick={() => setPreviewImage('/icon/sample1.png')}>กดเพื่อดูตัวอย่างภาพที่ถูกต้อง</button>
+              </div>
               <p className="text-sm text-gray-600 mb-2">(ภาพถ่ายหน้าตรง ไม่สวมหมวก แว่นกันแดด และหน้ากาก)</p>
               <input
                 type="file"
@@ -207,9 +211,9 @@ export default function UploadPage() {
 
             {/* File 2 */}
             <div className="pt-2 border-t border-gray-200">
-              <label className="block text-sm font-bold text-gray-800 mb-1">
-                ไฟล์ภาพที่ 2 <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-200 cursor-pointer" onClick={() => setPreviewImage('/icon/sample2.png')}>กดเพื่อดูตัวอย่างภาพที่ถูกต้อง</span>
-              </label>
+              <div className="block text-sm font-bold text-gray-800 mb-1">
+                ไฟล์ภาพที่ 2 <button type="button" className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-200 cursor-pointer" onClick={() => setPreviewImage('/icon/sample2.png')}>กดเพื่อดูตัวอย่างภาพที่ถูกต้อง</button>
+              </div>
               <p className="text-sm text-gray-600 mb-2">(ภาพถ่ายคู่กับบัตรประชาชนที่ยังไม่หมดอายุก่อนวันอบรม)</p>
               <input
                 type="file"
@@ -222,9 +226,9 @@ export default function UploadPage() {
 
             {/* File 3 */}
             <div className="pt-2 border-t border-gray-200">
-              <label className="block text-sm font-bold text-gray-800 mb-1">
-                ไฟล์ภาพที่ 3 <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-200 cursor-pointer" onClick={() => setPreviewImage('/icon/sample3.png')}>กดเพื่อดูตัวอย่างภาพที่ถูกต้อง</span>
-              </label>
+              <div className="block text-sm font-bold text-gray-800 mb-1">
+                ไฟล์ภาพที่ 3 <button type="button" className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-200 cursor-pointer" onClick={() => setPreviewImage('/icon/sample3.png')}>กดเพื่อดูตัวอย่างภาพที่ถูกต้อง</button>
+              </div>
               <p className="text-sm text-gray-600 mb-2">(ภาพถ่ายบัตรประชาชนที่ยังไม่หมดอายุก่อนวันอบรม)</p>
               <input
                 type="file"
@@ -250,12 +254,16 @@ export default function UploadPage() {
 
       {/* Modal for Image Preview */}
       {previewImage && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center bg-black/80 z-[100] p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-[100] p-4">
+          <button
+            type="button"
+            aria-label="ปิดภาพตัวอย่าง"
+            className="fixed inset-0 w-full h-full bg-transparent border-0 cursor-default"
+            onClick={() => setPreviewImage(null)}
+          />
+          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center z-10">
             <button 
+              type="button"
               className="absolute -top-10 right-0 text-white hover:text-gray-300 text-3xl font-bold focus:outline-none"
               onClick={() => setPreviewImage(null)}
             >
@@ -265,7 +273,6 @@ export default function UploadPage() {
               src={previewImage} 
               alt="Preview" 
               className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl bg-white"
-              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>

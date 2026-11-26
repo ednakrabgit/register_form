@@ -80,7 +80,7 @@ export default function Login() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="login-username" className="block text-sm font-medium text-slate-700 mb-1">
                 อีเมล หรือ รหัสบัตรประชาชน (Email / Citizen ID)
               </label>
               <div className="relative rounded-lg shadow-sm">
@@ -88,6 +88,7 @@ export default function Login() {
                   <User className="h-5 w-5" />
                 </div>
                 <input
+                  id="login-username"
                   type="text"
                   required
                   value={username}
@@ -99,7 +100,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 mb-1">
                 รหัสผ่าน (Password)
               </label>
               <div className="relative rounded-lg shadow-sm">
@@ -107,6 +108,7 @@ export default function Login() {
                   <Lock className="h-5 w-5" />
                 </div>
                 <input
+                  id="login-password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}

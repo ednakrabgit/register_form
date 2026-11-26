@@ -159,9 +159,9 @@ export default function EnquiryPage() {
             <form onSubmit={handleSearch}>
               <div className="mb-3">
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-bold text-gray-900">
+                  <span className="block text-sm font-bold text-gray-900">
                     เลขบัตรประชาชน
-                  </label>
+                  </span>
                   {result?.maskedCitizenId && (
                     <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
                       <i className="fas fa-shield-alt text-emerald-600 text-[10px]"></i> ซ่อนข้อมูลส่วนบุคคลแล้ว

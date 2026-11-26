@@ -309,9 +309,9 @@ export default function Tab2PersonalInfo() {
         <hr className="border-border my-8" />
 
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-textMain">
+          <span className="block mb-2 font-medium text-textMain">
             ท่านเคยเปลี่ยนชื่อหรือนามสกุลหรือไม่? <span className="text-red-500 font-bold">*</span>
-          </label>
+          </span>
           <div className="flex flex-col gap-2 mt-2">
             <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${formData.hasChangedName === 'no' || !formData.hasChangedName ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-white hover:bg-gray-50'}`}>
               <input type="radio" name="hasChangedName" value="no" className="w-5 h-5 accent-primary cursor-pointer" checked={formData.hasChangedName === 'no' || !formData.hasChangedName} onChange={handleChange} />

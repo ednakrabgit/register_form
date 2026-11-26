@@ -24,7 +24,8 @@ export default function StepIndicator() {
         }
 
         return (
-          <div 
+          <button 
+            type="button"
             key={stepNum} 
             className={circleClass}
             onClick={() => {
@@ -32,7 +33,7 @@ export default function StepIndicator() {
             }}
           >
             {isFinish ? <i className="fas fa-check"></i> : stepNum}
-          </div>
+          </button>
         );
       })}
     </div>

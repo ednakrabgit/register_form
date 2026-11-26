@@ -80,48 +80,58 @@ export default function PublicLayout() {
                 </button>
 
                 {dropdownOpen && (
-                  <div 
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 text-slate-700 border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-150"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <div className="px-4 py-2 border-b border-slate-100 text-xs">
-                      <div className="font-bold text-slate-900">{user?.fullName || user?.username}</div>
-                      <div className="text-slate-400 text-[11px] truncate">{user?.email || user?.username}</div>
-                    </div>
-
-                    <Link 
-                      to="/my-registrations" 
-                      className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 text-slate-700"
-                    >
-                      <FileText className="w-4 h-4 text-primary" />
-                      ประวัติการสมัครของฉัน
-                    </Link>
-
-                    <Link 
-                      to="/" 
-                      className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 text-slate-700"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      แบบฟอร์มลงทะเบียน
-                    </Link>
-
-                    {['Superadmin', 'Admin', 'Viewer'].includes(user?.role) && (
-                      <Link 
-                        to="/admin" 
-                        className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 text-purple-700 font-bold border-t border-slate-100"
-                      >
-                        🛡️ ไปยังหน้าแอดมิน (Admin Portal)
-                      </Link>
-                    )}
-
+                  <>
                     <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 text-left border-t border-slate-100 mt-1"
+                      type="button"
+                      aria-label="ปิดเมนู"
+                      className="fixed inset-0 z-40 bg-transparent border-0 cursor-default"
+                      onClick={() => setDropdownOpen(false)}
+                    />
+                    <div 
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 text-slate-700 border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-150"
                     >
-                      <LogOut className="w-4 h-4" />
-                      ออกจากระบบ
-                    </button>
-                  </div>
+                      <div className="px-4 py-2 border-b border-slate-100 text-xs">
+                        <div className="font-bold text-slate-900">{user?.fullName || user?.username}</div>
+                        <div className="text-slate-400 text-[11px] truncate">{user?.email || user?.username}</div>
+                      </div>
+
+                      <Link 
+                        to="/my-registrations" 
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 text-slate-700"
+                      >
+                        <FileText className="w-4 h-4 text-primary" />
+                        ประวัติการสมัครของฉัน
+                      </Link>
+
+                      <Link 
+                        to="/" 
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 text-slate-700"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        แบบฟอร์มลงทะเบียน
+                      </Link>
+
+                      {['Superadmin', 'Admin', 'Viewer'].includes(user?.role) && (
+                        <Link 
+                          to="/admin" 
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 text-purple-700 font-bold border-t border-slate-100"
+                        >
+                          🛡️ ไปยังหน้าแอดมิน (Admin Portal)
+                        </Link>
+                      )}
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 text-left border-t border-slate-100 mt-1"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        ออกจากระบบ
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             ) : (

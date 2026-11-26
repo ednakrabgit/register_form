@@ -669,9 +669,9 @@ export default function MasterDataCrud() {
 
               {isRenewCourse && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <span className="block text-sm font-medium text-gray-700 mb-1">
                     เสาหลักเริ่มต้น (Default Pillar)
-                  </label>
+                  </span>
                   <select 
                     value={formData.defaultPillarId || ''} 
                     onChange={e => setFormData({...formData, defaultPillarId: e.target.value})} 
@@ -692,13 +692,13 @@ export default function MasterDataCrud() {
 
               {isRenewCourse && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center justify-between">
+                  <span className="block text-sm font-medium text-gray-700 mb-1 flex items-center justify-between">
                     <span>
                       <i className="far fa-sticky-note mr-1 text-amber-500"></i>
                       หมายเหตุสำหรับวิชา (Note)
                     </span>
                     <span className="text-xs text-gray-400 font-normal">บันทึกช่วยจำ (ถ้ามี)</span>
-                  </label>
+                  </span>
                   <textarea 
                     rows={3}
                     value={formData.note || ''} 
@@ -741,30 +741,34 @@ export default function MasterDataCrud() {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-blue-50/50">
+                  <label htmlFor="master_isActiveBackend" className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-blue-50/50">
+                    <span className="sr-only">เปิดใช้ในระบบหลังบ้าน Backend / Admin</span>
                     <input 
+                      id="master_isActiveBackend"
                       type="checkbox" 
                       checked={formData.isActiveBackend !== false} 
                       onChange={e => setFormData({...formData, isActiveBackend: e.target.checked})}
                       className="rounded text-primary focus:ring-primary h-4 w-4"
                     />
-                    <div className="text-xs">
-                      <div className="font-semibold text-gray-800">Backend / Admin</div>
-                      <div className="text-gray-500 text-[10px]">เปิดใช้ในระบบหลังบ้าน</div>
-                    </div>
+                    <span className="text-xs block">
+                      <span className="font-semibold text-gray-800 block">Backend / Admin</span>
+                      <span className="text-gray-500 text-[10px] block">เปิดใช้ในระบบหลังบ้าน</span>
+                    </span>
                   </label>
 
-                  <label className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-emerald-50/50">
+                  <label htmlFor="master_isActiveFrontend" className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-emerald-50/50">
+                    <span className="sr-only">เปิดใช้ในหน้าลงทะเบียน Frontend / หน้าสมัคร</span>
                     <input 
+                      id="master_isActiveFrontend"
                       type="checkbox" 
                       checked={formData.isActiveFrontend !== false} 
                       onChange={e => setFormData({...formData, isActiveFrontend: e.target.checked})}
                       className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                     />
-                    <div className="text-xs">
-                      <div className="font-semibold text-gray-800">Frontend / หน้าสมัคร</div>
-                      <div className="text-gray-500 text-[10px]">แสดงให้ผู้สมัครเห็น</div>
-                    </div>
+                    <span className="text-xs block">
+                      <span className="font-semibold text-gray-800 block">Frontend / หน้าสมัคร</span>
+                      <span className="text-gray-500 text-[10px] block">แสดงให้ผู้สมัครเห็น</span>
+                    </span>
                   </label>
                 </div>
 

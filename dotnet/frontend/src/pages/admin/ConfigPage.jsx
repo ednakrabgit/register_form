@@ -416,7 +416,8 @@ export default function ConfigPage() {
                   {isOnline ? '🟢 ระบบออนไลน์' : '🔴 ปิดระบบชั่วคราว'}
                 </span>
 
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label htmlFor="sysOnlineToggle" className="relative inline-flex items-center cursor-pointer">
+                  <span className="sr-only">เปิด/ปิดระบบออนไลน์</span>
                   <input
                     type="checkbox"
                     id="sysOnlineToggle"
@@ -629,9 +630,9 @@ export default function ConfigPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-slate-800 mb-1.5">
+                    <span className="block text-sm font-bold text-slate-800 mb-1.5">
                       จำนวนวันปิดรับสมัครล่วงหน้า (วัน / Days)
-                    </label>
+                    </span>
                     <div className="flex items-center gap-3">
                       <input
                         type="number"
@@ -744,17 +745,20 @@ export default function ConfigPage() {
                 ].map((opt) => (
                   <label
                     key={opt.value}
+                    htmlFor={`tab4_opt_${opt.value}`}
                     className={`border rounded-xl p-4 cursor-pointer flex flex-col justify-between transition ${
                       configs['tab4_allowed_agent_types'] === opt.value
                         ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                         : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
                     }`}
                   >
+                    <span className="sr-only">{opt.label}</span>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="font-bold text-sm text-slate-800">{opt.label}</span>
                         <input
                           type="radio"
+                          id={`tab4_opt_${opt.value}`}
                           name="tab4_allowed_agent_types"
                           disabled={!canEdit}
                           checked={configs['tab4_allowed_agent_types'] === opt.value}

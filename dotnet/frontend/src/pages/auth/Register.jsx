@@ -114,7 +114,7 @@ export default function Register() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="reg-email" className="block text-sm font-medium text-slate-700 mb-1">
                 อีเมล (Email) <span className="text-red-500">*</span>
               </label>
               <div className="relative rounded-lg shadow-sm">
@@ -122,6 +122,7 @@ export default function Register() {
                   <Mail className="h-5 w-5" />
                 </div>
                 <input
+                  id="reg-email"
                   type="email"
                   required
                   name="email"
@@ -136,7 +137,7 @@ export default function Register() {
             {/* National ID with Live Checksum */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-slate-700">
+                <label htmlFor="reg-nationId" className="block text-sm font-medium text-slate-700">
                   เลขประจำตัวประชาชน 13 หลัก <span className="text-red-500">*</span>
                 </label>
                 {formData.nationId && (
@@ -150,6 +151,7 @@ export default function Register() {
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <input
+                  id="reg-nationId"
                   type="text"
                   required
                   maxLength={13}
@@ -169,7 +171,7 @@ export default function Register() {
             {/* Full Name & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="reg-fullName" className="block text-sm font-medium text-slate-700 mb-1">
                   ชื่อ-นามสกุล ภาษาไทย <span className="text-red-500">*</span>
                 </label>
                 <div className="relative rounded-lg shadow-sm">
@@ -177,6 +179,7 @@ export default function Register() {
                     <User className="h-5 w-5" />
                   </div>
                   <input
+                    id="reg-fullName"
                     type="text"
                     required
                     name="fullName"
@@ -189,7 +192,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="reg-phone" className="block text-sm font-medium text-slate-700 mb-1">
                   เบอร์โทรศัพท์มือถือ <span className="text-red-500">*</span>
                 </label>
                 <div className="relative rounded-lg shadow-sm">
@@ -197,6 +200,7 @@ export default function Register() {
                     <Phone className="h-5 w-5" />
                   </div>
                   <input
+                    id="reg-phone"
                     type="tel"
                     required
                     maxLength={10}
@@ -213,7 +217,7 @@ export default function Register() {
             {/* Passwords */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="reg-password" className="block text-sm font-medium text-slate-700 mb-1">
                   รหัสผ่าน (Password) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative rounded-lg shadow-sm">
@@ -221,6 +225,7 @@ export default function Register() {
                     <Lock className="h-5 w-5" />
                   </div>
                   <input
+                    id="reg-password"
                     type={showPassword ? "text" : "password"}
                     required
                     minLength={6}
@@ -241,7 +246,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="reg-confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
                   ยืนยันรหัสผ่าน <span className="text-red-500">*</span>
                 </label>
                 <div className="relative rounded-lg shadow-sm">
@@ -249,6 +254,7 @@ export default function Register() {
                     <Lock className="h-5 w-5" />
                   </div>
                   <input
+                    id="reg-confirmPassword"
                     type={showPassword ? "text" : "password"}
                     required
                     name="confirmPassword"

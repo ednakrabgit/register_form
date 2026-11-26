@@ -167,7 +167,7 @@ export default function Tab4License() {
         <div className="mb-6">
           <span className="block mb-2 font-medium text-textMain">ประเภทใบอนุญาต <span className="text-red-500 font-bold">*</span></span>
           
-          <div className="border border-border rounded-md p-3 mb-2 flex items-center gap-3 bg-white hover:bg-gray-50 cursor-pointer" onClick={() => updateData({ agentType: 'agent', brokerType: '' })}>
+          <label htmlFor="agentType_agent" className="border border-border rounded-md p-3 mb-2 flex items-center gap-3 bg-white hover:bg-gray-50 cursor-pointer">
             <input 
               type="radio" 
               name="agentType" 
@@ -176,11 +176,11 @@ export default function Tab4License() {
               checked={formData.agentType === 'agent'}
               onChange={() => updateData({ agentType: 'agent', brokerType: '' })}
             />
-            <label htmlFor="agentType_agent" className="cursor-pointer font-medium">ตัวแทนประกันวินาศภัย</label>
-          </div>
+            <span className="cursor-pointer font-medium">ตัวแทนประกันวินาศภัย</span>
+          </label>
 
           <div className={`border rounded-md p-3 flex flex-col gap-3 bg-white transition-all ${formData.agentType === 'broker' ? 'border-primary' : 'border-border'}`}>
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => updateData({ agentType: 'broker' })}>
+            <label htmlFor="agentType_broker" className="flex items-center gap-3 cursor-pointer">
               <input 
                 type="radio" 
                 name="agentType" 
@@ -189,14 +189,14 @@ export default function Tab4License() {
                 checked={formData.agentType === 'broker'}
                 onChange={() => updateData({ agentType: 'broker' })}
               />
-              <label htmlFor="agentType_broker" className="cursor-pointer font-medium">นายหน้าประกันวินาศภัย</label>
-            </div>
+              <span className="cursor-pointer font-medium">นายหน้าประกันวินาศภัย</span>
+            </label>
 
               {formData.agentType === 'broker' && (
               <div className="pl-8 pt-3 pb-2 border-t border-gray-100 flex flex-col gap-4 animate-[fadeIn_0.3s]">
                 <span className="block font-medium text-textMain">ประเภทนายหน้า <span className="text-red-500 font-bold">*</span></span>
                 
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => { updateData({ brokerType: 'individual' }); if (errors.brokerType) setErrors(prev => ({...prev, brokerType: ''})) }}>
+                <label htmlFor="brokerType_ind" className="flex items-center gap-3 cursor-pointer">
                   <input 
                     type="radio" 
                     name="brokerType" 
@@ -205,10 +205,10 @@ export default function Tab4License() {
                     checked={formData.brokerType === 'individual'}
                     onChange={() => { updateData({ brokerType: 'individual' }); if (errors.brokerType) setErrors(prev => ({...prev, brokerType: ''})) }}
                   />
-                  <label htmlFor="brokerType_ind" className="cursor-pointer">นายหน้าบุคคล</label>
-                </div>
+                  <span className="cursor-pointer">นายหน้าบุคคล</span>
+                </label>
 
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => { updateData({ brokerType: 'corporate' }); if (errors.brokerType) setErrors(prev => ({...prev, brokerType: ''})) }}>
+                <label htmlFor="brokerType_corp" className="flex items-center gap-3 cursor-pointer">
                   <input 
                     type="radio" 
                     name="brokerType" 
@@ -217,8 +217,8 @@ export default function Tab4License() {
                     checked={formData.brokerType === 'corporate'}
                     onChange={() => { updateData({ brokerType: 'corporate' }); if (errors.brokerType) setErrors(prev => ({...prev, brokerType: ''})) }}
                   />
-                  <label htmlFor="brokerType_corp" className="cursor-pointer">นายหน้านิติบุคคล</label>
-                </div>
+                  <span className="cursor-pointer">นายหน้านิติบุคคล</span>
+                </label>
                 {errors.brokerType && <p className="text-error text-sm mt-1">{errors.brokerType}</p>}
               </div>
             )}

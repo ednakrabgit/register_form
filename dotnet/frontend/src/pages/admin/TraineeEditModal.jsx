@@ -925,12 +925,12 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                 {canManageRemark && (
                   <div className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm space-y-3 bg-amber-50/20">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
                         <i className="fas fa-sticky-note text-amber-600"></i> หมายเหตุ
                         <span className="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                           เฉพาะ Super Admin / Admin
                         </span>
-                      </label>
+                      </span>
                       <button
                         type="button"
                         onClick={handleSaveRemarkOnly}
@@ -1719,9 +1719,9 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                     <div className="space-y-6 pt-2 animate-in fade-in">
                       {/* 5 Years Previous Trainings */}
                       <div className="p-4 border rounded-xl bg-slate-50 space-y-3">
-                        <label className="block text-sm font-bold text-slate-800">
+                        <span className="block text-sm font-bold text-slate-800">
                           วิชาที่ท่านเคยเข้าอบรมในรอบการสะสมชั่วโมงอบรมปัจจุบัน (5 ปี)
-                        </label>
+                        </span>
                         <span className="text-xs text-red-500 block">
                           * สำคัญ : ท่านจะต้องไม่อบรมวิชาที่เคยเข้าอบรมซ้ำอีก ตามข้อกำหนดของ คปภ.
                         </span>
@@ -1738,6 +1738,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                             return (
                               <label 
                                 key={idx} 
+                                aria-label={course.name}
                                 className={`group/stamp relative flex items-start gap-2.5 p-2 rounded-lg border transition-all ${
                                   isPassedFromStamp 
                                     ? 'bg-emerald-50/80 border-emerald-300 shadow-2xs hover:border-emerald-400 hover:bg-emerald-50' 
@@ -1746,6 +1747,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                                       : 'bg-white border-gray-200 hover:bg-gray-50'
                                 } ${effectiveReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
                               >
+                                <span className="sr-only">{course.name}</span>
                                 <input
                                   type="checkbox"
                                   className="mt-1 w-4 h-4 accent-emerald-600 rounded"
@@ -1899,9 +1901,9 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
                       {/* Master Degree Deduction Privilege */}
                       {showDeductionPrivilege && (
                         <div className="p-4 border rounded-xl bg-white space-y-4">
-                          <label className="block text-sm font-bold text-gray-700">
+                          <span className="block text-sm font-bold text-gray-700">
                             สำเร็จการศึกษาตั้งแต่ระดับปริญญาโทขึ้นไป หรือไม่
-                          </label>
+                          </span>
 
                           <div className="flex gap-6">
                             <label className="flex items-center gap-2 cursor-pointer text-sm">

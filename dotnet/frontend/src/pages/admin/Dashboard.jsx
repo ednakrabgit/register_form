@@ -1357,9 +1357,10 @@ export default function Dashboard() {
                     className="border border-indigo-200/80 rounded-xl overflow-hidden bg-white shadow-xs transition-all"
                   >
                     {/* LEVEL 1: แถบหัวข้อปี (Year Header) */}
-                    <div
+                    <button
+                      type="button"
                       onClick={() => toggleYearCollapse(yearGroup.yearKey)}
-                      className="w-full flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-gradient-to-r from-indigo-50/90 via-slate-50 to-white hover:from-indigo-100/70 border-b border-indigo-100 transition cursor-pointer select-none gap-3"
+                      className="w-full text-left flex flex-col md:flex-row md:items-center justify-between p-3.5 bg-gradient-to-r from-indigo-50/90 via-slate-50 to-white hover:from-indigo-100/70 border-b border-indigo-100 transition cursor-pointer select-none gap-3"
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-xs">
@@ -1409,7 +1410,7 @@ export default function Dashboard() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </button>
 
                     {/* LEVEL 2: รายการเดือนภายในปี (Months in Year) */}
                     {!isYearCollapsed && (
@@ -1424,9 +1425,10 @@ export default function Dashboard() {
                               className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs"
                             >
                               {/* แถบหัวข้อเดือน (Month Header) */}
-                              <div
+                              <button
+                                type="button"
                                 onClick={() => toggleMonthCollapse(monthGroup.monthKey)}
-                                className="w-full flex flex-col md:flex-row md:items-center justify-between p-3 bg-slate-100/70 hover:bg-slate-200/60 transition cursor-pointer select-none border-b border-slate-200/80 gap-2"
+                                className="w-full text-left flex flex-col md:flex-row md:items-center justify-between p-3 bg-slate-100/70 hover:bg-slate-200/60 transition cursor-pointer select-none border-b border-slate-200/80 gap-2"
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="p-1 text-slate-500 hover:text-slate-800">
@@ -1462,7 +1464,7 @@ export default function Dashboard() {
                                     </span>
                                   )}
                                 </div>
-                              </div>
+                              </button>
 
                               {/* LEVEL 3: ตารางรอบอบรมในเดือนนั้น (Training rounds in month) */}
                               {!isMonthCollapsed && (

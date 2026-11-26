@@ -681,9 +681,9 @@ export default function LocationMasterCrud({ type: propType }) {
 
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   รหัสอ้างอิง (ID / Code) <span className="text-red-500">*</span>
-                </label>
+                </span>
                 <input 
                   type="number" 
                   required 
@@ -703,9 +703,9 @@ export default function LocationMasterCrud({ type: propType }) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   ชื่อ (ภาษาไทย) <span className="text-red-500">*</span>
-                </label>
+                </span>
                 <input 
                   type="text" 
                   required 
@@ -726,9 +726,9 @@ export default function LocationMasterCrud({ type: propType }) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                   ชื่อ (ภาษาอังกฤษ)
-                </label>
+                </span>
                 <input 
                   type="text" 
                   placeholder="เช่น Phra Nakhon, Bang Rak..."
@@ -750,9 +750,9 @@ export default function LocationMasterCrud({ type: propType }) {
               {/* District: Select Province */}
               {type === 'districts' && (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                     จังหวัดที่สังกัด <span className="text-red-500">*</span>
-                  </label>
+                  </span>
                   <select 
                     required 
                     value={formData.provinceId || ''} 
@@ -773,9 +773,9 @@ export default function LocationMasterCrud({ type: propType }) {
               {type === 'subdistricts' && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                    <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                       1. เลือกจังหวัด <span className="text-red-500">*</span>
-                    </label>
+                    </span>
                     <select
                       value={modalProvinceId}
                       onChange={(e) => {
@@ -800,9 +800,9 @@ export default function LocationMasterCrud({ type: propType }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                    <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                       2. เลือกอำเภอ/เขตที่สังกัด <span className="text-red-500">*</span>
-                    </label>
+                    </span>
                     <select 
                       required 
                       value={formData.districtId || ''} 
@@ -822,9 +822,9 @@ export default function LocationMasterCrud({ type: propType }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                    <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                       รหัสไปรษณีย์ (Postal Code) <span className="text-red-500">*</span>
-                    </label>
+                    </span>
                     <input 
                       type="text" 
                       required

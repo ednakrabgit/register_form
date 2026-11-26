@@ -1212,7 +1212,8 @@ export default function UserManagement() {
                       </td>
 
                       <td className="py-3 px-4 text-center bg-green-50/20">
-                        <label className="inline-flex items-center cursor-pointer justify-center">
+                        <label className="inline-flex items-center cursor-pointer justify-center" aria-label={`สิทธิ์ดูข้อมูล ${perm.menuName}`}>
+                          <span className="sr-only">สิทธิ์ดูข้อมูล {perm.menuName}</span>
                           <input
                             type="checkbox"
                             checked={perm.canView}
@@ -1223,7 +1224,8 @@ export default function UserManagement() {
                       </td>
 
                       <td className="py-3 px-4 text-center bg-amber-50/20">
-                        <label className="inline-flex items-center cursor-pointer justify-center">
+                        <label className="inline-flex items-center cursor-pointer justify-center" aria-label={`สิทธิ์แก้ไข ${perm.menuName}`}>
+                          <span className="sr-only">สิทธิ์แก้ไข {perm.menuName}</span>
                           <input
                             type="checkbox"
                             checked={perm.canEdit}
@@ -1279,9 +1281,9 @@ export default function UserManagement() {
 
             <form onSubmit={handleUserSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <span className="block text-xs font-bold text-slate-700 mb-1">
                   ชื่อผู้ใช้งาน (Username) <span className="text-red-500">*</span>
-                </label>
+                </span>
                 <input
                   type="text"
                   required
@@ -1306,9 +1308,9 @@ export default function UserManagement() {
 
               {!currentUser && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <span className="block text-xs font-bold text-slate-700 mb-1">
                     รหัสผ่าน (Password) <span className="text-red-500">*</span>
-                  </label>
+                  </span>
                   <input
                     type="password"
                     required
@@ -1322,9 +1324,9 @@ export default function UserManagement() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <span className="block text-xs font-bold text-slate-700 mb-1">
                     ระดับสิทธิ์ (Role) <span className="text-red-500">*</span>
-                  </label>
+                  </span>
                   <select
                     value={userFormData.role}
                     onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
@@ -1445,9 +1447,9 @@ export default function UserManagement() {
 
             <form onSubmit={handleRoleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <span className="block text-xs font-bold text-slate-700 mb-1">
                   รหัส Role (Role Code) <span className="text-red-500">*</span>
-                </label>
+                </span>
                 <input
                   type="text"
                   required
@@ -1460,9 +1462,9 @@ export default function UserManagement() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <span className="block text-xs font-bold text-slate-700 mb-1">
                   ชื่อ Role แสดงผล (Role Name) <span className="text-red-500">*</span>
-                </label>
+                </span>
                 <input
                   type="text"
                   required
@@ -1658,9 +1660,9 @@ export default function UserManagement() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">
+                  <span className="font-semibold text-slate-600 block mb-1">
                     Menu Key (รหัสภาษาอังกฤษ) *
-                  </label>
+                  </span>
                   <input
                     type="text"
                     required
