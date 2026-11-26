@@ -1147,7 +1147,7 @@ export default function UserProfile() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">เลขประจำตัวประชาชน (Readonly)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">เลขประจำตัวประชาชน (Readonly)</span>
                 <input
                   type="text"
                   value={personData.nationId}
@@ -1157,7 +1157,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">คำนำหน้า (ไทย)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">คำนำหน้า (ไทย)</span>
                 <select
                   name="titleTh"
                   value={masterData.titles.find(t => t.name === personData.titleTh || t.id?.toString() === personData.titleTh?.toString())?.id?.toString() || personData.titleTh || ''}
@@ -1172,7 +1172,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">ชื่อ (ภาษาไทย)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">ชื่อ (ภาษาไทย)</span>
                 <input
                   type="text"
                   name="firstNameTh"
@@ -1183,7 +1183,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">นามสกุล (ภาษาไทย)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">นามสกุล (ภาษาไทย)</span>
                 <input
                   type="text"
                   name="lastNameTh"
@@ -1216,7 +1216,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">เพศ</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">เพศ</span>
                 <select
                   name="genderId"
                   value={personData.genderId || ''}
@@ -1231,7 +1231,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">ศาสนา</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">ศาสนา</span>
                 <select
                   name="religionId"
                   value={personData.religionId || ''}
@@ -1246,7 +1246,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">กรุ๊ปเลือด</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">กรุ๊ปเลือด</span>
                 <select
                   name="bloodGroupId"
                   value={personData.bloodGroupId || ''}
@@ -1269,7 +1269,7 @@ export default function UserProfile() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">เบอร์โทรศัพท์ (มือถือ)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">เบอร์โทรศัพท์ (มือถือ)</span>
                 <input
                   type="text"
                   value={accountData.phone}
@@ -1282,7 +1282,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">อีเมล (Email)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">อีเมล (Email)</span>
                 <input
                   type="email"
                   value={accountData.email}
@@ -1295,7 +1295,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Line ID</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">Line ID</span>
                 <input
                   type="text"
                   name="lineId"
@@ -1306,7 +1306,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Facebook</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">Facebook</span>
                 <input
                   type="text"
                   name="facebook"
@@ -1317,7 +1317,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Instagram</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">Instagram</span>
                 <input
                   type="text"
                   name="instagram"
@@ -1328,7 +1328,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">ผู้ติดต่อฉุกเฉิน (ชื่อ-สกุล)</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">ผู้ติดต่อฉุกเฉิน (ชื่อ-สกุล)</span>
                 <input
                   type="text"
                   name="emergencyContactName"
@@ -1339,7 +1339,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">เบอร์ผู้ติดต่อฉุกเฉิน</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">เบอร์ผู้ติดต่อฉุกเฉิน</span>
                 <input
                   type="text"
                   name="emergencyContactPhone"
@@ -1350,7 +1350,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">แพ้อาหาร / ข้อจำกัด</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">แพ้อาหาร / ข้อจำกัด</span>
                 <input
                   type="text"
                   name="foodAllergy"
@@ -1361,7 +1361,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">โรคประจำตัว</label>
+                <span className="block text-xs font-bold text-slate-600 mb-1">โรคประจำตัว</span>
                 <input
                   type="text"
                   name="medicalCondition"
@@ -1396,7 +1396,7 @@ export default function UserProfile() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">บ้านเลขที่ <span className="text-red-500">*</span></label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">บ้านเลขที่ <span className="text-red-500">*</span></span>
                   <input
                     type="text"
                     name="houseNo"
@@ -1407,7 +1407,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">หมู่ที่</label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">หมู่ที่</span>
                   <input
                     type="text"
                     name="moo"
@@ -1418,7 +1418,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">หมู่บ้าน / อาคาร</label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">หมู่บ้าน / อาคาร</span>
                   <input
                     type="text"
                     name="village"
@@ -1429,7 +1429,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ซอย</label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">ซอย</span>
                   <input
                     type="text"
                     name="soi"
@@ -1440,7 +1440,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ถนน</label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">ถนน</span>
                   <input
                     type="text"
                     name="road"
@@ -1451,7 +1451,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">จังหวัด <span className="text-red-500">*</span></label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">จังหวัด <span className="text-red-500">*</span></span>
                   <Select
                     options={masterData.provinces.map(p => ({ value: p.provinceId, label: p.provinceThai }))}
                     value={masterData.provinces.filter(p => p.provinceId === addrA.provinceId).map(p => ({ value: p.provinceId, label: p.provinceThai }))[0] || null}
@@ -1462,7 +1462,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">อำเภอ/เขต <span className="text-red-500">*</span></label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">อำเภอ/เขต <span className="text-red-500">*</span></span>
                   <Select
                     options={districtsA.map(d => ({ value: d.districtId, label: d.districtThai }))}
                     value={districtsA.filter(d => d.districtId === addrA.districtId).map(d => ({ value: d.districtId, label: d.districtThai }))[0] || null}
@@ -1474,7 +1474,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ตำบล/แขวง <span className="text-red-500">*</span></label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">ตำบล/แขวง <span className="text-red-500">*</span></span>
                   <Select
                     options={subDistrictsA.map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode }))}
                     value={subDistrictsA.filter(s => s.subDistrictId === addrA.subDistrictId).map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode }))[0] || null}
@@ -1486,7 +1486,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">รหัสไปรษณีย์ <span className="text-red-500">*</span></label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">รหัสไปรษณีย์ <span className="text-red-500">*</span></span>
                   <input
                     type="text"
                     name="postcode"
@@ -1555,7 +1555,7 @@ export default function UserProfile() {
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">บ้านเลขที่ <span className="text-red-500">*</span></label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">บ้านเลขที่ <span className="text-red-500">*</span></span>
                       <input
                         type="text"
                         name="houseNo"
@@ -1566,7 +1566,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">หมู่ที่</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">หมู่ที่</span>
                       <input
                         type="text"
                         name="moo"
@@ -1577,7 +1577,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">หมู่บ้าน / อาคาร</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">หมู่บ้าน / อาคาร</span>
                       <input
                         type="text"
                         name="village"
@@ -1588,7 +1588,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">ซอย</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">ซอย</span>
                       <input
                         type="text"
                         name="soi"
@@ -1599,7 +1599,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">ถนน</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">ถนน</span>
                       <input
                         type="text"
                         name="road"
@@ -1610,7 +1610,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">จังหวัด <span className="text-red-500">*</span></label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">จังหวัด <span className="text-red-500">*</span></span>
                       <Select
                         options={masterData.provinces.map(p => ({ value: p.provinceId, label: p.provinceThai }))}
                         value={masterData.provinces.filter(p => p.provinceId === addrC.provinceId).map(p => ({ value: p.provinceId, label: p.provinceThai }))[0] || null}
@@ -1621,7 +1621,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">อำเภอ/เขต <span className="text-red-500">*</span></label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">อำเภอ/เขต <span className="text-red-500">*</span></span>
                       <Select
                         options={districtsC.map(d => ({ value: d.districtId, label: d.districtThai }))}
                         value={districtsC.filter(d => d.districtId === addrC.districtId).map(d => ({ value: d.districtId, label: d.districtThai }))[0] || null}
@@ -1633,7 +1633,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">ตำบล/แขวง <span className="text-red-500">*</span></label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">ตำบล/แขวง <span className="text-red-500">*</span></span>
                       <Select
                         options={subDistrictsC.map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode }))}
                         value={subDistrictsC.filter(s => s.subDistrictId === addrC.subDistrictId).map(s => ({ value: s.subDistrictId, label: s.subDistrictThai, zipcode: s.zipcode }))[0] || null}
@@ -1645,7 +1645,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">รหัสไปรษณีย์ <span className="text-red-500">*</span></label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">รหัสไปรษณีย์ <span className="text-red-500">*</span></span>
                       <input
                         type="text"
                         name="postcode"
@@ -1673,7 +1673,7 @@ export default function UserProfile() {
             {personData.licenses.map((lic, idx) => (
               <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ประเภทใบอนุญาต</label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">ประเภทใบอนุญาต</span>
                   <select
                     name="courseType"
                     value={lic.courseType || 'agent'}
@@ -1686,7 +1686,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">เลขที่ใบอนุญาต (10 หลัก)</label>
+                  <span className="block text-xs font-bold text-slate-600 mb-1">เลขที่ใบอนุญาต (10 หลัก)</span>
                   <input
                     type="text"
                     maxLength={10}
@@ -1733,7 +1733,7 @@ export default function UserProfile() {
                 <div key={idx} className="space-y-4">
                   <div className={`grid grid-cols-1 ${isBroker ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">สังกัดสาขาวิริยะ</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">สังกัดสาขาวิริยะ</span>
                       <Select
                         options={masterData.agentBranches.map(b => ({ value: b.branchId, label: b.branchName, regionId: b.regionId, regionName: b.regionName }))}
                         value={masterData.agentBranches.filter(b => b.branchId === aff.branchId).map(b => ({ value: b.branchId, label: b.branchName }))[0] || null}
@@ -1754,7 +1754,7 @@ export default function UserProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">ภาค</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">ภาค</span>
                       <input 
                         type="text" 
                         value={masterData.agentBranches.find(b => b.branchId === aff.branchId)?.regionName || ''} 
@@ -1765,7 +1765,7 @@ export default function UserProfile() {
 
                     {isBroker && (
                       <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">ประเภทนายหน้า (ถ้ามี)</label>
+                        <span className="block text-xs font-bold text-slate-600 mb-1">ประเภทนายหน้า (ถ้ามี)</span>
                         <select
                           name="brokerType"
                           value={aff.brokerType === 'corporate' ? 'corporate' : 'individual'}
@@ -1779,7 +1779,7 @@ export default function UserProfile() {
                     )}
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">รหัสตัวแทนวิริยะ (5 หลัก)</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">รหัสตัวแทนวิริยะ (5 หลัก)</span>
                       <input
                         type="text"
                         maxLength={5}
@@ -1794,7 +1794,7 @@ export default function UserProfile() {
                   {isBroker && aff.brokerType === 'corporate' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl animate-in fade-in">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">ข้อมูลสังกัดบริษัทโบรกเกอร์</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">ข้อมูลสังกัดบริษัทโบรกเกอร์</span>
                       <input 
                         type="text" 
                         name="brokerCompany" 
@@ -1805,7 +1805,7 @@ export default function UserProfile() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">สาขาของบริษัทนายหน้าที่สังกัด</label>
+                      <span className="block text-xs font-bold text-slate-600 mb-1">สาขาของบริษัทนายหน้าที่สังกัด</span>
                       <input 
                         type="text" 
                         name="brokerBranch" 
@@ -1834,7 +1834,7 @@ export default function UserProfile() {
           <div className="space-y-4">
             {/* Level Radio List */}
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-2">ระดับคอร์สที่ต้องการอบรม</label>
+              <span className="block text-xs font-bold text-slate-600 mb-2">ระดับคอร์สที่ต้องการอบรม</span>
               <div className="flex flex-col gap-2">
                 {masterData?.courses?.filter(course => {
                   const licType = personData?.licenses?.[0]?.courseType;
@@ -2088,7 +2088,7 @@ export default function UserProfile() {
 
                     {isDeductionMaster && (
                       <div className="pt-3 border-t space-y-2">
-                        <label className="block text-xs font-bold text-gray-600">สถานะการยื่นเอกสารลดหย่อน</label>
+                        <span className="block text-xs font-bold text-gray-600">สถานะการยื่นเอกสารลดหย่อน</span>
                         <div className="flex gap-4">
                           <label className="flex items-center gap-2 text-sm cursor-pointer">
                             <input 
@@ -2134,7 +2134,7 @@ export default function UserProfile() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">ธุรกิจอื่นที่ท่านทำ (ระบุประเภทธุรกิจ)</label>
+                <span className="block text-xs font-bold text-gray-600 mb-1">ธุรกิจอื่นที่ท่านทำ (ระบุประเภทธุรกิจ)</span>
                 <input 
                   type="text" 
                   value={personData?.others?.[0]?.otherBusiness || ''} 
@@ -2145,7 +2145,7 @@ export default function UserProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">ประสบการณ์ในธุรกิจประกันภัย (ปี)</label>
+                <span className="block text-xs font-bold text-gray-600 mb-1">ประสบการณ์ในธุรกิจประกันภัย (ปี)</span>
                 <input 
                   type="number" 
                   min="0"
@@ -2159,7 +2159,7 @@ export default function UserProfile() {
 
             {/* Territories */}
             <div className="pt-2">
-              <label className="block text-xs font-bold text-gray-600 mb-2">เขตพื้นที่ขาย</label>
+              <span className="block text-xs font-bold text-gray-600 mb-2">เขตพื้นที่ขาย</span>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {(Array.isArray(masterData?.territories) ? masterData.territories : []).map((territory, idx) => {
                   const checked = personData?.others?.[0]?.salesAreas?.some(sa => sa.territoriesId?.toString() === territory.id.toString());
@@ -2180,7 +2180,7 @@ export default function UserProfile() {
 
             {/* Specialties */}
             <div className="pt-2">
-              <label className="block text-xs font-bold text-gray-600 mb-2">ความเชี่ยวชาญประกันภัย</label>
+              <span className="block text-xs font-bold text-gray-600 mb-2">ความเชี่ยวชาญประกันภัย</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {(Array.isArray(masterData?.expertises) ? masterData.expertises : []).map((specialty, idx) => {
                   const checked = personData?.others?.[0]?.specialties?.some(sp => sp.expertiseId?.toString() === specialty.id.toString());
@@ -2201,7 +2201,7 @@ export default function UserProfile() {
 
             {/* Other Companies */}
             <div className="pt-2">
-              <label className="block text-xs font-bold text-gray-600 mb-2">บริษัทประกันภัยอื่นที่ท่านส่งงานในปัจจุบัน</label>
+              <span className="block text-xs font-bold text-gray-600 mb-2">บริษัทประกันภัยอื่นที่ท่านส่งงานในปัจจุบัน</span>
               <div className="max-h-52 overflow-y-auto p-3 border rounded-xl bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-2">
                 {(Array.isArray(masterData?.companies) ? masterData.companies : []).map((company, idx) => {
                   const checked = personData?.others?.[0]?.otherCompanies?.some(oc => oc.companyId?.toString() === company.id.toString());
@@ -2313,7 +2313,7 @@ export default function UserProfile() {
 
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">รหัสผ่านปัจจุบัน</label>
+              <span className="block text-xs font-bold text-slate-600 mb-1">รหัสผ่านปัจจุบัน</span>
               <div className="relative">
                 <input
                   type={showPassword.current ? 'text' : 'password'}
@@ -2334,7 +2334,7 @@ export default function UserProfile() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">รหัสผ่านใหม่</label>
+              <span className="block text-xs font-bold text-slate-600 mb-1">รหัสผ่านใหม่</span>
               <div className="relative">
                 <input
                   type={showPassword.new ? 'text' : 'password'}
@@ -2355,7 +2355,7 @@ export default function UserProfile() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">ยืนยันรหัสผ่านใหม่</label>
+              <span className="block text-xs font-bold text-slate-600 mb-1">ยืนยันรหัสผ่านใหม่</span>
               <div className="relative">
                 <input
                   type={showPassword.confirm ? 'text' : 'password'}

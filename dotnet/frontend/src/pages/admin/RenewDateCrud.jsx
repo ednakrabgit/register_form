@@ -194,20 +194,20 @@ export default function RenewDateCrud() {
             <h3 className="text-xl font-bold mb-4 text-warning">{editItem ? 'แก้ไขข้อมูล' : 'เพิ่มข้อมูล'}</h3>
             <form onSubmit={handleSave}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">ข้อความแสดงวันที่ (เช่น 12 ม.ค. 67)</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">ข้อความแสดงวันที่ (เช่น 12 ม.ค. 67)</span>
                 <input type="text" required value={formData.courseDateDisplay || ''} onChange={e => setFormData({...formData, courseDateDisplay: e.target.value})} className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">วันที่จริง (เลือกปฏิทิน)</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">วันที่จริง (เลือกปฏิทิน)</span>
                 <input type="date" required value={formData.courseDate || ''} onChange={e => setFormData({...formData, courseDate: e.target.value})} className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" />
               </div>
               <div className="mb-4 flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</span>
                   <input type="number" required value={formData.displayOrder || 0} onChange={e => setFormData({...formData, displayOrder: Number.parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">สถานะดั้งเดิม</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">สถานะดั้งเดิม</span>
                   <select value={formData.status || 'active'} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -247,7 +247,7 @@ export default function RenewDateCrud() {
                 </div>
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</label>
+                    <span className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</span>
                     <input 
                       type="datetime-local" 
                       value={formData.startActiveDatetime || ''} 
@@ -256,7 +256,7 @@ export default function RenewDateCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</label>
+                    <span className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</span>
                     <input 
                       type="datetime-local" 
                       value={formData.endActiveDatetime || ''} 

@@ -72,7 +72,7 @@ export default function Tab3Address() {
         </div>
 
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-textMain">ที่อยู่สำหรับจัดส่งเอกสาร</label>
+          <span className="block mb-2 font-medium text-textMain">ที่อยู่สำหรับจัดส่งเอกสาร</span>
           <div className="flex flex-col gap-3">
             <label className={`flex items-center gap-3 p-3 border rounded-md cursor-pointer transition-colors ${formData.sameAddress !== false ? 'border-primary bg-white text-primary' : 'border-border bg-white'}`}>
               <input 

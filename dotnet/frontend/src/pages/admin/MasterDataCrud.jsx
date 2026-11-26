@@ -711,7 +711,7 @@ export default function MasterDataCrud() {
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</span>
                   <input 
                     type="number" 
                     required 
@@ -722,7 +722,7 @@ export default function MasterDataCrud() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">สถานะทั่วไป</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">สถานะทั่วไป</span>
                   <select 
                     value={formData.status} 
                     onChange={e => setFormData({...formData, status: e.target.value})} 
@@ -775,7 +775,7 @@ export default function MasterDataCrud() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] text-gray-500 mb-0.5">เวลาเริ่มต้น (Start)</label>
+                      <span className="block text-[11px] text-gray-500 mb-0.5">เวลาเริ่มต้น (Start)</span>
                       <input 
                         type="datetime-local" 
                         value={formData.startActiveDatetime || ''} 
@@ -784,7 +784,7 @@ export default function MasterDataCrud() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-500 mb-0.5">เวลาสิ้นสุด (End)</label>
+                      <span className="block text-[11px] text-gray-500 mb-0.5">เวลาสิ้นสุด (End)</span>
                       <input 
                         type="datetime-local" 
                         value={formData.endActiveDatetime || ''} 
@@ -926,7 +926,7 @@ export default function MasterDataCrud() {
               <form onSubmit={handleSaveDetail}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">ประเภท (Agent / Broker)</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">ประเภท (Agent / Broker)</span>
                     <select 
                       value={detailFormData.agentType || 'agent'} 
                       onChange={e => setDetailFormData({...detailFormData, agentType: e.target.value})}
@@ -938,7 +938,7 @@ export default function MasterDataCrud() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสประกาศ</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสประกาศ</span>
                     <input 
                       type="text" 
                       value={detailFormData.announcementCode} 
@@ -948,7 +948,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">ชื่อย่อหลักสูตร</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">ชื่อย่อหลักสูตร</span>
                     <input 
                       type="text" 
                       value={detailFormData.courseShortName} 
@@ -958,7 +958,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสหลักสูตร</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสหลักสูตร</span>
                     <input 
                       type="text" 
                       value={detailFormData.curriculumCode} 
@@ -968,7 +968,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสวิชา (Course Code)</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสวิชา (Course Code)</span>
                     <input 
                       type="text" 
                       value={detailFormData.courseCode} 
@@ -978,7 +978,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสวิชา OIC</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสวิชา OIC</span>
                     <input 
                       type="text" 
                       value={detailFormData.oicCourseCode} 
@@ -988,7 +988,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รายวิชาย่อย</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รายวิชาย่อย</span>
                     <input 
                       type="text" 
                       value={detailFormData.subCourseName} 
@@ -999,7 +999,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">ลำดับ</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">ลำดับ</span>
                     <input 
                       type="number" 
                       value={detailFormData.displayOrder} 
@@ -1008,7 +1008,7 @@ export default function MasterDataCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">สถานะ</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">สถานะ</span>
                     <select 
                       value={detailFormData.status} 
                       onChange={e => setDetailFormData({...detailFormData, status: e.target.value})}

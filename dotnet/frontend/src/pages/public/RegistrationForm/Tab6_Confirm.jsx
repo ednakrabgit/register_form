@@ -176,7 +176,7 @@ export default function Tab6Confirm() {
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-textMain mb-2">เขตพื้นที่ขาย</label>
+          <span className="block text-sm font-medium text-textMain mb-2">เขตพื้นที่ขาย</span>
           <div className="flex flex-wrap gap-4">
             {territories.map((territory, idx) => (
               <label key={idx} className="flex items-center gap-2 cursor-pointer">
@@ -195,7 +195,7 @@ export default function Tab6Confirm() {
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-textMain mb-2">ความเชี่ยวชาญประกันภัย</label>
+          <span className="block text-sm font-medium text-textMain mb-2">ความเชี่ยวชาญประกันภัย</span>
           <div className="flex flex-col gap-3">
             {specialties.map((specialty, idx) => (
               <label key={idx} className="flex items-center gap-3 cursor-pointer">
@@ -214,7 +214,7 @@ export default function Tab6Confirm() {
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-textMain mb-2">บริษัทประกันภัยอื่นที่ท่านส่งงานในปัจจุบัน</label>
+          <span className="block text-sm font-medium text-textMain mb-2">บริษัทประกันภัยอื่นที่ท่านส่งงานในปัจจุบัน</span>
           <div className="max-h-60 overflow-y-auto p-4 border border-border rounded-md bg-gray-50 flex flex-col gap-3">
             {companies.map((company, idx) => (
               <label key={idx} className="flex items-center gap-3 cursor-pointer">

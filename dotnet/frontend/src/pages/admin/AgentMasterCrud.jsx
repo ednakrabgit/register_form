@@ -226,13 +226,13 @@ export default function AgentMasterCrud({ type: propType }) {
             <h3 className="text-xl font-bold mb-4 text-primary">{editItem ? 'แก้ไขข้อมูล' : 'เพิ่มข้อมูล'}</h3>
             <form onSubmit={handleSave}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">ชื่อ</span>
                 <input type="text" required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none" />
               </div>
 
               {type === 'agent-branches' && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ภูมิภาค</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">ภูมิภาค</span>
                   <select required value={formData.regionId || ''} onChange={e => setFormData({...formData, regionId: Number.parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none">
                     <option value="" disabled>เลือกภูมิภาค...</option>
                     {regions.map(r => (
@@ -274,7 +274,7 @@ export default function AgentMasterCrud({ type: propType }) {
                 </div>
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</label>
+                    <span className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</span>
                     <input 
                       type="datetime-local" 
                       value={formData.startActiveDatetime || ''} 
@@ -283,7 +283,7 @@ export default function AgentMasterCrud({ type: propType }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</label>
+                    <span className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</span>
                     <input 
                       type="datetime-local" 
                       value={formData.endActiveDatetime || ''} 

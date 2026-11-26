@@ -165,7 +165,7 @@ export default function Tab4License() {
       
       <form onSubmit={handleNext} noValidate>
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-textMain">ประเภทใบอนุญาต <span className="text-red-500 font-bold">*</span></label>
+          <span className="block mb-2 font-medium text-textMain">ประเภทใบอนุญาต <span className="text-red-500 font-bold">*</span></span>
           
           <div className="border border-border rounded-md p-3 mb-2 flex items-center gap-3 bg-white hover:bg-gray-50 cursor-pointer" onClick={() => updateData({ agentType: 'agent', brokerType: '' })}>
             <input 
@@ -194,7 +194,7 @@ export default function Tab4License() {
 
               {formData.agentType === 'broker' && (
               <div className="pl-8 pt-3 pb-2 border-t border-gray-100 flex flex-col gap-4 animate-[fadeIn_0.3s]">
-                <label className="block font-medium text-textMain">ประเภทนายหน้า <span className="text-red-500 font-bold">*</span></label>
+                <span className="block font-medium text-textMain">ประเภทนายหน้า <span className="text-red-500 font-bold">*</span></span>
                 
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => { updateData({ brokerType: 'individual' }); if (errors.brokerType) setErrors(prev => ({...prev, brokerType: ''})) }}>
                   <input 

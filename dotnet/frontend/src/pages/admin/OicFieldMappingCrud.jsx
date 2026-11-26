@@ -205,7 +205,7 @@ export default function OicFieldMappingCrud() {
             <form onSubmit={handleSave}>
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source JSON Path *</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">Source JSON Path *</span>
                   <input
                     type="text"
                     required
@@ -216,7 +216,7 @@ export default function OicFieldMappingCrud() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Target Field Name *</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">Target Field Name *</span>
                   <input
                     type="text"
                     required
@@ -227,7 +227,7 @@ export default function OicFieldMappingCrud() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Type *</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">Data Type *</span>
                   <select
                     className="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-red-600 outline-none"
                     value={formData.dataType}
@@ -241,7 +241,7 @@ export default function OicFieldMappingCrud() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">คำอธิบาย / จุดที่ใช้บนหน้าจอ Frontend</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">คำอธิบาย / จุดที่ใช้บนหน้าจอ Frontend</span>
                   <textarea
                     className="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-red-600 outline-none"
                     value={formData.description}

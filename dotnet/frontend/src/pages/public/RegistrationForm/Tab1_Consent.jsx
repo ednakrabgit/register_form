@@ -11,7 +11,7 @@ export default function Tab1Consent() {
       </h2>
       
       <div className="mb-6">
-        <label className="block mb-2 font-medium text-textMain">คำประกาศความเป็นส่วนตัว (Privacy Notice)</label>
+        <span className="block mb-2 font-medium text-textMain">คำประกาศความเป็นส่วนตัว (Privacy Notice)</span>
         <div className="bg-white p-5 rounded-lg border border-border text-sm text-textMuted leading-relaxed">
           <p className="font-bold text-black">เรียน ผู้เข้าอบรมทุกท่าน</p>
           <br/>

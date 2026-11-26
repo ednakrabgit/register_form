@@ -164,7 +164,7 @@ export default function UploadPage() {
           
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">เลขบัตรประชาชน</label>
+              <span className="block text-sm font-medium text-gray-700 mb-1">เลขบัตรประชาชน</span>
               <input
                 type="text"
                 maxLength="13"
@@ -178,7 +178,7 @@ export default function UploadPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">หมายเลขโทรศัพท์มือถือ</label>
+              <span className="block text-sm font-medium text-gray-700 mb-1">หมายเลขโทรศัพท์มือถือ</span>
               <input
                 type="text"
                 maxLength="10"

@@ -534,7 +534,7 @@ export default function RenewBasicCrud() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">วันที่เปิดอบรม</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">วันที่เปิดอบรม</span>
                 <select 
                   value={formData.dateId} 
                   onChange={e => setFormData({...formData, dateId: e.target.value})} 
@@ -548,7 +548,7 @@ export default function RenewBasicCrud() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">สถานะทั่วไป</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">สถานะทั่วไป</span>
                 <select 
                   value={formData.status} 
                   onChange={e => setFormData({...formData, status: e.target.value})} 
@@ -600,7 +600,7 @@ export default function RenewBasicCrud() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] text-gray-500 mb-0.5">เวลาเริ่มต้น (Start)</label>
+                      <span className="block text-[11px] text-gray-500 mb-0.5">เวลาเริ่มต้น (Start)</span>
                       <input 
                         type="datetime-local" 
                         value={formData.startActiveDatetime || ''} 
@@ -609,7 +609,7 @@ export default function RenewBasicCrud() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-500 mb-0.5">เวลาสิ้นสุด (End)</label>
+                      <span className="block text-[11px] text-gray-500 mb-0.5">เวลาสิ้นสุด (End)</span>
                       <input 
                         type="datetime-local" 
                         value={formData.endActiveDatetime || ''} 
@@ -842,7 +842,7 @@ export default function RenewBasicCrud() {
               <form onSubmit={handleSaveCurriculum}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">ประเภท</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">ประเภท</span>
                     <select 
                       value={curriculumForm.agentType || 'agent'} 
                       onChange={e => setCurriculumForm({...curriculumForm, agentType: e.target.value})}
@@ -854,7 +854,7 @@ export default function RenewBasicCrud() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">ชื่อย่อหลักสูตร</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">ชื่อย่อหลักสูตร</span>
                     <input 
                       type="text" 
                       value={curriculumForm.courseShortName} 
@@ -864,7 +864,7 @@ export default function RenewBasicCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสในระบบอบรม (Col R)</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสในระบบอบรม (Col R)</span>
                     <input 
                       type="text" 
                       value={curriculumForm.trainingCourseCode} 
@@ -874,7 +874,7 @@ export default function RenewBasicCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสหลักสูตร คปภ.</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสหลักสูตร คปภ.</span>
                     <input 
                       type="text" 
                       value={curriculumForm.curriculumCode} 
@@ -884,7 +884,7 @@ export default function RenewBasicCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">รหัสประกาศ</label>
+                    <span className="block text-xs font-medium text-gray-700 mb-1">รหัสประกาศ</span>
                     <input 
                       type="text" 
                       value={curriculumForm.announcementCode} 

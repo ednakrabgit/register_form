@@ -216,7 +216,7 @@ export default function OicValueMappingCrud() {
             <form onSubmit={handleSave}>
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Target Field *</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">Target Field *</span>
                   <input
                     type="text"
                     required
@@ -233,7 +233,7 @@ export default function OicValueMappingCrud() {
                   </datalist>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source Word (คำที่รับมา) *</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">Source Word (คำที่รับมา) *</span>
                   <input
                     type="text"
                     required
@@ -244,7 +244,7 @@ export default function OicValueMappingCrud() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Target Word (คำที่จะบันทึก) *</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">Target Word (คำที่จะบันทึก) *</span>
                   <input
                     type="text"
                     required
@@ -255,7 +255,7 @@ export default function OicValueMappingCrud() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">คำอธิบาย / จุดที่ใช้บนหน้าจอ Frontend</label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1">คำอธิบาย / จุดที่ใช้บนหน้าจอ Frontend</span>
                   <textarea
                     className="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-red-600 outline-none"
                     value={formData.description}

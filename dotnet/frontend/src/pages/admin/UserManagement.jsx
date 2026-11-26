@@ -1294,7 +1294,7 @@ export default function UserManagement() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">อีเมล (Email)</label>
+                <span className="block text-xs font-bold text-slate-700 mb-1">อีเมล (Email)</span>
                 <input
                   type="email"
                   value={userFormData.email}
@@ -1337,7 +1337,7 @@ export default function UserManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">เลขประจำตัวประชาชน (13 หลัก)</label>
+                  <span className="block text-xs font-bold text-slate-700 mb-1">เลขประจำตัวประชาชน (13 หลัก)</span>
                   <input
                     type="text"
                     maxLength={13}
@@ -1351,7 +1351,7 @@ export default function UserManagement() {
 
               <div className="grid grid-cols-12 gap-3">
                 <div className="col-span-12 sm:col-span-3">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">คำนำหน้า</label>
+                  <span className="block text-xs font-bold text-slate-700 mb-1">คำนำหน้า</span>
                   <select
                     value={userFormData.titleTh}
                     onChange={(e) => setUserFormData({ ...userFormData, titleTh: e.target.value })}
@@ -1365,7 +1365,7 @@ export default function UserManagement() {
                 </div>
 
                 <div className="col-span-12 sm:col-span-4">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">ชื่อ (First Name)</label>
+                  <span className="block text-xs font-bold text-slate-700 mb-1">ชื่อ (First Name)</span>
                   <input
                     type="text"
                     value={userFormData.firstName}
@@ -1376,7 +1376,7 @@ export default function UserManagement() {
                 </div>
 
                 <div className="col-span-12 sm:col-span-5">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">นามสกุล (Last Name)</label>
+                  <span className="block text-xs font-bold text-slate-700 mb-1">นามสกุล (Last Name)</span>
                   <input
                     type="text"
                     value={userFormData.lastName}
@@ -1388,7 +1388,7 @@ export default function UserManagement() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                <span className="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์</span>
                 <input
                   type="tel"
                   value={userFormData.phone}
@@ -1474,7 +1474,7 @@ export default function UserManagement() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">คำอธิบายบทบาท</label>
+                <span className="block text-xs font-bold text-slate-700 mb-1">คำอธิบายบทบาท</span>
                 <textarea
                   rows={3}
                   value={roleFormData.description}
@@ -1524,7 +1524,7 @@ export default function UserManagement() {
               </p>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">รหัสผ่านใหม่</label>
+                <span className="block text-xs font-bold text-slate-700 mb-1">รหัสผ่านใหม่</span>
                 <input
                   type="password"
                   required
@@ -1672,7 +1672,7 @@ export default function UserManagement() {
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">ชื่อเมนูแสดงผล *</label>
+                  <span className="font-semibold text-slate-600 block mb-1">ชื่อเมนูแสดงผล *</span>
                   <input
                     type="text"
                     required
@@ -1683,7 +1683,7 @@ export default function UserManagement() {
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">หมวดหมู่</label>
+                  <span className="font-semibold text-slate-600 block mb-1">หมวดหมู่</span>
                   <select
                     value={menuFormData.category}
                     onChange={(e) => setMenuFormData({ ...menuFormData, category: e.target.value })}
@@ -1694,7 +1694,7 @@ export default function UserManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">URL Path (เช่น /admin/reports)</label>
+                  <span className="font-semibold text-slate-600 block mb-1">URL Path (เช่น /admin/reports)</span>
                   <input
                     type="text"
                     placeholder="/admin/..."
@@ -1704,7 +1704,7 @@ export default function UserManagement() {
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">FontAwesome Icon Class</label>
+                  <span className="font-semibold text-slate-600 block mb-1">FontAwesome Icon Class</span>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -1719,7 +1719,7 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">ลำดับการแสดงผล (Sort Order)</label>
+                  <span className="font-semibold text-slate-600 block mb-1">ลำดับการแสดงผล (Sort Order)</span>
                   <div className="flex gap-2">
                     <input
                       type="number"

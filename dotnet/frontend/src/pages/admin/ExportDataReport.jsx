@@ -532,7 +532,7 @@ export default function ExportDataReport() {
         )}
 
         <div className="mb-4">
-          <label className="block text-sm text-gray-700 mb-1">ช่วง ID (เช่น 50-100, 150-200)</label>
+          <span className="block text-sm text-gray-700 mb-1">ช่วง ID (เช่น 50-100, 150-200)</span>
           <input
             type="text"
             placeholder="{50-100},{150-200}"
@@ -545,7 +545,7 @@ export default function ExportDataReport() {
       </div>
 
       <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-8">
-        <label className="block text-sm font-semibold text-gray-700 mb-3">เลือกระดับและวันที่ (ส่งออกแยกไฟล์หากเลือกหลายรายการ)</label>
+        <span className="block text-sm font-semibold text-gray-700 mb-3">เลือกระดับและวันที่ (ส่งออกแยกไฟล์หากเลือกหลายรายการ)</span>
 
         <div className="flex gap-4 mb-4">
           <label className="flex items-center cursor-pointer">

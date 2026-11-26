@@ -780,7 +780,7 @@ export default function ConfigPage() {
                 {/* Branch Label */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">ข้อความหัวข้อ สาขา (tab4_label_branch)</label>
+                    <span className="text-xs font-bold text-slate-700">ข้อความหัวข้อ สาขา (tab4_label_branch)</span>
                     {canEdit && (
                       <button type="button" onClick={() => handleResetField('tab4_label_branch')} className="text-[11px] text-slate-400 hover:text-primary">
                         Default: &quot;สาขา *&quot;
@@ -799,7 +799,7 @@ export default function ConfigPage() {
                 {/* Branch Hint */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">ข้อความแนะนำ สาขา (tab4_hint_branch)</label>
+                    <span className="text-xs font-bold text-slate-700">ข้อความแนะนำ สาขา (tab4_hint_branch)</span>
                     {canEdit && (
                       <button type="button" onClick={() => handleResetField('tab4_hint_branch')} className="text-[11px] text-slate-400 hover:text-primary">
                         Default: &quot;พิมพ์เพื่อค้นหาสาขา&quot;
@@ -818,7 +818,7 @@ export default function ConfigPage() {
                 {/* Default Branch */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">สาขาเริ่มต้น (tab4_default_branch)</label>
+                    <span className="text-xs font-bold text-slate-700">สาขาเริ่มต้น (tab4_default_branch)</span>
                     <span className="text-[11px] text-slate-400">เว้นว่างไว้หากไม่ต้องการเติมอัตโนมัติ</span>
                   </div>
                   <input
@@ -834,7 +834,7 @@ export default function ConfigPage() {
                 {/* Region Label */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">ข้อความหัวข้อ ภาค (tab4_label_region)</label>
+                    <span className="text-xs font-bold text-slate-700">ข้อความหัวข้อ ภาค (tab4_label_region)</span>
                     {canEdit && (
                       <button type="button" onClick={() => handleResetField('tab4_label_region')} className="text-[11px] text-slate-400 hover:text-primary">
                         Default: &quot;ภาค *&quot;
@@ -853,7 +853,7 @@ export default function ConfigPage() {
                 {/* Region Hint */}
                 <div className="space-y-1.5 md:col-span-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">ข้อความแนะนำ ภาค (tab4_hint_region)</label>
+                    <span className="text-xs font-bold text-slate-700">ข้อความแนะนำ ภาค (tab4_hint_region)</span>
                     {canEdit && (
                       <button type="button" onClick={() => handleResetField('tab4_hint_region')} className="text-[11px] text-slate-400 hover:text-primary">
                         Default: &quot;ระบบจะเติมให้อัตโนมัติ&quot;
@@ -882,7 +882,7 @@ export default function ConfigPage() {
                 {/* Agent Code Label */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">ข้อความหัวข้อ รหัสตัวแทน (tab4_label_agentcode)</label>
+                    <span className="text-xs font-bold text-slate-700">ข้อความหัวข้อ รหัสตัวแทน (tab4_label_agentcode)</span>
                     {canEdit && (
                       <button type="button" onClick={() => handleResetField('tab4_label_agentcode')} className="text-[11px] text-slate-400 hover:text-primary">
                         Default
@@ -901,7 +901,7 @@ export default function ConfigPage() {
                 {/* Default Agent Code */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">รหัสตัวแทนเริ่มต้น (tab4_default_agentcode)</label>
+                    <span className="text-xs font-bold text-slate-700">รหัสตัวแทนเริ่มต้น (tab4_default_agentcode)</span>
                     <span className="text-[11px] text-slate-400">เว้นว่างไว้หากให้ผู้สมัครกรอกเอง</span>
                   </div>
                   <input
@@ -917,7 +917,7 @@ export default function ConfigPage() {
                 {/* Agent Code Hint */}
                 <div className="space-y-1.5 md:col-span-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">คำแนะนำ: รหัสตัวแทน (tab4_hint_agentcode)</label>
+                    <span className="text-xs font-bold text-slate-700">คำแนะนำ: รหัสตัวแทน (tab4_hint_agentcode)</span>
                     {canEdit && (
                       <button type="button" onClick={() => handleResetField('tab4_hint_agentcode')} className="text-[11px] text-slate-400 hover:text-primary">
                         Default
@@ -974,7 +974,7 @@ export default function ConfigPage() {
                 {/* Session Timeout */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">Session Timeout (วินาที)</label>
+                    <span className="text-xs font-bold text-slate-700">Session Timeout (วินาที)</span>
                     <span className="text-xs font-semibold text-primary">
                       {sessionMinutes} นาที ({sessionSeconds} วินาที)
                     </span>

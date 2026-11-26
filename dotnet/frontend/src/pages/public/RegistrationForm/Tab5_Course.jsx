@@ -199,7 +199,7 @@ export default function Tab5Course() {
       
       <form onSubmit={handleNext} noValidate>
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-textMain">ระดับคอร์ส <span className="text-red-500 font-bold">*</span></label>
+          <span className="block mb-2 font-medium text-textMain">ระดับคอร์ส <span className="text-red-500 font-bold">*</span></span>
           <div className="flex flex-col gap-3">
             {courseOptions.map((course, idx) => (
               <label key={idx} className={`flex items-center gap-3 cursor-pointer p-3 border rounded-md transition-colors bg-white ${errors.courseType ? 'border-error' : 'hover:bg-gray-50'}`}>
@@ -320,7 +320,7 @@ export default function Tab5Course() {
           <>
             <hr className="border-t border-border my-8" />
             <div className="mb-6 animate-[fadeIn_0.3s]">
-              <label className="block mb-3 font-medium text-textMain">สำเร็จการศึกษาตั้งแต่ระดับปริญญาโทขึ้นไป หรือ ไม่ <span className="text-red-500 font-bold">*</span></label>
+              <span className="block mb-3 font-medium text-textMain">สำเร็จการศึกษาตั้งแต่ระดับปริญญาโทขึ้นไป หรือ ไม่ <span className="text-red-500 font-bold">*</span></span>
               <div className="flex flex-col gap-3 p-4 border border-border rounded-md bg-white">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -352,7 +352,7 @@ export default function Tab5Course() {
 
               {(formData.deductionPrivilege || []).includes('MasterDegree') && (
                 <div className="mt-6 animate-[fadeIn_0.3s]" id="masterDegreeStatus">
-                  <label className="block mb-1 font-medium text-textMain">สถานะการยื่นเอกสาร <span className="text-red-500 font-bold">*</span></label>
+                  <span className="block mb-1 font-medium text-textMain">สถานะการยื่นเอกสาร <span className="text-red-500 font-bold">*</span></span>
                   <span className="text-error text-sm block mb-4">* หากท่านเคยยื่นเอกสารและบันทึกในระบบของสำนักงาน คปภ. แล้วไม่ต้องยื่นซ้ำ</span>
                   <div className="flex flex-col gap-3">
                     <label className="flex items-center gap-3 cursor-pointer p-3 border rounded-md bg-white hover:bg-gray-50">

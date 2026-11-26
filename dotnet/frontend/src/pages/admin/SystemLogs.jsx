@@ -82,7 +82,7 @@ export default function SystemLogs() {
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="w-full md:w-1/3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">เลือกไฟล์ Log</label>
+          <span className="block text-sm font-medium text-gray-700 mb-1">เลือกไฟล์ Log</span>
           <select 
             className="w-full px-4 py-2 border rounded-md"
             value={selectedFile}
@@ -95,7 +95,7 @@ export default function SystemLogs() {
           </select>
         </div>
         <div className="w-full md:w-1/3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">ค้นหาใน Log</label>
+          <span className="block text-sm font-medium text-gray-700 mb-1">ค้นหาใน Log</span>
           <input 
             type="text" 
             placeholder="เช่น Error, Exception, POST..." 

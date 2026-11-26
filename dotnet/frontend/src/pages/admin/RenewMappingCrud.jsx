@@ -324,7 +324,7 @@ export default function RenewMappingCrud() {
                   
                   <div className="flex items-center gap-3">
                     <div>
-                      <label className="text-xs text-gray-500 block">ลำดับแสดงผล</label>
+                      <span className="text-xs text-gray-500 block">ลำดับแสดงผล</span>
                       <input type="number" value={displayOrder} onChange={e => setDisplayOrder(e.target.value)} className="w-20 border rounded p-2 text-center" min="1" />
                     </div>
                   </div>
@@ -353,7 +353,7 @@ export default function RenewMappingCrud() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <div>
-                      <label className="block text-xs text-gray-500">เริ่มแสดงที่หน้าสมัคร</label>
+                      <span className="block text-xs text-gray-500">เริ่มแสดงที่หน้าสมัคร</span>
                       <input 
                         type="datetime-local" 
                         value={startActiveDatetime} 
@@ -362,7 +362,7 @@ export default function RenewMappingCrud() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500">สิ้นสุดแสดงที่หน้าสมัคร</label>
+                      <span className="block text-xs text-gray-500">สิ้นสุดแสดงที่หน้าสมัคร</span>
                       <input 
                         type="datetime-local" 
                         value={endActiveDatetime} 
@@ -466,7 +466,7 @@ export default function RenewMappingCrud() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</span>
                 <input 
                   type="number" 
                   required 
@@ -506,7 +506,7 @@ export default function RenewMappingCrud() {
                 </div>
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</label>
+                    <span className="block text-xs text-gray-600 mb-1">เริ่มเปิดใช้งาน (Start Datetime)</span>
                     <input 
                       type="datetime-local" 
                       value={editItem.startActiveDatetime || ''} 
@@ -515,7 +515,7 @@ export default function RenewMappingCrud() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</label>
+                    <span className="block text-xs text-gray-600 mb-1">สิ้นสุดการเปิดใช้งาน (End Datetime)</span>
                     <input 
                       type="datetime-local" 
                       value={editItem.endActiveDatetime || ''} 
