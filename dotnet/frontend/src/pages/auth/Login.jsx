@@ -25,18 +25,18 @@ export default function Login() {
       const user = await login(username, password);
       
       if (from && from !== '/login' && from !== '/admin/login') {
-        navigate(from, { replace: true });
+        void navigate(from, { replace: true });
       } else if (isAdminLogin) {
         if (user?.role === 'Applicant') {
-          navigate('/admin/trainees', { replace: true });
+          void navigate('/admin/trainees', { replace: true });
         } else {
-          navigate('/admin', { replace: true });
+          void navigate('/admin', { replace: true });
         }
       } else {
         if (user?.role && user.role !== 'Applicant') {
-          navigate('/admin', { replace: true });
+          void navigate('/admin', { replace: true });
         } else {
-          navigate('/', { replace: true });
+          void navigate('/', { replace: true });
         }
       }
     } catch (err) {

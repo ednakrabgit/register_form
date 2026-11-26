@@ -102,7 +102,7 @@ export default function Tab5Course() {
       }
     };
     
-    fetchCourses();
+    void fetchCourses();
   }, [formData.agentType]);
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export default function Tab5Course() {
         console.error("Failed to load renew courses", err);
       }
     };
-    fetchRenewCheckboxes();
+    void fetchRenewCheckboxes();
   }, []);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function Tab5Course() {
         console.error("Failed to load renew other courses", err);
       }
     };
-    fetchRenewOtherOptions();
+    void fetchRenewOtherOptions();
     }, []);
 
   // Auto-normalize array fields matching by name

@@ -32,7 +32,7 @@ export default function OicFieldMappingCrud() {
   });
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -72,7 +72,7 @@ export default function OicFieldMappingCrud() {
       if (!res.ok) throw new Error('Save failed');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
@@ -85,7 +85,7 @@ export default function OicFieldMappingCrud() {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Delete failed');
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
     }

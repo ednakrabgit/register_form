@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
       setIsLoading(false);
     };
 
-    verifyUser();
+    void verifyUser();
   }, []);
 
   const login = async (usernameOrEmail, password) => {

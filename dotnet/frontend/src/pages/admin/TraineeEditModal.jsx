@@ -37,7 +37,7 @@ const formatStampDateDisplay = (dateStr) => {
   if (!dateStr) return '';
   try {
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
+    if (Number.isNaN(d.getTime())) return dateStr;
     const day = d.getDate();
     const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
     const month = months[d.getMonth()];
@@ -207,7 +207,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
       }
     };
 
-    if (nationId) fetchData();
+    if (nationId) void fetchData();
   }, [nationId]);
 
   const addrAProvince = formData?.addresses?.find(a => a.addressType === 'A')?.provinceId ?? formData?.addresses?.[0]?.provinceId;
@@ -380,7 +380,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
     let newTrainings = [...(formData.trainings || [])];
     if (isChecked) {
       if (!newTrainings.some(t => t.courseId?.toString() === courseId.toString())) {
-        newTrainings.push({ courseId: parseInt(courseId), nationId: nationId });
+        newTrainings.push({ courseId: Number.parseInt(courseId), nationId: nationId });
       }
     } else {
       newTrainings = newTrainings.filter(t => t.courseId?.toString() !== courseId.toString());
@@ -444,7 +444,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
     let currentList = newOthers[0][collectionName] || [];
     if (isChecked) {
       if (!currentList.some(item => item[idField]?.toString() === idValue.toString())) {
-        currentList.push({ [idField]: parseInt(idValue), nationId: nationId });
+        currentList.push({ [idField]: Number.parseInt(idValue), nationId: nationId });
       }
     } else {
       currentList = currentList.filter(item => item[idField]?.toString() !== idValue.toString());
@@ -503,7 +503,7 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
     const email = data.emailAlt;
     if (!email?.trim()) {
       errors.push({ tab: 'personal', msg: 'กรุณากรอกอีเมล' });
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(email.trim())) {
       errors.push({ tab: 'personal', msg: 'รูปแบบอีเมลไม่ถูกต้อง' });
     }
 
@@ -639,9 +639,9 @@ export default function TraineeEditModal({ nationId, isReadOnly = false, onClose
         addresses: finalAddresses,
         birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
         idCardExpiry: formData.idCardExpiry ? new Date(formData.idCardExpiry).toISOString() : null,
-        religionId: formData.religionId ? parseInt(formData.religionId) : null,
-        genderId: formData.genderId ? parseInt(formData.genderId) : null,
-        bloodGroupId: formData.bloodGroupId ? parseInt(formData.bloodGroupId) : null
+        religionId: formData.religionId ? Number.parseInt(formData.religionId) : null,
+        genderId: formData.genderId ? Number.parseInt(formData.genderId) : null,
+        bloodGroupId: formData.bloodGroupId ? Number.parseInt(formData.bloodGroupId) : null
       };
 
       const res = await fetch(`${API_BASE_URL}/admin/trainees/${nationId}`, {

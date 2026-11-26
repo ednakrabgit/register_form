@@ -14,7 +14,7 @@ const toDateTimeLocal = (dateStr) => {
   if (!dateStr) return '';
   try {
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
+    if (Number.isNaN(d.getTime())) return dateStr;
     const pad = (n) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   } catch {
@@ -92,7 +92,7 @@ export default function ConfigPage() {
   };
 
   useEffect(() => {
-    fetchAllData();
+    void fetchAllData();
   }, []);
 
   const handleChange = (key, value) => {
@@ -237,8 +237,8 @@ export default function ConfigPage() {
     const openTime = period.open ? new Date(period.open) : null;
     const closeTime = period.close ? new Date(period.close) : null;
 
-    if (openTime && isNaN(openTime.getTime())) return { text: 'รูปแบบวันที่ไม่ถูกต้อง', color: 'bg-red-100 text-red-800 border-red-300' };
-    if (closeTime && isNaN(closeTime.getTime())) return { text: 'รูปแบบวันที่ไม่ถูกต้อง', color: 'bg-red-100 text-red-800 border-red-300' };
+    if (openTime && Number.isNaN(openTime.getTime())) return { text: 'รูปแบบวันที่ไม่ถูกต้อง', color: 'bg-red-100 text-red-800 border-red-300' };
+    if (closeTime && Number.isNaN(closeTime.getTime())) return { text: 'รูปแบบวันที่ไม่ถูกต้อง', color: 'bg-red-100 text-red-800 border-red-300' };
 
     if (openTime && closeTime) {
       if (now >= openTime && now <= closeTime) return { text: '🟢 กำลังเปิดรับสมัคร', color: 'bg-green-100 text-green-800 border-green-300 font-semibold' };
@@ -255,7 +255,7 @@ export default function ConfigPage() {
   };
 
   const isOnline = configs['SYSTEM_IS_ONLINE'] === 'true';
-  const sessionSeconds = parseInt(configs['SESSION_TIMEOUT'] || '3600', 10);
+  const sessionSeconds = Number.parseInt(configs['SESSION_TIMEOUT'] || '3600', 10);
   const sessionMinutes = Math.floor(sessionSeconds / 60);
 
   if (isLoading) {
@@ -691,7 +691,7 @@ export default function ConfigPage() {
                       <span className="text-amber-800">วันอบรมเร็วที่สุดที่มองเห็นได้:</span>
                       <span className="font-bold text-emerald-800">
                         {(() => {
-                          const days = parseInt(configs['RENEW_COURSE_EXPIRY_DAYS_ADVANCE'] || '30', 10) || 0;
+                          const days = Number.parseInt(configs['RENEW_COURSE_EXPIRY_DAYS_ADVANCE'] || '30', 10) || 0;
                           const d = new Date();
                           d.setDate(d.getDate() + days);
                           return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });

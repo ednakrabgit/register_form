@@ -176,10 +176,10 @@ export default function Tab2PersonalInfo() {
       const idStr = rawNationalId;
       let sum = 0;
       for (let i = 0; i < 12; i++) {
-        sum += parseFloat(idStr.charAt(i)) * (13 - i);
+        sum += Number.parseFloat(idStr.charAt(i)) * (13 - i);
       }
       const checkDigit = (11 - (sum % 11)) % 10;
-      if (parseFloat(idStr.charAt(12)) !== checkDigit) {
+      if (Number.parseFloat(idStr.charAt(12)) !== checkDigit) {
         newErrors.nationalId = 'เลขบัตรประชาชนไม่ถูกต้อง';
       }
     }
@@ -194,7 +194,7 @@ export default function Tab2PersonalInfo() {
       }
     }
     if (formData.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
       if (!emailRegex.test(formData.email)) {
         newErrors.email = 'รูปแบบอีเมลไม่ถูกต้อง';
       }

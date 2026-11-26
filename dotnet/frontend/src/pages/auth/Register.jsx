@@ -27,10 +27,10 @@ export default function Register() {
     if (cleanId.length !== 13) return false;
     let sum = 0;
     for (let i = 0; i < 12; i++) {
-      sum += parseInt(cleanId.charAt(i), 10) * (13 - i);
+      sum += Number.parseInt(cleanId.charAt(i), 10) * (13 - i);
     }
     const checkDigit = (11 - (sum % 11)) % 10;
-    return checkDigit === parseInt(cleanId.charAt(12), 10);
+    return checkDigit === Number.parseInt(cleanId.charAt(12), 10);
   };
 
   const isIdValid = formData.nationId.replace(/\D/g, '').length === 13 && validateThaiID(formData.nationId);
@@ -74,7 +74,7 @@ export default function Register() {
       });
 
       // Navigate to registration form immediately
-      navigate('/', { replace: true });
+      void navigate('/', { replace: true });
     } catch (err) {
       setError(err.message || 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
     } finally {

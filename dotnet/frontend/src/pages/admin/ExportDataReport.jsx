@@ -31,11 +31,11 @@ export default function ExportDataReport() {
       const str = String(courseDate).trim();
       const isoMatch = str.match(/^(\d{4})-/);
       if (isoMatch) {
-        const y = parseInt(isoMatch[1], 10);
+        const y = Number.parseInt(isoMatch[1], 10);
         return String(y < 2400 ? y + 543 : y);
       }
       const parsed = new Date(courseDate);
-      if (!isNaN(parsed.getTime())) {
+      if (!Number.isNaN(parsed.getTime())) {
         const y = parsed.getFullYear();
         return String(y < 2400 ? y + 543 : y);
       }
@@ -45,7 +45,7 @@ export default function ExportDataReport() {
       const beMatch = text.match(/\b(2[56]\d{2})\b/);
       if (beMatch) return beMatch[1];
       const adMatch = text.match(/\b(20\d{2})\b/);
-      if (adMatch) return String(parseInt(adMatch[1], 10) + 543);
+      if (adMatch) return String(Number.parseInt(adMatch[1], 10) + 543);
     }
     return 'ไม่ระบุปี';
   };
@@ -130,11 +130,11 @@ export default function ExportDataReport() {
         });
 
         const sortedYears = Object.keys(byYear).sort((a, b) => {
-          const na = parseInt(a, 10);
-          const nb = parseInt(b, 10);
-          if (isNaN(na) && isNaN(nb)) return a.localeCompare(b);
-          if (isNaN(na)) return 1;
-          if (isNaN(nb)) return -1;
+          const na = Number.parseInt(a, 10);
+          const nb = Number.parseInt(b, 10);
+          if (Number.isNaN(na) && Number.isNaN(nb)) return a.localeCompare(b);
+          if (Number.isNaN(na)) return 1;
+          if (Number.isNaN(nb)) return -1;
           return nb - na; // Newest year first
         });
 
@@ -227,12 +227,12 @@ export default function ExportDataReport() {
     const str = String(val).trim();
     if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
       const parts = str.substring(0, 10).split('-');
-      const y = parseInt(parts[0], 10);
+      const y = Number.parseInt(parts[0], 10);
       const yearStr = y < 2400 ? String(y + 543) : String(y);
       return `${parts[2]}/${parts[1]}/${yearStr}`;
     }
     const d = new Date(val);
-    if (!isNaN(d.getTime())) {
+    if (!Number.isNaN(d.getTime())) {
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
       let year = d.getFullYear();
@@ -353,7 +353,7 @@ export default function ExportDataReport() {
         idRanges: idRanges || null,
         selectedNationalIds: selectedPersons.map(p => p.nationalId),
         selectedCourses: Object.entries(selectedCourses).map(([cid, dids]) => ({
-          courseId: parseInt(cid),
+          courseId: Number.parseInt(cid),
           dateIds: dids
         })),
         allColumns: exportType === 'all',

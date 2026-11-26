@@ -96,7 +96,7 @@ export default function TraineesList() {
         setMasterMap(map);
       } catch (e) { console.error('Failed to load master data for mapping', e); }
     };
-    fetchMasterData();
+    void fetchMasterData();
   }, []);
 
   const toggleRow = (id) => {
@@ -129,13 +129,13 @@ export default function TraineesList() {
   };
 
   useEffect(() => {
-    fetchTrainees();
+    void fetchTrainees();
   }, [page, pageSize, sortBy, sortDir]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(1);
-    fetchTrainees();
+    void fetchTrainees();
   };
 
   const handleViewTrainee = async (trainee) => {
@@ -174,8 +174,8 @@ export default function TraineesList() {
       
       if (res.ok) {
         alert('อัปโหลดไฟล์สำเร็จ');
-        handleViewTrainee(selectedTrainee);
-        fetchTrainees();
+        void handleViewTrainee(selectedTrainee);
+        void fetchTrainees();
       } else {
         alert('อัปโหลดไฟล์ไม่สำเร็จ');
       }
@@ -199,12 +199,12 @@ export default function TraineesList() {
     const str = String(val).trim();
     if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
       const parts = str.substring(0, 10).split('-');
-      const y = parseInt(parts[0], 10);
+      const y = Number.parseInt(parts[0], 10);
       const yearStr = y < 2400 ? String(y + 543) : String(y);
       return `${parts[2]}/${parts[1]}/${yearStr}`;
     }
     const d = new Date(val);
-    if (!isNaN(d.getTime())) {
+    if (!Number.isNaN(d.getTime())) {
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
       let year = d.getFullYear();
@@ -652,7 +652,7 @@ export default function TraineesList() {
                                             const dStr = String(val).split('T')[0];
                                             const parts = dStr.split('-');
                                             if (parts.length === 3) {
-                                              let year = parseInt(parts[0], 10);
+                                              let year = Number.parseInt(parts[0], 10);
                                               const month = parts[1];
                                               const day = parts[2];
                                               if (year < 2400) year += 543;
@@ -749,7 +749,7 @@ export default function TraineesList() {
                                     const rawCourse = currentData.courseType || currentData.CourseType || currentData.CourseId || currentData.courseId || currentData.Course || currentData.course;
                                     const displayCourse = (masterMap.courseType && masterMap.courseType[rawCourse]) 
                                       ? masterMap.courseType[rawCourse] 
-                                      : ((rawCourse && isNaN(rawCourse) && rawCourse !== 'agent' && rawCourse !== 'broker') ? rawCourse : (t.course || '-'));
+                                      : ((rawCourse && Number.isNaN(rawCourse) && rawCourse !== 'agent' && rawCourse !== 'broker') ? rawCourse : (t.course || '-'));
 
                                     return (
                                       <tr key={trans.id} className="border-b hover:bg-gray-50">
@@ -893,7 +893,7 @@ export default function TraineesList() {
             if (closeModal) {
               setEditingTraineeId(null);
             }
-            fetchTrainees();
+            void fetchTrainees();
           }} 
         />
       )}

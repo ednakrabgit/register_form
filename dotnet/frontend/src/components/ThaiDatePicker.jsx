@@ -40,7 +40,7 @@ export default function ThaiDatePicker({
   if (value) {
     const rawStr = typeof value === 'string' ? value.split('T')[0] : value;
     const d = new Date(rawStr);
-    if (!isNaN(d.getTime())) {
+    if (!Number.isNaN(d.getTime())) {
       selectedDate = d;
     }
   }
@@ -69,7 +69,7 @@ export default function ThaiDatePicker({
       if (parts.length === 3) {
         const d = parts[0];
         const m = parts[1];
-        const y = parseInt(parts[2], 10) + 543;
+        const y = Number.parseInt(parts[2], 10) + 543;
         displayValue = `${d}/${m}/${y}`;
       }
     }
@@ -143,7 +143,7 @@ export default function ThaiDatePicker({
               
               <select
                 value={date.getFullYear()}
-                onChange={({ target: { value } }) => changeYear(parseInt(value))}
+                onChange={({ target: { value } }) => changeYear(Number.parseInt(value))}
                 className="border-none bg-transparent font-medium"
               >
                 {Array.from({ length: 150 }, (_, i) => new Date().getFullYear() - 100 + i).map(year => (

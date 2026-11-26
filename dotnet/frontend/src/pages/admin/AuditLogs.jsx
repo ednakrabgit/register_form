@@ -12,7 +12,7 @@ export default function AuditLogs() {
   const [selectedLog, setSelectedLog] = useState(null);
 
   useEffect(() => {
-    fetchLogs();
+    void fetchLogs();
   }, []);
 
   const fetchLogs = async () => {

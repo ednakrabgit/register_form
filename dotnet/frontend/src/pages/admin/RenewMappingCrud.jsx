@@ -27,7 +27,7 @@ export default function RenewMappingCrud() {
   const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -106,7 +106,7 @@ export default function RenewMappingCrud() {
         dateId: selectedDate.id,
         subjectId: selectedSubject.id,
         status: 'active',
-        displayOrder: parseInt(displayOrder) || 1,
+        displayOrder: Number.parseInt(displayOrder) || 1,
         isActiveBackend: isActiveBackend,
         isActiveFrontend: isActiveFrontend,
         startActiveDatetime: startActiveDatetime || null,
@@ -155,7 +155,7 @@ export default function RenewMappingCrud() {
       });
       if (!res.ok) throw new Error('Update failed');
       setShowEditModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการแก้ไขข้อมูล: ' + err.message);
     }
@@ -166,7 +166,7 @@ export default function RenewMappingCrud() {
     try {
       const res = await fetch(`${API_BASE_URL}/RenewData/mappings/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
@@ -471,7 +471,7 @@ export default function RenewMappingCrud() {
                   type="number" 
                   required 
                   value={editItem.displayOrder || 0} 
-                  onChange={e => setEditItem({...editItem, displayOrder: parseInt(e.target.value)})} 
+                  onChange={e => setEditItem({...editItem, displayOrder: Number.parseInt(e.target.value)})} 
                   className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" 
                 />
               </div>

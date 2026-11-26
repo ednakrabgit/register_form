@@ -33,7 +33,7 @@ export default function OicValueMappingCrud() {
   });
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -83,7 +83,7 @@ export default function OicValueMappingCrud() {
       if (!res.ok) throw new Error('Save failed');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
@@ -96,7 +96,7 @@ export default function OicValueMappingCrud() {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Delete failed');
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
     }

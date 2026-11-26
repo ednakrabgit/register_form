@@ -54,13 +54,13 @@ export default function EnquiryPage() {
 
   useEffect(() => {
     if (initialQuery) {
-      fetchEnquiry(initialQuery);
+      void fetchEnquiry(initialQuery);
     }
   }, [initialQuery]);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
-    fetchEnquiry(nationalId);
+    void fetchEnquiry(nationalId);
   };
 
   const copyShareLink = () => {
@@ -73,7 +73,7 @@ export default function EnquiryPage() {
       navigator.clipboard.writeText(url).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
-      });
+      }).catch(() => {});
     } else {
       const ta = document.createElement('textarea');
       ta.value = url;

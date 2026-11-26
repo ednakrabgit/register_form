@@ -122,7 +122,7 @@ export default function Tab6Confirm() {
       }
       
       setShowConfirmModal(false);
-      navigate(`/success?national_id=${formData.nationalId}&phone=${formData.phone || formData.phoneOtp}`);
+      void navigate(`/success?national_id=${formData.nationalId}&phone=${formData.phone || formData.phoneOtp}`);
     } catch (error) {
       if (error.message !== 'API Error') {
         alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);

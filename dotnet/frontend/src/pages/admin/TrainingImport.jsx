@@ -25,7 +25,7 @@ export default function TrainingImport() {
 
   useEffect(() => {
     if (activeTab === 'history') {
-      fetchHistory();
+      void fetchHistory();
     }
   }, [activeTab, page]);
 
@@ -129,7 +129,7 @@ export default function TrainingImport() {
       setSuccessMessage(msg);
       setPreviewData(null);
       setSelectedFile(null);
-      fetchHistory();
+      void fetchHistory();
     } catch (err) {
       setErrorMessage(err.message);
     } finally {
@@ -168,7 +168,7 @@ export default function TrainingImport() {
         throw new Error(err.message || 'ซิงค์ข้อมูลไม่สำเร็จ');
       }
       alert('ซิงค์ข้อมูลสำเร็จเรียบร้อย');
-      fetchHistory();
+      void fetchHistory();
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -510,7 +510,7 @@ export default function TrainingImport() {
               />
             </div>
             <button
-              onClick={() => { setPage(1); fetchHistory(); }}
+              onClick={() => { setPage(1); void fetchHistory(); }}
               className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
               <i className="fas fa-search mr-1"></i> ค้นหา

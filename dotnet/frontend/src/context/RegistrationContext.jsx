@@ -119,7 +119,7 @@ export function RegistrationProvider({ children }) {
       }
     };
     
-    fetchMasterData();
+    void fetchMasterData();
   }, []);
 
   const nextStep = () => {

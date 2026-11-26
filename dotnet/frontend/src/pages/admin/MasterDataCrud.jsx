@@ -59,12 +59,12 @@ export default function MasterDataCrud() {
   const isPillars = type === 'pillars' || type === 'pillar';
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
     if (isRenewCourse) {
-      fetchPillars();
+      void fetchPillars();
     }
     if (isPillars) {
-      fetchRenewCourses();
+      void fetchRenewCourses();
     }
   }, [type]);
 
@@ -120,7 +120,7 @@ export default function MasterDataCrud() {
         delete payload.defaultPillarId;
         delete payload.note;
       } else {
-        payload.defaultPillarId = payload.defaultPillarId ? parseInt(payload.defaultPillarId) : null;
+        payload.defaultPillarId = payload.defaultPillarId ? Number.parseInt(payload.defaultPillarId) : null;
         payload.note = payload.note ? payload.note.trim() : null;
       }
 
@@ -133,7 +133,7 @@ export default function MasterDataCrud() {
       if (!res.ok) throw new Error('Save failed');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       console.error(err);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
@@ -147,7 +147,7 @@ export default function MasterDataCrud() {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Delete failed');
-      fetchData();
+      void fetchData();
     } catch (err) {
       console.error(err);
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
@@ -202,7 +202,7 @@ export default function MasterDataCrud() {
       status: 'active'
     });
     setShowDetailsModal(true);
-    fetchCourseDetails(course.id);
+    void fetchCourseDetails(course.id);
   };
 
   const fetchCourseDetails = async (courseId) => {
@@ -283,7 +283,7 @@ export default function MasterDataCrud() {
         announcementCode: detailFormData.announcementCode,
         curriculumCode: detailFormData.curriculumCode,
         courseShortName: detailFormData.courseShortName,
-        displayOrder: parseInt(detailFormData.displayOrder) || 1,
+        displayOrder: Number.parseInt(detailFormData.displayOrder) || 1,
         status: detailFormData.status || 'active',
         subDetails: [
           {
@@ -716,7 +716,7 @@ export default function MasterDataCrud() {
                     type="number" 
                     required 
                     value={formData.displayOrder} 
-                    onChange={e => setFormData({...formData, displayOrder: parseInt(e.target.value) || 0})} 
+                    onChange={e => setFormData({...formData, displayOrder: Number.parseInt(e.target.value) || 0})} 
                     className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none" 
                   />
                 </div>

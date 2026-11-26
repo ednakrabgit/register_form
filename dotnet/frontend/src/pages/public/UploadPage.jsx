@@ -63,7 +63,7 @@ export default function UploadPage() {
       }
 
       alert("อัปโหลดเอกสารเรียบร้อยแล้ว");
-      navigate('/enquiry?national_id=' + nationalId);
+      void navigate('/enquiry?national_id=' + nationalId);
 
     } catch (error) {
       alert(error.message);

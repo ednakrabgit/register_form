@@ -134,8 +134,8 @@ export default function UserManagement() {
 
   useEffect(() => {
     setCurrentPage(1);
-    fetchUsers();
-    fetchRoles();
+    void fetchUsers();
+    void fetchRoles();
   }, [search, selectedRole, selectedStatus]);
 
   const showAlert = (type, message) => {
@@ -243,8 +243,8 @@ export default function UserManagement() {
       }
 
       setIsModalOpen(false);
-      fetchUsers();
-      fetchRoles();
+      void fetchUsers();
+      void fetchRoles();
     } catch (err) {
       showAlert("error", err.message);
     }
@@ -284,8 +284,8 @@ export default function UserManagement() {
 
       showAlert("success", "ลบผู้ใช้งานเรียบร้อยแล้ว");
       setIsDeleteModalOpen(false);
-      fetchUsers();
-      fetchRoles();
+      void fetchUsers();
+      void fetchRoles();
     } catch (err) {
       showAlert("error", err.message);
     }
@@ -302,7 +302,7 @@ export default function UserManagement() {
         headers: getAuthOnlyHeaders()
       });
       if (res.ok) {
-        fetchUsers();
+        void fetchUsers();
       }
     } catch (err) {
       console.error("Toggle status error", err);
@@ -386,7 +386,7 @@ export default function UserManagement() {
       }
 
       setIsRoleModalOpen(false);
-      fetchRoles();
+      void fetchRoles();
     } catch (err) {
       showAlert("error", err.message);
     }
@@ -436,7 +436,7 @@ export default function UserManagement() {
 
       showAlert("success", `บันทึกตารางสิทธิ์สำหรับ ${currentRole.roleName} สำเร็จ`);
       setIsPermModalOpen(false);
-      fetchRoles();
+      void fetchRoles();
     } catch (err) {
       showAlert("error", err.message);
     }
@@ -453,7 +453,7 @@ export default function UserManagement() {
 
       showAlert("success", "ลบ Role เรียบร้อยแล้ว");
       setIsDeleteRoleModalOpen(false);
-      fetchRoles();
+      void fetchRoles();
     } catch (err) {
       showAlert("error", err.message);
     }
@@ -473,7 +473,7 @@ export default function UserManagement() {
   };
 
   const handleOpenManageMenus = () => {
-    fetchSystemMenus();
+    void fetchSystemMenus();
     setMenuFormData({ menuKey: '', menuName: '', category: 'Admin', path: '', icon: 'fas fa-circle', sortOrder: 0 });
     setIsEditingMenu(false);
     setEditingMenuId(null);
@@ -492,7 +492,7 @@ export default function UserManagement() {
             category: menuFormData.category,
             path: menuFormData.path,
             icon: menuFormData.icon,
-            sortOrder: parseInt(menuFormData.sortOrder) || 0
+            sortOrder: Number.parseInt(menuFormData.sortOrder) || 0
           })
         });
         if (!res.ok) {
@@ -510,7 +510,7 @@ export default function UserManagement() {
             category: menuFormData.category,
             path: menuFormData.path,
             icon: menuFormData.icon,
-            sortOrder: parseInt(menuFormData.sortOrder) || 0
+            sortOrder: Number.parseInt(menuFormData.sortOrder) || 0
           })
         });
         if (!res.ok) {
@@ -522,8 +522,8 @@ export default function UserManagement() {
       setMenuFormData({ menuKey: '', menuName: '', category: 'Admin', path: '', icon: 'fas fa-circle', sortOrder: 0 });
       setIsEditingMenu(false);
       setEditingMenuId(null);
-      fetchSystemMenus();
-      fetchRoles();
+      void fetchSystemMenus();
+      void fetchRoles();
     } catch (err) {
       showAlert('error', err.message);
     }
@@ -541,8 +541,8 @@ export default function UserManagement() {
         throw new Error(err.message || 'ลบเมนูไม่สำเร็จ');
       }
       showAlert('success', 'ลบเมนูระบบสำเร็จ');
-      fetchSystemMenus();
-      fetchRoles();
+      void fetchSystemMenus();
+      void fetchRoles();
     } catch (err) {
       showAlert('error', err.message);
     }

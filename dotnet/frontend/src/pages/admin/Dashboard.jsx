@@ -82,7 +82,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchStats();
+    void fetchStats();
   }, [token, trendStartDate, trendEndDate, courseStartDate, courseEndDate]);
 
   // Trainee Training Status Search Effect
@@ -152,18 +152,18 @@ export default function Dashboard() {
         if (dStr.includes('/')) {
           const parts = dStr.split('/');
           if (parts.length === 3) {
-            dayNum = parseInt(parts[0], 10) || 0;
-            monthNum = parseInt(parts[1], 10) || 0;
-            yearNum = parseInt(parts[2], 10) || 0;
+            dayNum = Number.parseInt(parts[0], 10) || 0;
+            monthNum = Number.parseInt(parts[1], 10) || 0;
+            yearNum = Number.parseInt(parts[2], 10) || 0;
             yearKey = yearNum > 0 ? (yearNum > 2400 ? `พ.ศ. ${yearNum}` : `ค.ศ. ${yearNum}`) : 'ไม่ระบุปี';
             monthKey = (monthNum >= 1 && monthNum <= 12) ? thaiMonthNames[monthNum] : (parts[1] ? `เดือน ${parts[1]}` : 'ไม่ระบุเดือน');
           }
         } else if (dStr.includes('-')) {
           const parts = dStr.split('-');
           if (parts.length === 3) {
-            yearNum = parseInt(parts[0], 10) || 0;
-            monthNum = parseInt(parts[1], 10) || 0;
-            dayNum = parseInt(parts[2], 10) || 0;
+            yearNum = Number.parseInt(parts[0], 10) || 0;
+            monthNum = Number.parseInt(parts[1], 10) || 0;
+            dayNum = Number.parseInt(parts[2], 10) || 0;
             yearKey = yearNum > 0 ? (yearNum > 2400 ? `พ.ศ. ${yearNum}` : `ค.ศ. ${yearNum}`) : 'ไม่ระบุปี';
             monthKey = (monthNum >= 1 && monthNum <= 12) ? thaiMonthNames[monthNum] : (parts[1] ? `เดือน ${parts[1]}` : 'ไม่ระบุเดือน');
           }

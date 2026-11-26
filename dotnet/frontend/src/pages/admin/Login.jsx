@@ -20,9 +20,9 @@ export default function Login() {
     try {
       const user = await login(username, password);
       if (user.role === 'Applicant') {
-        navigate('/admin/trainees', { replace: true });
+        void navigate('/admin/trainees', { replace: true });
       } else {
-        navigate('/admin', { replace: true });
+        void navigate('/admin', { replace: true });
       }
     } catch (err) {
       setError(err.message || 'เข้าสู่ระบบไม่สำเร็จ');

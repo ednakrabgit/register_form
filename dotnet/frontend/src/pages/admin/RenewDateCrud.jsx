@@ -14,7 +14,7 @@ export default function RenewDateCrud() {
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -55,7 +55,7 @@ export default function RenewDateCrud() {
       if (!res.ok) throw new Error('Save failed');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
@@ -68,7 +68,7 @@ export default function RenewDateCrud() {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Delete failed');
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
@@ -204,7 +204,7 @@ export default function RenewDateCrud() {
               <div className="mb-4 flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</label>
-                  <input type="number" required value={formData.displayOrder || 0} onChange={e => setFormData({...formData, displayOrder: parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" />
+                  <input type="number" required value={formData.displayOrder || 0} onChange={e => setFormData({...formData, displayOrder: Number.parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-warning outline-none" />
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">สถานะดั้งเดิม</label>

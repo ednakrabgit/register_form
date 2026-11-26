@@ -64,7 +64,7 @@ export default function LocationMasterCrud({ type: propType }) {
     setSelectedProvinceId('');
     setSelectedDistrictId('');
     setPage(1);
-    fetchData();
+    void fetchData();
   }, [type]);
 
   const fetchData = async () => {
@@ -223,7 +223,7 @@ export default function LocationMasterCrud({ type: propType }) {
       if (!res.ok) throw new Error('Save failed');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message);
     }
@@ -236,7 +236,7 @@ export default function LocationMasterCrud({ type: propType }) {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Delete failed');
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
@@ -693,7 +693,7 @@ export default function LocationMasterCrud({ type: propType }) {
                     formData.subDistrictId
                   } 
                   onChange={e => {
-                    const val = parseInt(e.target.value) || 0;
+                    const val = Number.parseInt(e.target.value) || 0;
                     if (type === 'provinces') setFormData({...formData, provinceId: val});
                     if (type === 'districts') setFormData({...formData, districtId: val});
                     if (type === 'subdistricts') setFormData({...formData, subDistrictId: val});
@@ -756,7 +756,7 @@ export default function LocationMasterCrud({ type: propType }) {
                   <select 
                     required 
                     value={formData.provinceId || ''} 
-                    onChange={e => setFormData({...formData, provinceId: parseInt(e.target.value)})} 
+                    onChange={e => setFormData({...formData, provinceId: Number.parseInt(e.target.value)})} 
                     className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary/30 outline-none bg-white"
                   >
                     <option value="" disabled>-- เลือกจังหวัด --</option>
@@ -806,7 +806,7 @@ export default function LocationMasterCrud({ type: propType }) {
                     <select 
                       required 
                       value={formData.districtId || ''} 
-                      onChange={e => setFormData({...formData, districtId: parseInt(e.target.value)})} 
+                      onChange={e => setFormData({...formData, districtId: Number.parseInt(e.target.value)})} 
                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary/30 outline-none bg-white"
                     >
                       <option value="" disabled>-- เลือกอำเภอ --</option>

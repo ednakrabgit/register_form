@@ -49,8 +49,8 @@ export default function RenewBasicCrud() {
   });
 
   useEffect(() => {
-    fetchData();
-    fetchRenewDates();
+    void fetchData();
+    void fetchRenewDates();
   }, []);
 
   const fetchData = async () => {
@@ -120,7 +120,7 @@ export default function RenewBasicCrud() {
         id: editItem ? editItem.id : 0,
         courseName: formData.courseName,
         status: formData.status,
-        dateId: formData.dateId ? parseInt(formData.dateId) : null,
+        dateId: formData.dateId ? Number.parseInt(formData.dateId) : null,
         agentType: formData.agentType,
         isActiveBackend: formData.isActiveBackend !== false,
         isActiveFrontend: formData.isActiveFrontend !== false,
@@ -137,7 +137,7 @@ export default function RenewBasicCrud() {
       if (!res.ok) throw new Error('Failed to save');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -148,7 +148,7 @@ export default function RenewBasicCrud() {
     try {
       const res = await fetch(`${API_BASE}/RenewBasic/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -219,7 +219,7 @@ export default function RenewBasicCrud() {
         courseType: 'basic',
         courseId: selectedCourseForDetails.id,
         ...curriculumForm,
-        displayOrder: parseInt(curriculumForm.displayOrder) || 1
+        displayOrder: Number.parseInt(curriculumForm.displayOrder) || 1
       };
 
       const res = await fetch(url, {
@@ -289,7 +289,7 @@ export default function RenewBasicCrud() {
         id: editingSubDetailId || 0,
         curriculumId: selectedCurriculumForSub.id,
         ...subDetailForm,
-        displayOrder: parseInt(subDetailForm.displayOrder) || 1
+        displayOrder: Number.parseInt(subDetailForm.displayOrder) || 1
       };
 
       const res = await fetch(url, {

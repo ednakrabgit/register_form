@@ -12,12 +12,12 @@ export default function SystemLogs() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchLogFiles();
+    void fetchLogFiles();
   }, []);
 
   useEffect(() => {
     if (selectedFile) {
-      fetchLogContent(selectedFile);
+      void fetchLogContent(selectedFile);
     } else {
       setLogContent('');
     }

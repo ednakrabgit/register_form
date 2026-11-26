@@ -10,7 +10,7 @@ export default function ReportRemarks() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   const fetchData = async () => {

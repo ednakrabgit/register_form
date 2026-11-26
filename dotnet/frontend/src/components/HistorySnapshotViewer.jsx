@@ -10,7 +10,7 @@ export function decodeUnicode(str) {
   if (typeof str !== 'string') return str;
   try {
     return str.replace(/\\u([0-9a-fA-F]{4})/g, (_, code) => 
-      String.fromCharCode(parseInt(code, 16))
+      String.fromCharCode(Number.parseInt(code, 16))
     );
   } catch {
     return str;
@@ -41,7 +41,7 @@ export function parseSnapshot(data) {
 export function formatThaiDate(dateStr) {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return String(dateStr);
+  if (Number.isNaN(d.getTime())) return String(dateStr);
   
   const day = d.getDate().toString().padStart(2, '0');
   const month = (d.getMonth() + 1).toString().padStart(2, '0');

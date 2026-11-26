@@ -18,9 +18,9 @@ export default function AgentMasterCrud({ type: propType }) {
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
     if (type === 'agent-branches') {
-      fetchRegions();
+      void fetchRegions();
     }
   }, [type]);
 
@@ -111,7 +111,7 @@ export default function AgentMasterCrud({ type: propType }) {
       if (!res.ok) throw new Error('Failed to save');
       
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -126,7 +126,7 @@ export default function AgentMasterCrud({ type: propType }) {
         const text = await res.text();
         throw new Error(text || 'Failed to delete');
       }
-      fetchData();
+      void fetchData();
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -233,7 +233,7 @@ export default function AgentMasterCrud({ type: propType }) {
               {type === 'agent-branches' && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">ภูมิภาค</label>
-                  <select required value={formData.regionId || ''} onChange={e => setFormData({...formData, regionId: parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none">
+                  <select required value={formData.regionId || ''} onChange={e => setFormData({...formData, regionId: Number.parseInt(e.target.value)})} className="w-full border rounded p-2 focus:ring-2 focus:ring-primary outline-none">
                     <option value="" disabled>เลือกภูมิภาค...</option>
                     {regions.map(r => (
                       <option key={r.id} value={r.id}>{r.name}</option>

@@ -43,7 +43,7 @@ const formatStampDateDisplay = (dateStr) => {
   if (!dateStr) return '';
   try {
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
+    if (Number.isNaN(d.getTime())) return dateStr;
     const day = d.getDate();
     const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
     const month = months[d.getMonth()];
@@ -297,7 +297,7 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
-    fetchProfile();
+    void fetchProfile();
   }, []);
 
   const addrAProvince = personData.addresses.find(a => a.addressType === 'A')?.provinceId ?? personData.addresses[0]?.provinceId;
@@ -510,7 +510,7 @@ export default function UserProfile() {
     let newTrainings = [...(personData.trainings || [])];
     if (isChecked) {
       if (!newTrainings.some(t => t.courseId?.toString() === courseId.toString())) {
-        newTrainings.push({ courseId: parseInt(courseId), nationId: personData.nationId });
+        newTrainings.push({ courseId: Number.parseInt(courseId), nationId: personData.nationId });
       }
     } else {
       newTrainings = newTrainings.filter(t => t.courseId?.toString() !== courseId.toString());
@@ -574,7 +574,7 @@ export default function UserProfile() {
     let currentList = newOthers[0][collectionName] || [];
     if (isChecked) {
       if (!currentList.some(item => item[idField]?.toString() === idValue.toString())) {
-        currentList.push({ [idField]: parseInt(idValue), nationId: personData.nationId });
+        currentList.push({ [idField]: Number.parseInt(idValue), nationId: personData.nationId });
       }
     } else {
       currentList = currentList.filter(item => item[idField]?.toString() !== idValue.toString());
@@ -633,7 +633,7 @@ export default function UserProfile() {
     const email = data.emailAlt || accountData.email;
     if (!email?.trim()) {
       errors.push({ tab: 'personal', msg: 'กรุณากรอกอีเมล' });
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(email.trim())) {
       errors.push({ tab: 'personal', msg: 'รูปแบบอีเมลไม่ถูกต้อง' });
     }
 
@@ -803,7 +803,7 @@ export default function UserProfile() {
       } catch {}
 
       showAlert('success', 'บันทึกข้อมูลและประวัติการแก้ไขสำเร็จ (History Saved)');
-      fetchProfile();
+      void fetchProfile();
     } catch (err) {
       showAlert('error', err.message);
     } finally {
@@ -872,7 +872,7 @@ export default function UserProfile() {
 
       showAlert('success', 'เปลี่ยนรหัสผ่านสำเร็จเรียบร้อยแล้ว');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      fetchProfile();
+      void fetchProfile();
     } catch (err) {
       showAlert('error', err.message);
     } finally {
