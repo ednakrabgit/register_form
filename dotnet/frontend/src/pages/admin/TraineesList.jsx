@@ -107,7 +107,7 @@ export default function TraineesList() {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken') || localStorage.getItem('admin_token');
-      const qs = new URLSearchParams({ search: searchTerm, page, pageSize: pageSize === 'All' ? 0 : pageSize, sortBy, sortDir });
+      const qs = new URLSearchParams({ search: searchTerm, page, pageSize: String(pageSize) === 'All' ? 0 : pageSize, sortBy, sortDir });
       const response = await fetch(`${API_BASE_URL}/admin/trainees?${qs.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -698,7 +698,7 @@ export default function TraineesList() {
                                         let newVal = resolveValue(rawNew, field.mapType, field.label);
 
                                         if (field.isList) {
-                                          const norm = (v) => Array.from(new Set(String(v || '').split(',').map(s => s.trim()))).filter(Boolean).sort().join(', ');
+                                          const norm = (v) => Array.from(new Set(String(v || '').split(',').map(s => s.trim()))).filter(Boolean).sort((a, b) => a.localeCompare(b, 'th')).join(', ');
                                           oldVal = norm(oldVal);
                                           newVal = norm(newVal);
                                         }
@@ -788,7 +788,7 @@ export default function TraineesList() {
         </table>
       </div>
 
-      {pageSize !== 'All' && total > 0 && (
+      {String(pageSize) !== 'All' && total > 0 && (
         <div className="flex justify-center mt-6">
           <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
             <button

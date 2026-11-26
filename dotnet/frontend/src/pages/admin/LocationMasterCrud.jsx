@@ -193,9 +193,9 @@ export default function LocationMasterCrud({ type: propType }) {
 
   // Paginated data
   const totalItems = filteredData.length;
-  const totalPages = pageSize === 'All' ? 1 : Math.max(1, Math.ceil(totalItems / (Number(pageSize) || 50)));
+  const totalPages = String(pageSize) === 'All' ? 1 : Math.max(1, Math.ceil(totalItems / (Number(pageSize) || 50)));
   const paginatedData = useMemo(() => {
-    if (pageSize === 'All') return filteredData;
+    if (String(pageSize) === 'All') return filteredData;
     const size = Number(pageSize) || 50;
     const start = (page - 1) * size;
     return filteredData.slice(start, start + size);
@@ -484,7 +484,7 @@ export default function LocationMasterCrud({ type: propType }) {
               <span className="text-gray-400 ml-1">(กรองจากทั้งหมด {data.length.toLocaleString()} รายการ)</span>
             )}
           </div>
-          {pageSize !== 'All' && totalPages > 1 && (
+          {String(pageSize) !== 'All' && totalPages > 1 && (
             <div>
               หน้า <span className="font-semibold">{page}</span> จาก <span className="font-semibold">{totalPages}</span>
             </div>
@@ -528,7 +528,7 @@ export default function LocationMasterCrud({ type: propType }) {
                   return (
                     <tr key={item.id} className="hover:bg-blue-50/40 transition-colors">
                       <td className="p-3.5 text-center text-gray-400 text-xs">
-                        {pageSize === 'All' ? idx + 1 : ((page - 1) * Number(pageSize)) + idx + 1}
+                        {String(pageSize) === 'All' ? idx + 1 : ((page - 1) * Number(pageSize)) + idx + 1}
                       </td>
                       <td className="p-3.5 font-mono text-xs text-gray-600">
                         {type === 'provinces' && item.provinceId}
@@ -611,7 +611,7 @@ export default function LocationMasterCrud({ type: propType }) {
         )}
 
         {/* Pagination Bar */}
-        {!loading && pageSize !== 'All' && totalPages > 1 && (
+        {!loading && String(pageSize) !== 'All' && totalPages > 1 && (
           <div className="p-3.5 bg-slate-50 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="text-xs text-gray-600">
               กำลังแสดงแถวที่ <span className="font-semibold">{((page - 1) * Number(pageSize)) + 1}</span> ถึง{' '}

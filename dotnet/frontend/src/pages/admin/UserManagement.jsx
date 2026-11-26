@@ -549,10 +549,10 @@ export default function UserManagement() {
   };
 
   // Pagination calculation
-  const totalPages = Math.ceil(users.length / (pageSize === 'All' ? users.length || 1 : pageSize)) || 1;
-  const paginatedUsers = pageSize === 'All' 
+  const totalPages = Math.ceil(users.length / (String(pageSize) === 'All' ? users.length || 1 : Number(pageSize))) || 1;
+  const paginatedUsers = String(pageSize) === 'All' 
     ? users 
-    : users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    : users.slice((currentPage - 1) * Number(pageSize), currentPage * Number(pageSize));
 
   // Stats calculation
   const totalCount = users.length;
@@ -946,13 +946,13 @@ export default function UserManagement() {
                 <span>รายการต่อหน้า</span>
                 <span className="text-slate-300">|</span>
                 <span>
-                  {pageSize === 'All'
+                  {String(pageSize) === 'All'
                     ? `1 - ${users.length} จากทั้งหมด ${users.length} รายการ`
-                    : `${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, users.length)} จากทั้งหมด ${users.length} รายการ`}
+                    : `${((currentPage - 1) * Number(pageSize)) + 1} - ${Math.min(currentPage * Number(pageSize), users.length)} จากทั้งหมด ${users.length} รายการ`}
                 </span>
               </div>
 
-              {pageSize !== 'All' && totalPages > 1 && (
+              {String(pageSize) !== 'All' && totalPages > 1 && (
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setCurrentPage(1)}

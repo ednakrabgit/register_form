@@ -167,33 +167,30 @@ export default function Tab4License() {
         <div className="mb-6">
           <label className="block mb-2 font-medium text-textMain">ประเภทใบอนุญาต <span className="text-red-500 font-bold">*</span></label>
           
-          {true && (
-            <div className="border border-border rounded-md p-3 mb-2 flex items-center gap-3 bg-white hover:bg-gray-50 cursor-pointer" onClick={() => updateData({ agentType: 'agent', brokerType: '' })}>
+          <div className="border border-border rounded-md p-3 mb-2 flex items-center gap-3 bg-white hover:bg-gray-50 cursor-pointer" onClick={() => updateData({ agentType: 'agent', brokerType: '' })}>
+            <input 
+              type="radio" 
+              name="agentType" 
+              id="agentType_agent" 
+              className="w-5 h-5 accent-primary" 
+              checked={formData.agentType === 'agent'}
+              onChange={() => updateData({ agentType: 'agent', brokerType: '' })}
+            />
+            <label htmlFor="agentType_agent" className="cursor-pointer font-medium">ตัวแทนประกันวินาศภัย</label>
+          </div>
+
+          <div className={`border rounded-md p-3 flex flex-col gap-3 bg-white transition-all ${formData.agentType === 'broker' ? 'border-primary' : 'border-border'}`}>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => updateData({ agentType: 'broker' })}>
               <input 
                 type="radio" 
                 name="agentType" 
-                id="agentType_agent" 
+                id="agentType_broker" 
                 className="w-5 h-5 accent-primary" 
-                checked={formData.agentType === 'agent'}
-                onChange={() => updateData({ agentType: 'agent', brokerType: '' })}
+                checked={formData.agentType === 'broker'}
+                onChange={() => updateData({ agentType: 'broker' })}
               />
-              <label htmlFor="agentType_agent" className="cursor-pointer font-medium">ตัวแทนประกันวินาศภัย</label>
+              <label htmlFor="agentType_broker" className="cursor-pointer font-medium">นายหน้าประกันวินาศภัย</label>
             </div>
-          )}
-
-          {true && (
-            <div className={`border rounded-md p-3 flex flex-col gap-3 bg-white transition-all ${formData.agentType === 'broker' ? 'border-primary' : 'border-border'}`}>
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => updateData({ agentType: 'broker' })}>
-                <input 
-                  type="radio" 
-                  name="agentType" 
-                  id="agentType_broker" 
-                  className="w-5 h-5 accent-primary" 
-                  checked={formData.agentType === 'broker'}
-                  onChange={() => updateData({ agentType: 'broker' })}
-                />
-                <label htmlFor="agentType_broker" className="cursor-pointer font-medium">นายหน้าประกันวินาศภัย</label>
-              </div>
 
               {formData.agentType === 'broker' && (
               <div className="pl-8 pt-3 pb-2 border-t border-gray-100 flex flex-col gap-4 animate-[fadeIn_0.3s]">
@@ -226,7 +223,6 @@ export default function Tab4License() {
               </div>
             )}
           </div>
-          )}
           {errors.agentType && <p className="text-error text-sm mt-2">{errors.agentType}</p>}
         </div>
 

@@ -48,7 +48,7 @@ export default function MasterDataDashboard() {
             <i className={`fas ${link.icon} text-5xl ${link.color} mb-4`}></i>
             <h4 className="text-lg font-bold text-gray-800 mb-2">{link.title}</h4>
             <p className="text-gray-500 text-xs mb-6 flex-1">เพิ่ม ลบ หรือแก้ไขข้อมูลในระบบ</p>
-            <Link to={link.custom ? `/admin/master-data/${link.type}` : `/admin/master-data/${link.type}`} className={`px-6 py-2 border rounded transition-colors text-sm w-full ${link.custom ? 'border-info text-info hover:bg-info hover:text-white' : 'border-primary text-primary hover:bg-primary hover:text-white'}`}>
+            <Link to={`/admin/master-data/${link.type}`} className={`px-6 py-2 border rounded transition-colors text-sm w-full ${link.custom ? 'border-info text-info hover:bg-info hover:text-white' : 'border-primary text-primary hover:bg-primary hover:text-white'}`}>
               จัดการข้อมูล
             </Link>
           </div>
